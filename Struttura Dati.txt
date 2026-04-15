@@ -1,0 +1,320 @@
+Asset Server ----> ReportAsset_CMDB.csv                                                                                            !!   ReportAsset_CMDB              ||   TABELLA HW
+------------------------------------                                                                                               !!   ----------------------------- ||   --------------------------
+*1  Nome CI _______________________ -> Nome Configuration Item      => Nome Server                                                 !!   1 nome                        ||   * nome           
+ 27 Stato _________________________ -> Condizione del server        => Deployed / End Of Life                                      !!   2 ip                          ||   * dominio
+    Category ______________________ ->                              => Server                                                      !!   1 computername                ||   * dns_name
+*20 Type __________________________ -> Tipo di server               => ESX / Server                                                !!   2 ipbigfix                    ||   * ip
+    Item __________________________ -> Non definito                                                                                !!   3 osbigfix                    ||   * virtuale
+*19 Ruolo _________________________ -> Tipologia/Funzione           => Appliance / WebServer / DBServer / ...                      !!   4 dnsname                     ||   * tipo
+*21 Ambiente ______________________ -> Ambiente operativo           => Produzione / Collaudo / Addestramento / Test / ...          !!   5 dominiobigfix               ||   * cluster_name
+*3  OS ____________________________ -> Sistema Operativo                                                                           !!   6 is_virtual                  ||     cluster_ambiente
+ 18 Applicazioni (lista) __________ -> Elenco Applicazioni servite  => ...                                                         !!     cpu_bigfix                  ||     cluster_cliente
+*22 Responsabile (Server) _________ ->                                                                                             !!   7 ram_bigfix                  ||     cluster_destinazione
+*   Applicazione __________________ -> Applicazione primaria                                                                       !!   8 numerocore                  ||     cluster_cores
+    Responsabile (Applicazione) ___ ->                                                                                             !!   9 numerocpu                   ||     cluster_numhosts
+*5  Domain Name ___________________ -> Nome Dominio                 => ced_it / cadit_ext / ...                                    !!  10 numerosocket                ||     cluster_n_vms_total
+    Uptime ________________________ -> Giorni e ore di attività                                                                    !!  11 processore_bigfix           ||     cluster_n_vms
+*10 Numero Socket _________________ -> Numero processori fisici                                                                    !!  12 nomeproduttore              ||     cluster_n_vms_win
+*9  Numero CPU ____________________ -> Numero complessivo dei core  => Numero core x Numero socket. Valido per i server fisici.    !!  13 serialnumber_bigfix         ||     hyperthreadactive
+*11 Processore ____________________ -> Tipologia di processore      => Es.: Intel(R) Xeon(R) Gold 6142M CPU @ 2.60GHz              !!  14 nomemodello                 ||     ha_enabled
+ 7  Ram ___________________________ -> Quantità di RAM in MB        => 4096 MB                                                     !!  15 clustername                 ||     drs_enabled
+ 13 Serial Number _________________ ->                                                                                             !!  16 virtualcenter               ||   * host
+*15 VM_Cluster ____________________ -> Nome del Cluster VmWare      => Valido per le macchine virtuali in farm VmWare              !!  12 manufacturer                ||     host_os_version
+    VMWare_LastReportDate _________ -> Data ultimo report VmWare                                                                   !!  17 bigfix_lastreportdate       ||   * operating_system
+*   VM_Host _______________________ -> Nome Host VmWare                                                                            !!  18 applicazione                ||     vm_hw_version
+    VM_VMID _______________________ -> Identificativo del server virtuale                                                          !!  19 ruolo                       ||   * n_cpu
+    VM_VMName _____________________ -> Nome del server virtuale nella farm VmWare                                                  !!  20 type                        ||   * n_core
+*16 VM_Virtualcenter ______________ -> Nome del Virtual Center VmWare                                                              !!     indismissione               ||   * n_core_x_cpu
+ 12 Manufacturer __________________ -> Produttore del server                                                                       !!     dr                          ||     pvu_per_core
+ 14 Modello _______________________ -> Modello del server                                                                          !!  21 ambiente                    ||     valore_pvu_modificato
+*6  Is Virtual ____________________ -> Indica se è virtuale         => Si / No                                                     !!     ambientecritico             ||     valore_pvu_predefinito
+    Bigfix_ComputerID _____________ -> Identificativo fornito da BigFix                                                            !!  22 responsabile                ||     fattore_core_oracle
+    bigfix_computername ___________ -> Nome server fornito da BigFix                                                               !!  23 cliente                     ||     powerstate
+*4  DNS ___________________________ -> Nome completo con il dominio => Non affidabile!                                             !!  24 contratto                   ||   * vcenter
+ 17 Bigfix_LastReportDate _________ -> Data ultimo report BigFix                                                                   !!     accesso                     ||     vcenter_cores
+*8  server_numerocore _____________ -> Numero Core del server       => Server fisici: core per socket. VM sono il Numero_CPU       !!     anno                        ||     vcenter_hosts
+ 25 server_iscloud ________________ -> Indica se il server è in un cloud pubblico.                                                 !!     mese                        ||     vcenter_dominio
+*26 Sito __________________________ -> Sito geografico                                                                             !!     giorno                      ||     vcenter_cluster
+    Sala __________________________ -> Sala del datacenter                                                                         !!     note                        ||   * cpu_model
+    Fila __________________________ -> File della sala                                                                             !!     servizio                    ||   * applicazione
+    Rack __________________________ -> Indicazione del Rack                                                                        !!   3 sistemaoperativo            ||   * ruolo
+*23 Used By _______________________ -> Cliente cui è dedicato il server                                                            !!  25 cloud                       ||   * ambiente
+*24 Contratto _____________________ -> Tipologia del contratto      => Full Outsourcing / Facility / ...                           !!  26 sito                        ||   * responsabile
+*2  IP Primario ___________________ -> Indirizzo IP Primario                                                                       !!  27 stato                       ||   * cliente
+    Indirizzi IP __________________ -> Altri indirizzi IP                                                                          !!                                 ||   * contratto
+    Data censimento in CMDB _______ ->                                                                                                                                ||     contratto_ms
+    ReconciliationIdentity-Server _ ->                                                                                                                                ||   * sito
+                                                                                                                                                                      ||     dismesso
+                                                                                                                                                                      ||     data_dismissione
+                                                                                                                                                                      ||     lastlogon
+                                                                                                                                                                      ||     anno
+                                                                                                                                                                      ||     mese
+                                                                                                                                                                      ||     giorno
+                                                                                                                                                                      ||     ad
+                                                                                                                                                                      ||     bigfix
+                                                                                                                                                                      ||     cmdb
+                                                                                                                                                                      ||     rvt
+                                                                                                                                                                      ||     sccm
+                                                                                                                                                                      ||     citrix
+
+==============================================================================================================================================================================================
+ICTG-01 Inventario Hardware ---> ICTG-HW.csv                                                                         !! ICTG-HW                                 ||   TABELLA HW
+----------------------------                                                                                         !! ---------------------------             ||   --------------------------
+  Stato ______________________________ -> Situazione del server  => Messaggio relativo alla rilevazione dei dati.    !!    stato                                ||   * nome           
+* Nome computer ______________________ ->                                                                            !!    nome_computer                        ||   * dominio
+* Sistema operativo __________________ ->                                                                            !!    sistema_operativo                    ||   * dns_name
+* Nome DNS ___________________________ ->                                                                            !!    nome_dns                             ||     ip
+  Indirizzo IP _______________________ -> Elenco indirizzi IP separati da virgola.                                   !!    indirizzo_ip                         ||   * virtuale
+  RAM ________________________________ ->                                                                            !!    ram                                  ||     tipo
+  AIX Full OS Level __________________ -> Livello sistema operativo se AIX IBM                                       !!    aix_full_os_level                    ||     cluster_name
+  Technology Level ___________________ -> Livello tecnologico per sistemi AIX                                        !!    technology_level                     ||     cluster_ambiente
+  Cluster Name _______________________ -> Cluster DB                                                                 !!    cluster_name                         ||     cluster_cliente
+  Cluster Type _______________________ -> Tipo di Cluster => WLBS / MSCS / RHCS / ...                                !!    cluster_type                         ||     cluster_destinazione
+* NumeroCPU __________________________ -> Numero complessivo core => NumeroCore x NumeroSocket                       !!    numerocpu                            ||     cluster_cores
+* NumeroCore _________________________ -> Numero Core x Socket                                                       !!    numerocore                           ||     cluster_numhosts
+* NumeroSocket _______________________ ->                                                                            !!    numerosocket                         ||     cluster_n_vms_total
+  License Type _______________________ -> Client / Server                                                            !!    license_type                         ||     cluster_n_vms
+* Computer Type ______________________ -> Physical / Virtual                                                         !!    computer_type                        ||     cluster_n_vms_win
+  Java Output ________________________ ->                                                                            !!    java_output                          ||     hyperthreadactive
+  JavaPath ___________________________ ->                                                                            !!    javapath                             ||     ha_enabled
+  JavaVersion ________________________ ->                                                                            !!    javaversion                          ||     drs_enabled
+* Tipo di computer ___________________ -> Fisico / Virtuale                                                          !!    tipo_di_computer                     ||     host
+  Core partizione ____________________ -> Duplica i dati di NumeroCore                                               !!    core_partizione                      ||     host_os_version
+  ID server __________________________ ->                                                                            !!    id_server                            ||   * operating_system
+  Core server ________________________ -> Core server fisico che ospita il server virtuale                           !!    core_server                          ||     vm_hw_version
+  Stringa marchio processore _________ -> Tipo di processore => Es.: Intel(R) Xeon(R) Gold 6238 CPU @ 2.10GHz        !!    stringa_marchio_processore           ||   * n_cpu
+  Vendor _____________________________ -> Fornitore del processore => Intel(R) / AMD / ...                           !!    vendor                               ||   * n_core
+  Marchio ____________________________ -> Relativo al tipo di processore => Xeon / ...                               !!    marchio                              ||   * n_core_x_cpu
+  Tipo _______________________________ -> Mono o Multi Core                                                          !!    tipo                                 ||   * pvu_per_core
+  Modello ____________________________ ->                                                                            !!    modello                              ||   * valore_pvu_modificato
+* PVU per core _______________________ ->                                                                            !!    pvu_per_core                         ||   * valore_pvu_predefinito
+* Valore PVU modificato ______________ -> True / False                                                               !!    valore_pvu_modificato                ||   * fattore_core_oracle
+* Valore PVU predefinito _____________ -> True / False                                                               !!    valore_pvu_predefinito               ||     powerstate
+* Fattore core Oracle ________________ -> Valore del fattore di conversione per il "Processore Oracle"               !!    fattore_core_oracle                  ||     vcenter
+  Ha un limite _______________________ ->                                                                            !!    ha_un_limite                         ||     vcenter_cores
+  Processori virtuali di partizione __ ->                                                                            !!    processori_virtuali_di_partizione    ||     vcenter_hosts
+  Socket attivi del server ___________ ->                                                                            !!    socket_attivi_del_server             ||     vcenter_dominio
+* Domain _____________________________ -> Nome del dominio del server                                                !!    domain                               ||     vcenter_cluster
+  Nome cluster _______________________ -> Nome del cluster                                                           !!    nome_cluster                         ||   * cpu_model
+  Core cluster _______________________ -> Numero core del cluster                                                    !!    core_cluster                         ||     applicazione
+* CPU ________________________________ -> Modello CPU => 3000 MHz Xeon Gold 6248R                                    !!    cpu                                  ||     ruolo
+  Nome host padre ____________________ -> Nome server Host                                                           !!    nome_host_padre                      ||     ambiente
+  Processore _________________________ -> Tipologia di processore  => Intel(R) Xeon(R) Gold 5122 CPU @ 3.60GHz       !!    processore                           ||     responsabile
+* Last Report Time ___________________ -> Data ultimo report inviato dal server                                      !!    last_report_time                     ||     cliente
+  Tipo di server _____________________ ->                                                                            !!    tipo_di_server                       ||     contratto
+  Titolarità LPAR ____________________ ->                                                                            !!    titolarità_lpar                      ||     contratto_ms
+                                                                                                                     !!    bfx_hw_cmdb                          ||     sito
+                                                                                                                     !!                                         ||     dismesso
+                                                                                                                     !!                                         ||     data_dismissione       
+                                                                                                                     !!                                         ||     lastlogon
+                                                                                                                     !!                                         ||     anno
+                                                                                                                     !!                                         ||     mese
+                                                                                                                     !!                                         ||     giorno
+                                                                                                                     !!                                         ||     ad
+                                                                                                                     !!                                         ||     bigfix
+                                                                                                                     !!                                         ||     cmdb
+                                                                                                                     !!                                         ||     rvt
+                                                                                                                     !!                                         ||     sccm
+                                                                                                                     !!                                         ||     citrix
+==============================================================================================================================================================================================
+RVTools_tabvCluster                             Cluster_list
+---------------------------------               -------------------------
+  1 Name                                          1 name
+    Config status                                 2 numhosts
+    OverallStatus                                 3 numeffectivehosts
+  2 NumHosts                                      4 totalcpu
+  3 numEffectiveHosts                             5 numcpucores
+  4 TotalCpu                                      6 numcputhreads
+  5 NumCpuCores                                   7 ha_enabled
+  6 NumCpuThreads                                 8 drs_enabled
+    Effective Cpu                                 9 drs_default_vm_behavior
+    TotalMemory                                  10 drs_vmotion_rate
+    Effective Memory                             11 ambiente
+    Num VMotions                                 12 cliente
+  7 HA enabled                                   13 destinazione
+    Failover Level                               14 vi_sdk_server
+    AdmissionControlEnabled                      15 vcenter         -> Nome del server VCenter senza l'eventuale dominio
+    Host monitoring                              16 n_vms_total     -> Numero totale delle macchine virtuali nel cluster
+    HB Datastore Candidate Policy                17 n_vms           -> Numero delle macchine virtuali attive.
+    Isolation Response                           18 n_vms_win       -> Numero delle macchine virtuali attive con Windows
+    Restart Priority                             19 cmdb            -> Cluster censito in CMDB
+    Cluster Settings                             20 rvt             -> Cluster censito tramite gli RvTools.
+    Max Failures
+    Max Failure Window
+    Failure Interval
+    Min Up Time
+    VM Monitoring
+  8 DRS enabled
+  9 DRS default VM behavior
+ 10 DRS vmotion rate
+    DPM enabled
+    DPM default behavior
+    DPM Host Power Action Rate
+    Object ID
+ 11 Ambiente
+ 12 Cliente
+    xxxxxxxxxxxxxxxxx
+ 13 Destinazione
+ 14 VI SDK Server
+    VI SDK UUID
+
+==============================================================================================================================================================================================
+RVTools_tabvHost                                    Host_list
+--------------------------------                    -----------------------------
+ 1 Host                                               1 nome                                                                                    
+27 Datacenter                                         2 stato                                                                                                                   
+25 Cluster                                            3 category
+   Config status                                      4 type
+   in Maintenance Mode                                5 item
+   in Quarantine Mode                                 6 ruolo
+   vSAN Fault Domain Name                             7 ambiente
+   CPU Model                                          8 os
+   Speed                                              9 responsabile_(server)
+   HT Available                                      10 domain_name
+   HT Active                                         11 numero_cpu
+   # CPU                                             12 processore
+   Cores per CPU                                     13 ram
+   # Cores                                           14 serial_number
+   CPU usage %                                       15 vm_virtualcenter
+   # Memory                                          16 manufacturer
+   Memory usage %                                    17 modello
+   Console                                           18 bigfix_computerid
+   # NICs                                            19 dns
+   # HBAs                                            20 bigfix_lastreportdate
+   # VMs total                                       21 server_numerocore
+   # VMs                                             22 sito
+   VMs per Core                                      23 numerosocket
+   # vCPUs                                           24 used_by
+   vCPUs per Core                                    25 cluster
+   vRAM                                              26 destinazione
+   VM Used memory                                    27 datacenter
+   VM Memory Swapped                                 28 ht_active
+   VM Memory Ballooned                               29 vmotion_support
+   VMotion support                                   30 versione_esx
+   Storage VMotion support                           31 storage_vmotion_support
+   Current EVC
+   Max EVC
+   Assigned License(s)
+   ATS Heartbeat
+   ATS Locking
+   Current CPU power man. policy
+   Supported CPU power man.
+   Host Power Policy
+   ESX Version
+   Boot time
+   DNS Servers
+   DHCP
+   Domain
+   DNS Search Order
+   NTP Server(s)
+   NTPD running
+   Time Zone
+   Time Zone Name
+   GMT Offset
+   Vendor
+   Model
+   Serial number
+   Service tag
+   OEM specific string
+   BIOS Vendor
+   BIOS Version
+   BIOS Date
+   Object ID
+   Armadio
+   AutoDeploy.MachineIdentity
+   Blade
+   Cespite
+   Chassis
+   Sala
+   Seriale
+   URL
+   UUID
+   VI SDK Server
+   VI SDK UUID
+   
+==============================================================================================================================================================================================
+RVTools_tabvInfo                                    VM_list
+--------------------------------                    -----------------------------
+   VM                                                1 vm                                   
+   Powerstate                                        2 powerstate                           
+   Template                                          3 template                             
+   SRM Placeholder                                   4 srm_placeholder                      
+   Config status                                     5 dns_name                             
+   DNS Name                                          6 cores                                
+   Connection state                                  7 primary_ip_address                   
+   Guest state                                       8 hw_version                           
+   Heartbeat                                         9 datacenter                           
+   Consolidation Needed                             10 cluster                           
+   PowerOn                                          11 host                                 
+   Suspend time                                     12 os_according_to_the_configuration_file
+   Creation date                                    13 os_according_to_the_vmware_tools     
+   Change Version                                   14 vi_sdk_server_type   
+   CPUs                                             15 vi_sdk_api_version   
+   Memory                                           16 vi_sdk_server                                        
+   NICs                                             17 vcenter                              
+   Disks                                            18 vm_version                           
+   min Required EVC Mode Key                        19 tools                                
+   Latency Sensitivity                              20 tools_version                        
+   EnableUUID                                       21 cpus                       
+   CBT                                              22 sockets                    
+   Primary IP Address                               23 cores_p/s                  
+   Network #1                                       24 dominio                           
+   Network #2                                       25 host_dominio                      
+   Network #3                                       26 cliente                           
+   Network #4                                       27 ambiente                                   
+   Network #5                                                                    
+   Network #6                                        
+   Network #7                                        
+   Network #8                                        
+   Num Monitors                                      
+   Video Ram KiB                                     
+   Resource pool                                     
+   Folder                                            
+   vApp                                              
+   DAS protection                                    
+   FT State
+   FT Latency
+   FT Bandwidth
+   FT Sec. Latency
+   Provisioned MiB
+   In Use MiB
+   Unshared MiB
+   HA Restart Priority
+   HA Isolation Response
+   HA VM Monitoring
+   Cluster rule(s)
+   Cluster rule name(s)
+   Boot Required
+   Boot delay
+   Boot retry delay
+   Boot retry enabled
+   Boot BIOS setup
+   Firmware
+   HW version
+   HW upgrade status
+   HW upgrade policy
+   HW target
+   Path
+   Log directory
+   Snapshot directory
+   Suspend directory
+   Annotation
+   SRM-com.vmware.vcDr:::protected
+   XdConfig
+   Datacenter
+   Cluster
+   Host
+   OS according to the configuration file
+   OS according to the VMware Tools
+   VM ID
+   VM UUID
+   VI SDK Server type
+   VI SDK API Version
+   VM-Cod_App
+   VM-Cliente
+   Bck_Cre
+   Bck_Ced
+   Bck_Fac
+   VM-Ambiente
+   VI SDK Server
+   VI SDK UUID

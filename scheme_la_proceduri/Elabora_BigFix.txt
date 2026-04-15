@@ -1,0 +1,102 @@
+Provcedura per la generazione del file 
+
+        ICTG-HW.csv                                                                                 BFX_Field = ["Stato",
+                                                                                                                 "Nome computer",
+Definire la struttura dati che risulterà essere il tracciato dati del file di output ICTG-HW.csv                 "Sistema operativo",
+                                                                                                                 "Nome DNS",
+Caricamento in memoria del report scaricato dal server di Inventory di BigFix in BFX                             "AIX Full OS Level",
+                                                                                                                 "Technology Level",
+Da BigFix => ICTG-01-inventario-hardware-AAAA...                                                                 "NumeroCPU",
+                                                                                                                 "NumeroCore",
+Per ogni server presente in ICTG-01-inventario-hardware-AAAA                                                     "NumeroSocket",
+    -> Leggere una riga del file nella variabile di tipo lista con nome Riga.                                    "License Type",
+                                                                                                                 "Computer Type",
+    -> Normalizzare il nome:                                                                                     "Java Output",
+        eliminare, se presente, il dominio                                                                       "JavaPath",
+        tutte le lettere in minuscolo                                                                            "JavaVersion",
+                                                                                                                 "Tipo di computer",
+    -> Inizializzare il record che servirà per la scrittura su file di output.                                   "Core partizione",
+                                                                                                                 "Core server",
+    -> Memorizzare nella struttura CMDB i soli campi presenti in BFX_field.                                      "Stringa marchio processore",
+                                                                                                                 "Vendor",
+        if cmp in BFX_field:                                                                                     "Marchio",
+            if Riga[cmp] is defined:                                                                             "Tipo",
+                BFX[nome_server][cmp] = Riga[cmp]                                                                             "Modello",
+                                                                                                                 "PVU per core",
+    passo alla riga successiva                                                                                   "Valore PVU modificato",
+                                                                                                                 "Valore PVU predefinito",
+                                                                                                                 "Fattore core Oracle",
+                                                                                                                 "Socket attivi del server",
+                                                                                                                 "Domain",
+Controllare che la directory di destinazione sia presente e in caso contrario, crearla.                          "Nome cluster",
+                                                                                                                 "Core cluster",
+Scrivere il file ICTG-HW.csv                                                                                     "CPU",
+                                                                                                                 "Nome host padre",
+Fine procedura.                                                                                                  "Last Report Time",
+                                                                                                                 "Tipo di server"
+                                                                                                                ]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            

@@ -1,0 +1,266 @@
+==== Elabora HW ===============
+ 
+📘 DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_HW)
+
+---
+
+# **1. INPUT FILES → CÂMPURI FOLOSITE**
+
+Procedura folosește **8 fișiere CSV** generate anterior:
+
+```text
+OUT_CLUSTER        → Cluster_list.csv +
+OUT_VM             → VM_list.csv + 
+OUT_Host           → Host_list.csv +
+OUT_BGFX           → ICTG-HW.csv + 
+OUT_CMDB_Citrix    → Server_CMDB_Citrix.csv +
+OUT_VCENTER        → Vcenter_list.csv +
+OUT_DISMESSI       → ServerDismessi.csv ++ 
+OUT_PDL            → AssetClient.csv
+```
+
+
+
+Toate sunt încărcate în dicționare Python:
+
+- `Cluster` ++++ din fisier Cluster_list.csv
+- `VM` +++  ---> din VM_list.csv se iau campuri
+- `HOST` ++++ ---> Host_list.csv
+- `BGFX` ++++ ---> ICTG_HW
+- `CMDB_Citrix` ++++  ---> Server_CMDB_Citrix
+- `VCenter`  +++ --> Vcenter_list
+- `DISS`  ++++ ---> ServerDismessi
+- `PDL` +++++ ----Ю  -----> AssetClient
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSA**
+
+## 🔵 **2.1. CMDB_Citrix → baza principală**
+
+Folosit pentru:
+
+- nume server
+- OS
+- DNS
+- Domain Name
+- Is Virtual
+- Numero CPU
+- Numero Socket
+- Processore
+- Modello
+- VM_Cluster
+- VM_Virtualcenter
+- VM_Host
+- Ambiente
+- Ruolo
+- Category
+- Type
+- Used By
+- Contratto
+- server_iscloud
+
+---
+
+## 🟣 **2.2. BGFX → hardware inventory**
+
+Folosit pentru câmpuri precum:
+
+- operating_system
+- dns_name
+- n_cpu
+- n_core
+- cpu_model
+- pvu_per_core
+- valori PVU
+- fattore_core_oracle
+- cluster_cores
+- host parent
+- vendor / model
+
+---
+
+## 🟡 **2.3. HOST → host ESX (doar pentru servere fizice)**
+
+Folosit doar dacă:
+
+```
+Is Virtual = NO
+```
+
+Câmpuri:
+
+- dominio
+- cpu_model
+- #CPU
+- #Cores
+- hyperthreading
+- site
+- vcenter
+- cluster
+
+---
+
+## 🟢 **2.4. VM → VM_list (doar pentru servere virtuale)**
+
+Folosit doar dacă:
+
+```
+Is Virtual = SI
+```
+
+Câmpuri:
+
+- host
+- vm_hw_version
+- n_core
+- powerstate
+- operating_system
+- vcenter
+- cluster
+- annotation
+
+---
+
+## 🟤 **2.5. Cluster → doar pentru VM**
+
+Folosit pentru:
+
+- cluster_name
+- cluster_ambiente
+- cluster_cliente
+- cluster_destinazione
+- cluster_cores
+- cluster_numhosts
+- cluster_n_vms
+- cluster_n_vms_win
+
+---
+
+## 🟠 **2.6. VCenter → doar pentru VM**
+
+Folosit pentru:
+
+- vcenter
+- vcenter_cores
+- vcenter_hosts
+- vcenter_dominio
+- vcenter_cluster
+
+---
+
+## 🔴 **2.7. PDL → client machines**
+
+Folosit pentru:
+
+- nome
+- dominio
+- cliente
+- ruolo = Desktop
+- ambiente = Produzione
+- virtuale = NO
+
+---
+
+# **3. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+## **3.1. OUT_Hardware_TAB → Tabella_HW.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_Hardware_TAB → Tabella_HW.csv            │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE TOATE câmpurile din Hardware_field:
+- nome
+- operating_system
+- dominio
+- dns_name
+- virtuale
+- tipo
+- cluster_name
+- cluster_ambiente
+- cluster_cliente
+- cluster_destinazione
+- cluster_cores
+- cluster_numhosts
+- cluster_n_vms_total
+- cluster_n_vms
+- cluster_n_vms_win
+- hyperthreadactive
+- ha_enabled
+- drs_enabled
+- host
+- vm_hw_version
+- n_cpu
+- n_core
+- pvu_per_core
+- valori PVU
+- fattore_core_oracle
+- powerstate
+- vcenter
+- cpu_model
+- applicazione
+- ruolo
+- ambiente
+- responsabile
+- cliente
+- contratto
+- sito
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stil identic cu modelul tău original)**
+
+
+                 ┌────────────────────────────────────────────┐
+                 │ 8 INPUT CSV FILES                          │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Cluster_list.csv → Cluster
+     VM_list.csv → VM
+     Host_list.csv → HOST
+     ICTG-HW.csv → BGFX
+     Server_CMDB_Citrix.csv → CMDB_Citrix
+     Vcenter_list.csv → VCenter
+     ServerDismessi.csv → DISS
+     AssetClient.csv → PDL
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Pentru fiecare server din CMDB_Citrix                │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Construiește Hardware[k] pe baza priorităților:
+        - CMDB_Citrix
+        - BGFX
+        - HOST (doar fizice)
+        - VM (doar virtuale)
+        - Cluster (doar virtuale)
+        - VCenter (doar virtuale)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Adaugă PDL (client machines)                         │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Setează valori implicite:
+        - tipo = "PDL"
+        - ruolo = "Desktop"
+        - ambiente = "Produzione"
+        - virtuale = "NO"
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_Hardware_TAB → Tabella_HW.csv                    │
+        └──────────────────────────────────────────────────────┘
+```
+
+---

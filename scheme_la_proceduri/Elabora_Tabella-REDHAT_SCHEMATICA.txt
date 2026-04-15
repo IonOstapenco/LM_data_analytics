@@ -1,0 +1,185 @@
+=== Elabora_Tabella-REDHAT ======
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-REDHAT)**  
+*(model complet, desfășurat, identic ca stil cu celelalte)*
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două fișiere CSV**:
+
+```text
+OUT_Hardware_TAB   → Tabella_HW.csv
+OUT_Software_TAB   → Tabella_SW.csv
+```
+
+Acestea sunt încărcate în dicționare Python:
+
+- `Hardware` → toate serverele + câmpuri HW (socket, core, cluster, cliente etc.)
+- `Software` → versiunea Red Hat detectată din software
+- `REDHAT` → structura finală pentru Tabella_REDHAT
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSA**
+
+## 🔵 **2.1. Tabella_SW → detectarea versiunii Red Hat Enterprise Linux**
+
+Din fiecare linie SW se extrage:
+
+- `nome componente` (index 41)
+- `versione_componente` (index 42)
+
+Dacă `nome componente` conține:
+
+```
+"red hat enterprise"
+```
+
+Atunci:
+
+```
+Software[nome_server] = versione_componente
+```
+
+Exemplu:
+
+- "red hat enterprise linux server" → versiune "7.9"
+
+---
+
+## 🟣 **2.2. Tabella_HW → baza hardware pentru REDHAT**
+
+Pentru fiecare server:
+
+- se verifică OS:
+  - conține "red hat enterprise"
+
+Câmpuri folosite din Hardware (REDHAT_Field):
+
+- nome  
+- powerstate  
+- operating_system  
+- virtuale  
+- tipo  
+- n_socket  
+- n_core  
+- cluster_name  
+- cluster_cores  
+- cluster_numhosts  
+- cliente  
+- ambiente  
+- destinazione  
+- versione_componente (din Software)
+
+---
+
+# **3. STRUCTURA REDHAT (OUTPUT)**
+
+REDHAT_Field definește câmpurile finale:
+
+- 13 câmpuri HW  
+- 1 câmp versiune Red Hat (din Software)
+
+Total câmpuri REDHAT: **14**
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI REDHAT**
+
+## 🟢 **4.1. Identificarea serverelor Red Hat**
+
+Un server intră în Tabella_REDHAT dacă:
+
+```
+OS conține "red hat enterprise"
+```
+
+---
+
+## 🟢 **4.2. Construirea fiecărui rând REDHAT**
+
+Pentru fiecare server Red Hat:
+
+1. Se creează `REDHAT[k] = []`
+2. Se extrag câmpurile definite în `REDHAT_Field`  
+3. Se tratează câmpurile speciale:
+
+### **4.2.1. cluster_cores**
+
+- dacă același cluster a fost deja procesat → cluster_cores = 0  
+- altfel → se păstrează valoarea și se marchează clusterul în `ClusterCores`
+
+### **4.2.2. cluster_numhosts**
+
+- dacă același cluster a fost deja procesat → cluster_numhosts = 0  
+- altfel → se păstrează valoarea și se marchează clusterul în `ClusterNumHosts`
+
+### **4.2.3. versione_componente**
+
+- dacă serverul apare în Software → versiunea detectată  
+- altfel → "-"
+
+---
+
+# **5. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+---
+
+## **5.1. OUT_REDHAT_TAB → Tabella_REDHAT.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_REDHAT_TAB → Tabella_REDHAT.csv         │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE câmpurile REDHAT_Field:
+- 13 câmpuri HW
+- 1 câmp versiune Red Hat (din Software)
+```
+
+Structura unei linii:
+
+```
+nome | powerstate | operating_system | virtuale | tipo |
+n_socket | n_core | cluster_name | cluster_cores | cluster_numhosts |
+cliente | ambiente | destinazione | versione_componente
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stilul tău preferat)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Tabella_SW.csv      → Software (versiune Red Hat)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Detectare versiune Red Hat din Tabella_SW            │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare server din Hardware:
+        - dacă OS conține "red hat enterprise":
+            → extrage câmpurile REDHAT_Field
+            → tratează cluster_cores (evită dublarea)
+            → tratează cluster_numhosts (evită dublarea)
+            → adaugă versione_componente (din Software)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_REDHAT_TAB → Tabella_REDHAT.csv                 │
+        └──────────────────────────────────────────────────────┘
+```
+
+---

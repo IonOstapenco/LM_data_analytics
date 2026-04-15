@@ -1,0 +1,143 @@
+===== Elabora Host =======
+
+DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora Host)
+
+1. INPUT FILES → CÂMPURI FOLOSITE
+
+Procedura caută fișiere RVTools tabvHost
+
+RvTools_Host_Pattern = "RVTools_tabvHost"
+Extension_end = "csv"
+
+Deci INPUT-ul este:
+RVTools_tabvHost*.csv
+
+1.1. CÂMPURI FOLOSITE DIN RVTools (HOST_field)
+Aceste câmpuri sunt detectate din header și mapate la indexul corect:
+
+- Host
+- Datacenter
+- Cluster
+- Config status
+- in Maintenance Mode
+- in Quarantine Mode
+- CPU Model
+- HT Available
+- HT Active
+- # CPU
+- Cores per CPU
+- # Cores
+- # VMs total
+- # VMs
+- VMs per Core
+- # vCPUs
+- vCPUs per Core
+- VMotion support
+- Storage VMotion support
+- ESX Version
+- Vendor
+- Model
+- VI SDK Server
+- Dominio_ESX   (calculat din DNS)
+
+Total: 24 câmpuri (0–23)
+Primul este Host, ultimul este Dominio_ESX (calculat).
+
+2. INPUT SECUNDAR → CMDB ESX (pentru merge)
+Procedura citește și:
+OUT_CMDB_ESX = "AssetCMDB_Esx.csv"
+
+Din acest fișier folosește câmpurile din CMDB_field, în special:
+- Nome CI
+- DNS
+- Numero Socket
+- Numero CPU
+- VM_Virtualcenter
+- ESX Version (adăugat la final)
+- Domain Name (înlocuit cu Dominio_ESX)
+
+
+
+3. OUTPUT FILES → CE CÂMPURI CONȚIN
+Procedura generează 2 fișiere:
+
+3.1. OUT_Host → Host_list.csv
+┌──────────────────────────────────────────────┐
+│ OUT_Host → Host_list.csv                     │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE EXACT HOST_field (24 câmpuri):
+- Host
+- Datacenter
+- Cluster
+- Config status
+- in Maintenance Mode
+- in Quarantine Mode
+- CPU Model
+- HT Available
+- HT Active
+- # CPU
+- Cores per CPU
+- # Cores
+- # VMs total
+- # VMs
+- VMs per Core
+- # vCPUs
+- vCPUs per Core
+- VMotion support
+- Storage VMotion support
+- ESX Version
+- Vendor
+- Model
+- VI SDK Server
+- Dominio_ESX
+
+
+
+3.2. OUT_CMDB_ESX → AssetCMDB_Esx.csv (actualizat)
+┌──────────────────────────────────────────────┐
+│ OUT_CMDB_ESX → AssetCMDB_Esx.csv             │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE EXACT CMDB_field (24 câmpuri) + 1 câmp suplimentar:
+- Toate câmpurile CMDB_field
+- ESX Version (adăugat din HOST)
+- Domain Name (înlocuit cu Dominio_ESX)
+- Numero CPU / Numero Socket actualizate din HOST
+- VM_Virtualcenter actualizat din HOST
+
+
+
+🎯 DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE
+                 ┌────────────────────────────────────┐
+                 │ RVTools_tabvHost*.csv              │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                     HOST_field (24 câmpuri)
+                               │
+                               ▼
+                 ┌────────────────────────────────────┐
+                 │ OUT_Host → Host_list.csv           │
+                 └────────────────────────────────────┘
+
+
+                 ┌────────────────────────────────────┐
+                 │ AssetCMDB_Esx.csv (input secundar) │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                Merge cu datele HOST:
+                - CPU / Cores
+                - VI SDK Server
+                - ESX Version
+                - Dominio_ESX
+                               │
+                               ▼
+                 ┌────────────────────────────────────┐
+                 │ OUT_CMDB_ESX → AssetCMDB_Esx.csv   │
+                 └────────────────────────────────────┘
+                 (CMDB_field + actualizări din HOST)
+

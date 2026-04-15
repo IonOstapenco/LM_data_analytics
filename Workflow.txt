@@ -1,0 +1,83 @@
+La chiave primaria è il nome del server e prima di poterla usare per una ricerca sui report del CMDB e/o del BigFix è necessario normalizzarla.
+Normalizzarla significa, mettere tutte le lettere del nome nello stesso 'case' (maiuscolo o minuscolo) e, se presente, eliminare il dominio ( Es.: A27.ced.it => A27 )
+Questa operazione di normalizzazione sarà eseguita nella procedura "Tabella HW" in fase di caricamento dei dati dai singoli report.
+
+Da CMDB => Asset Server (ALL)-              ==>> CMDB -+ 
+Da CMDB => Asset ServerDismessi (ALL)-      ==>> DISM  +---> tutti questi dati sono usati per scrivere ReportAsset_CMDB.csv
+Da CMDB => Asset Client (ALL)-              ==>> PDL  -+
+Da BigFix => ICTG-01-inventario-Hardware-   ==>> BFX  -----> ICTG-HW.csv
+
+L'operazione di normalizzazione dovrà essere effettuata anche sui file:
+        RvTools_tabvHost                    ==>> ESX  -----> Host_list.csv
+        RvTools_tabvCluster                 ==>> CLS  -----> Cluster_list.csv
+        RvTools_tabvInfo                    ==>> VM   -+
+        RvTools_tabvCPU                     ==>> CPU   +---> VM_list.csv
+        RvTools_tabvTools                   ==>> TOOL -+
+
+    Il caricamento dei dati da RvTool genera una nuova struttura dati con i dati dei Vcenter  
+                                            ==>> VCNTR ----> vCenter_list.csv
+                                            
+    La struttura dati VCNTR p necessaria per collezionare, in fase di caricamento dati da RvTool, i dati 
+    specifici dei Vcenter. Per la precisione i valori:
+            ==>> NumeroCores : il numero complessivo dei cores degli ESX amministrati da quel Vcenter
+            ==>> NumeroHosts : il numero dei server ESX amministrati da quel Vcenter
+            ==>> NumeroCluster : il numero dei cluster definiti e gestiti da quel Vcenter.
+    I dati del file vCenter_list sono elaborati dalla procedura che genera Host_list.csv
+    
+    La procedura che genera Host_list.csv genera anche il file Cluster_list.csv
+    
+    La procedura che genera VM_list.csv legge, aggiorna e riscrive il file Cluster_list,csv generato in fase di elaborazione degli ESX.
+    L'aggiornamento riguarda il numero delle VM, il numero delle VM attive (PoweredOn) e delle VM con Sistema operativo Windows.
+    
+        
+Questi file devono essere recuperati nelle varie cartelle che raccolgono i dati estratti dai diversi vCenter attivi nella infrastruttura Cedacri.
+
+# ------------------------------------------------------------------------------------------------
+#
+#  I dati estratti dall'Active Directory, per i server, sono da considerarsi deprecati.
+
+    L'operazione di normalizzazione dovrà essere effettuata anche sui file:
+            
+        AD-computerResult
+        
+    per estrarre i dati relativi alla data di ultima impostazione della password.
+        
+    Questi file devono essere recuperati dalle varie directories create in fase di estrazione dei dati dall'Active Directory
+        e memorizzati in ==>> AD
+ 
+# ------------------------------------------------------------------------------------------------
+
+    Caricamento dati da file nelle relative strutture dati (CMDB, BFX, ESX, ...)
+        Il caricamento dei dati da RvTools_tabvInfo utilizza i dati da CPU e da TOOL per verificare i dati relativi 
+            alla versione del tool VmWare installato e delle caratteristiche dei processori virtuali.
+
+    Leggo dati da CMDB per ogni server leggo tutti i campi.
+        Per i campi il cui valore è stato ritenuto più affidabile se proveniente da altre fonti:
+            Se tale valore è denifito nella fonte ritenuta prioritaria:
+                Sovrascrttura del campo del CMDB
+        Se (presente in BFX) allora
+            i dati che dovessero mancare dal CMDB, se presenti, li recupero dal BFX.
+            eliminare i dati del server da BFX
+        altrimenti
+            Parcheggiare i dati di quel server per segnalarlo in quanto non ha l'agente bigfix.
+        Se (type = 'ESX') allora
+            cerco quel server in Host_list e completo i dati prima di inserirli in TAB in memoria.
+        Se (is_virtual = 'si') allora
+            cerco quel server in VM e completo i dati prima di inserirli in TAB in memoria.
+        Se (presente in AD) allora
+            estraggo la data di 'last password reset' (pwdLastSet) e la memorizzo in TAB.
+            
+    Leggere i dati da PDL per completare TAB
+    
+    Al termine della lettura e elaborazione dei dati dei server del CMDB
+        i dati rimasti in BFX saranno salvati in un file per la segnalazione in quanto si tratta di server non 
+        censiti in CMDB
+
+            
+
+
+Python
+    Cercare le seguenti funzionalità:
+        Lettura di un file di testo in una struttura dati (liste? Dictionary?)
+        Selezione delle colonne da caricare in memoria o da ignorare tramite una struttura preordinata (lista) che contenga i nomi delle colonne da selezionare. 
+        Importante!! I nomi delle colonne devono coincidere con quelli del report scaricato dal CMDB/BIGFIX

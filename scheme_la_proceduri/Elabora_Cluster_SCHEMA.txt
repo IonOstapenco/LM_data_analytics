@@ -1,0 +1,118 @@
+==== Elabora_CLUSTER ====
+📘 DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora Cluster)
+1. INPUT FILES → CÂMPURI FOLOSITE
+Procedura folosește două surse de date:
+
+🔵 1.1. INPUT 1 – VM_list.csv (generat de Elabora_VM)
+┌──────────────────────────────────────────────┐
+│ VM_list.csv   → VM                           │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE:
+   - Powerstate        (col 1)
+   - Cluster           (col 11)
+   - OS according to VMware Tools (col 14)
+
+
+Folosire:
+- număr total VM per cluster
+- număr VM active (powered on)
+- număr VM Windows
+
+🟣 1.2. INPUT 2 – RVTools_tabvCluster → Cluster_list
+┌──────────────────────────────────────────────┐
+│ RVTools_tabvCluster*.csv   → Cluster         │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (Cluster_field):
+   - Name
+   - NumHosts
+   - numEffectiveHosts
+   - TotalCpu
+   - NumCpuCores
+   - NumCpuThreads
+   - HA enabled
+   - DRS enabled
+   - DRS default VM behavior
+   - DRS vmotion rate
+   - Ambiente
+   - Cliente
+   - Destinazione
+   - VI SDK Server
+   - Vcenter
+   - Vcenter dominio
+
+
+CÂMPURI SUPLIMENTARE ADĂUGATE:
+- Vcenter (fără domeniu)
+- Domeniu Vcenter
+VMs TotalVMs ActiveVMs Windows2. OUTPUT FILES → CE CÂMPURI CONȚIN
+Procedura generează două fișiere de output:
+2.1. OUT_CLUSTER → Cluster_list.csv
+┌──────────────────────────────────────────────┐
+│ OUT_CLUSTER → Cluster_list.csv               │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE:
+- Toate câmpurile Cluster_field (0–15)
+- + Vcenter (fără domeniu)
+- + Domeniu Vcenter
+- + # VMs Total
+- + # VMs Active
+- + # VMs Windows
+2.2. OUT_VCENTER → Vcenter_list.csv
+┌──────────────────────────────────────────────┐
+│ OUT_VCENTER → Vcenter_list.csv               │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE (agregat per Vcenter):
+- Nume Vcenter
+- Cluster (număr clustere)
+- Core Totali
+- Host (număr hosturi)
+- Domenio (domeniul Vcenter)
+
+
+🎯 DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE
+                 ┌────────────────────────────────────┐
+                 │ VM_list.csv                        │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+               Număr VM / active / Windows per cluster
+                               │
+                               ▼
+
+                 ┌────────────────────────────────────┐
+                 │ RVTools_tabvCluster*.csv           │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                     Cluster_field (0–15)
+                               │
+             + Vcenter fără domeniu
+             + Domeniu Vcenter
+             + # VMs Total
+             + # VMs Active
+             + # VMs Windows
+                               │
+                               ▼
+                 OUT_CLUSTER → Cluster_list.csv
+
+
+                               │
+                               ▼
+                 Agregare per Vcenter:
+                 - Cluster count
+                 - Core Totali
+                 - Host count
+                 - Domenio
+                               │
+                               ▼
+                 OUT_VCENTER → Vcenter_list.csv
+				 
+

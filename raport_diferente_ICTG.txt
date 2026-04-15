@@ -1,0 +1,124 @@
+
+========================================================================================================================
+Fisier vechi                                                Fisier nou                                                  
+------------------------------------------------------------------------------------------------------------------------
+Nome computer                                               Nome publisher
+Ultima visualizzazione computer                             Nome componente
+Nome publisher                                              Versione componente
+Nome componente                                             Versione dettagliata componente
+Versione componente                                         Nome prodotto
+Versione dettagliata componente                             Fine supporto
+Fine supporto                                               Metrica
+Percorso di installazione                                   Bundle Cloud Pak o FlexPoint
+                                                            << Autorizzato
+Nome prodotto                                               Nome computer
+Versione prodotto                                           Percorso di installazione
+Metrica                                                     Versione prodotto
+Bundle Cloud Pak o FlexPoint                                Opzione di bundling fornita da IBM
+Opzione di bundling fornita da IBM                          Ultima visualizzazione computer
+Sistema operativo                                           Data di eliminazione computer
+Nome DNS                                                    Sistema operativo
+>> AIX Full OS Level
+>> NumeroCPU
+>> NumeroCore
+>> NumeroSocket
+>> Domain
+>> Computer Type
+>> CPU
+>> Processore
+>> Java Output
+>> JavaPath
+>> JavaVersion
+Data di eliminazione computer                               Nome DNS
+                                                            << Tipo di computer
+                                                            << Core partizione
+                                                            << Nome publisher prodotto
+                                                            << Tipo di server
+                                                            << Core server
+                                                            << Vendor
+                                                            << Tipo
+                                                            << Modello
+PVU per core                                                PVU per core
+Fattore core Oracle                                         Fattore core Oracle
+Titolarità LPAR                                             Titolarità LPAR
+Ha un limite                                                Ha un limite
+                                                            << Processori logici
+                                                            << Socket attivi del server
+------------------------------------------------------------------------------------------------------------------------
+
+========================================================================================================================
+Fisier vechi                                                Fisier nou                                                  
+------------------------------------------------------------------------------------------------------------------------
+Nome computer                                               Nome computer
+Nome                                                        Nome
+Versione                                                    Versione
+Edizione                                                    Edizione
+Sistema operativo                                           Sistema operativo
+Funzione                                                    Funzione
+SID                                                         SID
+Percorso di installazione                                   Percorso di installazione
+AIX Full OS Level                                           AIX Full OS Level
+NumeroCPU                                                   NumeroCPU
+NumeroCore                                                  NumeroCore
+Domain                                                      Domain
+Java Output                                                 Java Output
+JavaPath                                                    JavaPath
+JavaVersion                                                 JavaVersion
+Tipo di computer                                            Tipo di computer
+NumeroSocket                                                NumeroSocket
+CPU                                                         CPU
+Processore                                                  Processore
+Core partizione                                             Core partizione
+Fattore core Oracle                                         Fattore core Oracle
+Socket attivi del server                                    Socket attivi del server
+------------------------------------------------------------------------------------------------------------------------
+
+========================================================================================================================
+Fisier vechi                                                Fisier nou                                                  
+------------------------------------------------------------------------------------------------------------------------
+Stato                                                       Stato
+Nome computer                                               Nome computer
+Sistema operativo                                           Sistema operativo
+Nome DNS                                                    Nome DNS
+Indirizzo IP                                                Indirizzo IP
+                                                            << RAM
+                                                            << AIX Full OS Level
+                                                            << Technology Level
+                                                            << Cluster Name
+                                                            << Cluster Type
+                                                            << NumeroCPU
+                                                            << NumeroCore
+                                                            << NumeroSocket
+                                                            << License Type
+                                                            << Computer Type
+                                                            << Java Output
+                                                            << JavaPath
+                                                            << JavaVersion
+Tipo di computer                                            Tipo di computer
+>> ID partizione
+Core partizione                                             Core partizione
+                                                            << ID server
+Core server                                                 Core server
+Stringa marchio processore                                  Stringa marchio processore
+Vendor                                                      Vendor
+                                                            << Marchio
+                                                            << Tipo
+                                                            << Modello
+PVU per core                                                PVU per core
+Valore PVU modificato                                       Valore PVU modificato
+Valore PVU predefinito                                      Valore PVU predefinito
+Fattore core Oracle                                         Fattore core Oracle
+                                                            << Ha un limite
+Titolarità LPAR                                             Processori virtuali di partizione
+Processori virtuali di partizione                           Socket attivi del server
+                                                            << Domain
+>> Processori logici
+Socket attivi del server                                    Nome cluster
+Nome cluster                                                Core cluster
+                                                            << CPU
+                                                            << Nome host padre
+                                                            << Processore
+                                                            << Last Report Time
+                                                            << Tipo di server
+Core cluster                                                Titolarità LPAR
+------------------------------------------------------------------------------------------------------------------------

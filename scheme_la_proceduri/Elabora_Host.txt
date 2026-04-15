@@ -1,0 +1,66 @@
+Procedura Elabora_vHost per generare i seguenti file:
+    
+    Host_list.csv                                                                                   Host_field = ["Host",
+                                                                                                                  "Datacenter",
+Definire la struttura dati che risulterà essere il tracciato record del file indicato sopra.                      "Cluster",
+                                                                                                                  "Config status",
+Selezionare tutti i file con il seguente nome.                                                                    "in Maintenance Mode",
+                                                                                                                  "in Quarantine Mode",
+        RVTools_tabvHost.csv                                                                                      "CPU Model",
+                                                                                                                  "HT Available",
+Nelle directory sottostanti quella corrente di elaborazione.                                                      "HT Active",
+                                                                                                                  "# CPU",
+Per ogni file:                                                                                                    "Cores per CPU",
+    Per ogni server:                                                                                              "# Cores",
+                                                                                                                  "# VMs total",
+        -> Leggere una riga del file nella variabile di tipo lista con nome Riga.                                 "# VMs",
+                                                                                                                  "VMs per Core",
+        -> Normalizzare il nome:                                                                                  "# vCPUs",
+            eliminare, se presente, il dominio                                                                    "vCPUs per Core",
+            tutte le lettere in minuscolo                                                                         "VMotion support",
+                                                                                                                  "Storage VMotion support",
+        -> Inizializzare il record che servirà per la scrittura su file di output.                                "ESX Version",
+                                                                                                                  "DNS Servers",
+        -> Memorizzare nella struttura Host i soli campi presenti in Host_field.                                  "Vendor",
+                                                                                                                  "Model",
+            if cmp in Host_field:                                                                                 "VI SDK Server"
+                if Riga[cmp] is defined:                                                                        ]       
+                    Host[nome_server][cmp] = Riga[cmp]                                                     
+                                                                                        
+        passo alla riga successiva                                                         
+
+    Passo al server successivo
+    
+Passo al file successivo
+    
+Controllare che la directory di destinazione sia presente e in caso contrario, crearla.
+Scrivere il file "Host_list.csv".
+
+fine procedura.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,16 @@
+Elabora_CMDB.py
+Elabora_BigFix.py
+Elabora_Host.py
+Elabora_VM.py
+Elabora_Cluster.py
+Elabora_Citrix.py
+Merge_CMDB_Citrix.py
+Elabora_HW.py
+Elabora_SW.py
+Elabora_Tabella-WIN.py
+Elabora_Tabella-SQL.py
+Elabora_Tabella-REDHAT.py
+Elabora_Tabella-JBOSS.py
+Elabora_Tabella-Rapid7.py
+Elabora_CTX_User.py
+Elabora_Tabella-Oracle

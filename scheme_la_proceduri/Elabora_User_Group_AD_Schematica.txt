@@ -1,0 +1,142 @@
+Perfect, Ion — îți construiesc **exact același stil de diagramă vizuală**, dar aplicată la procedura ta pentru **AD-usersAndGroupsResult.csv**.  
+Păstrez formatul, structura și estetica exemplului tău „Elabora_BigFix”.
+
+---
+
+# 📘 **====== Elabora_AD_UsersAndGroups ======**
+
+# **DIAGRAMĂ VIZUALĂ – INPUT / PROCESARE / OUTPUT**
+
+---
+
+# 🟦 **1. INPUT – Fișiere și liste folosite**
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  AD-usersAndGroupsResult-*.csv   →   Fișiere Active Directory │
+└──────────────────────────────────────────────────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────────────────────────────────┐
+│  Lista gruppi Office.txt   →   Grupuri STD / PRO             │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+# 🟩 **2. PRELUCRARE – LOGICA PROCEDURII**
+
+## **A. Încărcare grupuri STD / PRO**
+```
+Lista gruppi Office.txt
+     │
+     ▼
+[Split după separator]
+     │
+     ├── dacă tip = "std" → GROUP_STD
+     └── altfel → GROUP_PRO
+```
+
+---
+
+## **B. Căutare fișiere AD**
+```
+cm.list_files_scandir → găsește toate AD-usersAndGroupsResult-*.csv
+```
+
+---
+
+## **C. Procesarea fiecărui fișier AD**
+```
+┌──────────────────────────────────────────────┐
+│ Pentru fiecare fișier AD găsit               │
+└──────────────────────────────────────────────┘
+                 │
+                 ▼
+[Citire linii + eliminare header]
+                 │
+                 ▼
+[Curățare linie: \x00, newline]
+                 │
+                 ▼
+[Split după separator → câmpuri y[]]
+                 │
+                 ▼
+[Gestionare linii incomplete (<7 câmpuri)]
+                 │
+                 ▼
+[Excluderi]
+   ├─ SamAccountName conține: cr, cre
+   └─ GroupName conține: 099, ctx_033, ctx_870
+                 │
+                 ▼
+[Ignorăm dacă y[6] == "Group"]
+                 │
+                 ▼
+[Clasificare]
+   ├─ dacă GroupName ∈ GROUP_STD → USER_GROUP_STD
+   └─ dacă GroupName ∈ GROUP_PRO → USER_GROUP_PRO
+```
+
+---
+
+# 🟧 **3. OUTPUT – CE SE GENEREAZĂ**
+
+## **A. OUT_USER_PRO → User_list_pro.csv**
+```
+┌──────────────────────────────────────────────┐
+│ User_list_pro.csv                            │
+└──────────────────────────────────────────────┘
+Conține:
+- SamAccountName
+- GroupName
+(doar utilizatorii din grupurile PRO)
+```
+
+---
+
+## **B. OUT_USER_STD → User_list_std.csv**
+```
+┌──────────────────────────────────────────────┐
+│ User_list_std.csv                            │
+└──────────────────────────────────────────────┘
+Conține:
+- SamAccountName
+- GroupName
+(doar utilizatorii din grupurile STD)
+```
+
+---
+
+# 🟥 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE**
+
+```
+                 ┌──────────────────────────────────────────────┐
+                 │ AD-usersAndGroupsResult-*.csv (fișiere AD)   │
+                 └──────────────────────────────────────────────┘
+                                   │
+                                   ▼
+                 ┌──────────────────────────────────────────────┐
+                 │ Lista gruppi Office.txt → STD / PRO          │
+                 └──────────────────────────────────────────────┘
+                                   │
+                                   ▼
+                     [Filtrare + Clasificare utilizatori]
+                                   │
+                                   ▼
+     ┌──────────────────────────────────────────┬──────────────────────────────────────────┐
+     │                                          │                                          │
+     ▼                                          ▼                                          ▼
+┌──────────────────────────┐        ┌──────────────────────────┐                (filtre aplicate)
+│ USER_GROUP_PRO           │        │ USER_GROUP_STD           │
+└──────────────────────────┘        └──────────────────────────┘
+     │                                          │
+     ▼                                          ▼
+┌──────────────────────────┐        ┌──────────────────────────┐
+│ User_list_pro.csv        │        │ User_list_std.csv        │
+└──────────────────────────┘        └──────────────────────────┘
+```
+
+---
+
+Dacă vrei, pot să‑ți fac și o **variantă UML**, sau o **diagramă ASCII mai complexă**, sau chiar o **diagramă logică pe nivele (L1/L2/L3)**.

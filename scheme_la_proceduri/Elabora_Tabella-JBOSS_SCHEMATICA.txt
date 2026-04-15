@@ -1,0 +1,206 @@
+
+# ==== Elabora_Tabella-JBOSS.py ==============
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-JBOSS)**  
+*(model complet, desfășurat, identic ca stil cu celelalte)*
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două fișiere CSV**:
+
+```text
+OUT_Hardware_TAB   → Tabella_HW.csv
+OUT_Software_TAB   → Tabella_SW.csv
+```
+
+Acestea sunt încărcate în dicționare Python:
+
+- `Hardware` → toate serverele + câmpuri HW (socket, core, cluster, cliente etc.)
+- `Software` → informații despre JBOSS detectate din software
+- `JBOSS` → structura finală pentru Tabella_JBOSS
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSA**
+
+## 🔵 **2.1. Tabella_SW → detectarea instalărilor JBOSS**
+
+Din fiecare linie SW se extrage:
+
+- `nome componente` (index 41)
+- `versione_componente` (index 42)
+
+Dacă `nome componente` conține:
+
+```
+"red hat jboss"
+```
+
+Atunci:
+
+- dacă conține „enterprise” → ediție = enterprise  
+- dacă conține „web server” → ediție = web server  
+
+Rezultatul:
+
+```
+Software[nome_server] = [nome_componente, edizione, versione_componente]
+```
+
+---
+
+## 🟣 **2.2. Tabella_HW → baza hardware pentru JBOSS**
+
+Un server intră în Tabella_JBOSS dacă:
+
+```
+OS conține "red hat"
+sau
+serverul apare în Software (are JBOSS instalat)
+```
+
+Câmpuri folosite din Hardware (JBOSS_Field):
+
+- nome  
+- powerstate  
+- operating_system  
+- virtuale  
+- tipo  
+- n_socket  
+- n_core  
+- cluster_name  
+- cluster_cores  
+- cluster_numhosts  
+- cliente  
+- ambiente  
+- destinazione  
+- (din Software) → nome componente  
+- (din Software) → edizione  
+- (din Software) → versione_componente  
+
+---
+
+# **3. STRUCTURA JBOSS (OUTPUT)**
+
+JBOSS_Field definește câmpurile finale:
+
+- 13 câmpuri HW  
+- 3 câmpuri SW (JBOSS):
+  - nome componente  
+  - edizione  
+  - versione_componente  
+
+Total câmpuri JBOSS: **16**
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI JBOSS**
+
+## 🟢 **4.1. Identificarea serverelor JBOSS**
+
+Un server intră în Tabella_JBOSS dacă:
+
+- rulează Red Hat  
+**sau**
+- are JBOSS instalat (detectat în Tabella_SW)
+
+---
+
+## 🟢 **4.2. Construirea fiecărui rând JBOSS**
+
+Pentru fiecare server eligibil:
+
+1. Se creează `JBOSS[k] = []`
+2. Se extrag câmpurile definite în `JBOSS_Field`  
+3. Se tratează câmpul special:
+
+### **4.2.1. cluster_cores**
+
+- dacă același cluster a fost deja procesat → cluster_cores = 0  
+- altfel → se păstrează valoarea și se marchează clusterul în `ClusterName`
+
+### **4.2.2. câmpurile JBOSS din Software**
+
+Dacă serverul apare în Software:
+
+```
+JBOSS[k].append(nome_componente)
+JBOSS[k].append(edizione)
+JBOSS[k].append(versione_componente)
+```
+
+Altfel:
+
+```
+JBOSS[k].append("-")
+JBOSS[k].append("-")
+JBOSS[k].append("-")
+```
+
+---
+
+# **5. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+---
+
+## **5.1. OUT_JBOSS_TAB → Tabella_JBOSS.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_JBOSS_TAB → Tabella_JBOSS.csv           │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE câmpurile JBOSS_Field:
+- 13 câmpuri HW
+- 3 câmpuri JBOSS (din Software)
+```
+
+Structura unei linii:
+
+```
+nome | powerstate | operating_system | virtuale | tipo |
+n_socket | n_core | cluster_name | cluster_cores | cluster_numhosts |
+cliente | ambiente | destinazione |
+nome_componente | edizione | versione_componente
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stilul tău preferat)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Tabella_SW.csv      → Software (JBOSS)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Detectare JBOSS din Tabella_SW                       │
+        │  - enterprise                                        │
+        │  - web server                                        │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare server din Hardware:
+        - dacă OS conține "red hat"
+          sau serverul apare în Software:
+            → extrage câmpurile JBOSS_Field
+            → tratează cluster_cores (evită dublarea)
+            → adaugă nome componente, edizione, versione
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_JBOSS_TAB → Tabella_JBOSS.csv                   │
+        └──────────────────────────────────────────────────────┘
+```
+
+---

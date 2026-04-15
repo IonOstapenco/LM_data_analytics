@@ -1,0 +1,162 @@
+
+ ==== Elabora_Tabella-Rapid7.py ==============
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-Rapid7)**  
+*(model complet, desfășurat, identic ca stil cu celelalte)*
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două fișiere CSV**:
+
+```text
+OUT_Hardware_TAB   → Tabella_HW.csv
+OUT_Software_TAB   → Tabella_SW.csv
+```
+
+Acestea sunt încărcate în dicționare Python:
+
+- `Hardware` → toate serverele + câmpuri HW (virtuale, tipo, cliente etc.)
+- `Software` → versiunea Rapid7 detectată din software
+- `Rapid7` → structura finală pentru Tabella_Rapid7
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSA**
+
+## 🔵 **2.1. Tabella_SW → detectarea instalărilor Rapid7**
+
+Din fiecare linie SW se extrage:
+
+- `nome componente` (index 41)
+- `versione_componente` (index 42)
+
+Dacă `nome componente` conține:
+
+```
+"rapid7"
+```
+
+Atunci:
+
+```
+Software[nome_server] = versione_componente
+```
+
+---
+
+## 🟣 **2.2. Tabella_HW → baza hardware pentru Rapid7**
+
+Un server intră în Tabella_Rapid7 dacă:
+
+```
+apare în Software (are Rapid7 instalat)
+```
+
+Câmpuri folosite din Hardware (Rapid7_Field):
+
+- nome  
+- virtuale  
+- tipo  
+- cliente  
+- ambiente  
+- destinazione  
+- versione_componente (din Software)
+
+---
+
+# **3. STRUCTURA RAPID7 (OUTPUT)**
+
+Rapid7_Field definește câmpurile finale:
+
+- 6 câmpuri HW  
+- 1 câmp versiune Rapid7 (din Software)
+
+Total câmpuri Rapid7: **7**
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI RAPID7**
+
+## 🟢 **4.1. Identificarea serverelor Rapid7**
+
+Un server intră în Tabella_Rapid7 dacă:
+
+```
+Software[k] există → serverul are Rapid7 instalat
+```
+
+---
+
+## 🟢 **4.2. Construirea fiecărui rând Rapid7**
+
+Pentru fiecare server detectat:
+
+1. Se creează `Rapid7[k] = []`
+2. Se extrag câmpurile definite în `Rapid7_Field`  
+3. Se adaugă versiunea Rapid7:
+
+```
+Rapid7[k].append(Software[k])
+```
+
+---
+
+# **5. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+---
+
+## **5.1. OUT_Rapid7_TAB → Tabella_Rapid7.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_Rapid7_TAB → Tabella_Rapid7.csv         │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE câmpurile Rapid7_Field:
+- 6 câmpuri HW
+- 1 câmp versiune Rapid7 (din Software)
+```
+
+Structura unei linii:
+
+```
+nome | virtuale | tipo | cliente | ambiente | destinazione | versione_componente
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stilul tău preferat)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Tabella_SW.csv      → Software (Rapid7)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Detectare Rapid7 din Tabella_SW                      │
+        │  - extrage versione_componente                       │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare server din Hardware:
+        - dacă apare în Software:
+            → extrage câmpurile Rapid7_Field
+            → adaugă versione_componente
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_Rapid7_TAB → Tabella_Rapid7.csv                 │
+        └──────────────────────────────────────────────────────┘
+```
+
+---

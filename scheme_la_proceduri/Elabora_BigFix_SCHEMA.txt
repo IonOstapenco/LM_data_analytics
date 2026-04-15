@@ -1,0 +1,73 @@
+====== Elabora_BigFix ==========
+DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora BigFix)
+┌──────────────────────────────────────────────┐
+│ ICTG-0-inventario-hardware-*.csv  → BIGFIX   │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (BGFX_field):
+   - Stato
+   - Nome computer
+   - Sistema operativo
+   - Nome DNS
+   - AIX Full OS Level
+   - Technology Level
+   - NumeroCPU
+   - NumeroSocket
+   - License Type
+   - Computer Type
+   - Java Output
+   - JavaPath
+   - JavaVersion
+   - Tipo di computer
+   - Core partizione
+   - Core server
+   - Stringa marchio processore
+   - Vendor
+   - Marchio
+   - Tipo
+   - Modello
+   - PVU per core
+   - Valore PVU modificato
+   - Valore PVU predefinito
+   - Fattore core Oracle
+   - Socket attivi del server
+   - Domain
+   - Nome cluster
+   - Core cluster
+   - CPU
+   - Nome host padre
+   - Last Report Time
+   - Tipo di server
+
+!!** Notă:
+– Câmpurile sunt extrase prin index numeric din fișierul BigFix.
+– „Nome computer” este convertit la lowercase și folosit ca identificator unic.
+– Rândurile duplicate sunt eliminate.
+
+2. OUTPUT FILE → CE CÂMPURI CONȚINE
+
+┌──────────────────────────────────────────────┐
+│ OUT_BGFX → ICTG-HW.csv                       │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CONȚINE EXACT BGFX_field (33 câmpuri)
+   în aceeași ordine ca în lista de mai sus
+
+
+
+DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE
+
+                 ┌────────────────────────────────────┐
+                 │ ICTG-0-inventario-hardware-*.csv   │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                     BGFX_field (33 câmpuri)
+                               │
+                               ▼
+                 ┌────────────────────────────────────┐
+                 │ OUT_BGFX → ICTG-HW.csv             │
+                 └────────────────────────────────────┘
+                 (conține exact aceleași 33 câmpuri)

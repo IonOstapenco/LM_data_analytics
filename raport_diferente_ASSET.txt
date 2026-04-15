@@ -1,0 +1,108 @@
+
+========================================================================================================================
+Comparare header-e:   Asset Client (ALL)-data-2025-11-03 12_48_57.csv     vs  Asset Client (ALL)-data-2025-11-06 11_08_56.csv
+------------------------------------------------------------------------------------------------------------------------
+Fisier vechi / precedent                                     Fisier nou / actual                                         
+------------------------------------------------------------------------------------------------------------------------
+Nome CI                                                     Nome CI
+Stato                                                       Stato
+Category                                                    Category
+Type                                                        Type
+                                                            << Item
+OS                                                          OS
+Domain Name                                                 Domain Name
+Numero CPU                                                  Numero CPU
+Processore                                                  Processore
+Ram                                                         Ram
+Serial Number                                               Serial Number
+Manufacturer                                                Manufacturer
+Modello                                                     Modello
+                                                            << Is Virtual
+DNS                                                         DNS
+                                                            << server_numerocore
+                                                            << Sala
+Used By                                                     Used By
+                                                            << Indirizzi IP
+Data censimento in CMDB                                     Data censimento in CMDB
+ReconciliationIdentity-Server                               ReconciliationIdentity-Server
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+Comparare header-e:   Asset Software (ALL - Selezionare il cliente in alto)-data-2025-11-03 15_10_12.csv  vs  Asset Software (ALL - Selezionare il cliente in alto)-data-2025-11-24 11_45_42.csv
+------------------------------------------------------------------------------------------------------------------------
+Fisier vechi / precedent                                     Fisier nou / actual                                         
+------------------------------------------------------------------------------------------------------------------------
+server                                                      server
+ruolo                                                       ruolo
+ambiente                                                    ambiente
+os                                                          os
+software                                                    software
+category                                                    category
+type                                                        type
+item                                                        item
+mark_as_deleted                                             mark_as_deleted
+manufacturer_name_                                          manufacturer_name_
+version_number                                              version_number
+buildnumber                                                 buildnumber
+endoflife                                                   endoflife
+endofsupport                                                endofsupport
+used_by                                                     used_by
+>> software_recoinciliationid
+>> server_recoinciliationid
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+Comparare header-e:   Asset Server (ALL)-data-2025-11-03 12_55_30.csv     vs  Asset Server (ALL)-data-2025-11-24 11_25_23.csv
+------------------------------------------------------------------------------------------------------------------------
+Fisier vechi / precedent                                     Fisier nou / actual                                         
+------------------------------------------------------------------------------------------------------------------------
+Nome CI                                                     Nome CI
+Stato                                                       Stato
+Category                                                    Category
+Type                                                        Type
+Item                                                        Item
+Ruolo                                                       Ruolo
+Ambiente                                                    Ambiente
+OS                                                          OS
+Applicazioni (lista)                                        Applicazioni (lista)
+Responsabile (Server)                                       Responsabile (Server)
+Applicazione                                                Applicazione
+Responsabile (Applicazione)                                 Responsabile (Applicazione)
+Domain Name                                                 Domain Name
+Uptime                                                      Uptime
+Numero Socket                                               Numero Socket
+Numero CPU                                                  Numero CPU
+Processore                                                  Processore
+Ram                                                         Ram
+Serial Number                                               Serial Number
+VM_Cluster                                                  VM_Cluster
+VMWare_LastReportDate                                       VMWare_LastReportDate
+VM_Host                                                     VM_Host
+VM_VMID                                                     VM_VMID
+VM_VMName                                                   VM_VMName
+VM_Virtualcenter                                            VM_Virtualcenter
+Manufacturer                                                Manufacturer
+Modello                                                     Modello
+Is Virtual                                                  Is Virtual
+Bigfix_ComputerID                                           Bigfix_ComputerID
+bigfix_computername                                         bigfix_computername
+DNS                                                         DNS
+Bigfix_LastReportDate                                       Bigfix_LastReportDate
+server_numerocore                                           server_numerocore
+server_iscloud                                              server_iscloud
+Sito                                                        Sito
+Sala                                                        Sala
+Fila                                                        Fila
+Rack                                                        Rack
+Used By                                                     Used By
+Contratto                                                   Contratto
+                                                            << Ip_primary
+>> IP Primario
+Indirizzi IP                                                Indirizzi IP
+Data censimento in CMDB                                     Data censimento in CMDB
+ReconciliationIdentity-Server                               ReconciliationIdentity-Server
+>> StatoPower
+------------------------------------------------------------------------------------------------------------------------
+
