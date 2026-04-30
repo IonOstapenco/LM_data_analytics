@@ -41,7 +41,9 @@
  "OUT_VCENTER": "Vcenter_list.csv",
  "OUT_Vms_Citrix": "Vms_Citrix_list.csv",
  "OUT_USER_PRO": "User_list_pro.csv",
+ "FLEXERA_OUT_USER_PRO": "FLEXERA_User_list_pro.csv",
  "OUT_USER_STD": "User_list_std.csv",
+ "FLEXERA_OUT_USER_STD": "FLEXERA_User_list_std.csv",
  "OUT_Server_Citrix": "Server_Citrix_list.csv",
  "OUT_CMDB_Citrix": "Server_CMDB_Citrix.csv",
  "OUT_Hardware_TAB": "Tabella_HW.csv",
@@ -56,7 +58,7 @@
  "OUT_Oracle_TAB": "Tabella_Oracle.csv",
  "OUT_CTX_Users": "STAT_CTX_Users.txt",
  "OUT_CTX_Gruppi": "Gruppi_Std_Prof",
- "OUT_Lista_Gruppi": "Lista gruppi Office.txt",
+ "OUT_Lista_Gruppi": "FLEXERA_Lista gruppi Office.txt",
  "Normalized_dir": "Normalized",
  "Cedacri_standard": "20220125_Cedacri Standard Operating Model_v7 (working).xlsx",
  "Input_Macchine": "Macchine_Integrare.csv",
@@ -64,5 +66,6 @@
   "AD-usersAndGroupsResult": "AD-usersAndGroupsResult.csv",
   "AD_Users_Results_attivi": "AD_Users_Results_attivi.csv",
   "AD_Base_Pattern": "Active Directory Results - SERVIZICED",
-  "AD_Domain_Subfolder": "ServiziCed.local"
+  "AD_Domain_Subfolder": "ServiziCed.local",
+  "FLEXERA_SW_Pattern": "flexera_software_devices"
 }

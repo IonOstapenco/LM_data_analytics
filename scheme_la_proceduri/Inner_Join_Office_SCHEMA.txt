@@ -1,0 +1,301 @@
+Perfect, asta e exact aceeași procedură — doar că acum o pun clar, structurată și “de prezentat” sub numele tău 👇
+
+---
+
+# 📘 **====== Inner_Join_Office.py ======**
+
+# **DIAGRAMĂ VIZUALĂ – INPUT / PROCESARE / OUTPUT**
+
+---
+
+# 🟦 **1. INPUT – Fișiere și surse**
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ FARM_MT*.xlsx → Grupuri AD + Servere                         │
+│ Sheet: DNSName_sec_group_evo                                 │
+└──────────────────────────────────────────────────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────────────────────────────────┐
+│ ICTG-0-classificazione-software-*.csv → Software instalat    │
+└──────────────────────────────────────────────────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────────────────────────────────┐
+│ Parametri.json → pattern-uri + directoare                    │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+# 🟩 **2. PRELUCRARE – LOGICA PROCEDURII**
+
+---
+
+## **A. Identificare fișiere (cele mai recente)**
+
+```
+cm.list_files_scandir
+     │
+     ├─ FARM_MT*.xlsx → farm_file
+     └─ ICTG*.csv → ictgc_file
+```
+
+✔ sortare descrescătoare
+✔ se ia primul (cel mai recent)
+
+---
+
+## **B. Citire și normalizare**
+
+```
+FARM:
+  DNSName → split(".")
+           → prima parte
+           → trim → UPPER
+           → DNSName_processed
+
+ICTG:
+  Nome computer → trim → UPPER
+```
+
+---
+
+## **C. Curățare și deduplicare**
+
+```
+FARM:
+  [DNSName_processed, Gruppi di AD]
+
+ICTG:
+  [Nome computer, Nome componente]
+
+→ drop_duplicates()
+```
+
+---
+
+## **D. INNER JOIN (partea centrală)**
+
+```
+JOIN:
+  DNSName_processed  =  Nome computer
+```
+
+✔ doar serverele care există în ambele fișiere
+
+---
+
+## **E. Rezultat inițial**
+
+```
+result_df:
+  - Nome Server
+  - Gruppi di AD
+  - Nome componente
+```
+
+---
+
+## **F. Excludere servere**
+
+```
+EXCLUDE:
+  XA02MB2C
+  XA11MA2C
+```
+
+---
+
+## **G. Filtrare pe tip Office**
+
+```
+┌──────────────────────────────┐
+│ Office Standard              │
+│ contains "Office Standard"   │
+└──────────────────────────────┘
+
+┌──────────────────────────────┐
+│ Office Professional          │
+│ contains "Professional Plus" │
+└──────────────────────────────┘
+```
+
+→ rezultă:
+
+```
+standard_df
+professional_df
+```
+
+---
+
+## **H. Extracție grupuri AD (regex)**
+
+```
+Pentru fiecare rând:
+   Gruppi di AD → aplic regex
+```
+
+Exemple detectate:
+
+```
+CTX_121_XXX_PRD
+Utenti CCM 099
+UTENTI SDB 099
+Sap 99
+```
+
+→ rezultat:
+
+```
+(gruppo, source)
+  STD / PRO
+```
+
+---
+
+## **I. Eliminare duplicate + logică prioritate**
+
+```
+1. eliminare duplicate
+2. dacă apare în ambele:
+      → păstrăm PRO
+```
+
+---
+
+## **J. Filtru excluderi (keyword)**
+
+```
+EXCLUDE:
+  TOOL
+  YHC0062
+  SAP
+```
+
+✔ doar dacă apare ca “cuvânt separat” (regex \b)
+
+---
+
+## **K. Variante pentru Excel (liste unice)**
+
+```
+Extrage grupuri diferite:
+  CRxxxxx
+  CRExxxx
+  CTX_...
+  Utenti ...
+```
+
+→ fără STD/PRO
+→ doar liste unice
+
+---
+
+# 🟧 **3. OUTPUT – CE SE GENEREAZĂ**
+
+---
+
+## **A. Excel final**
+
+```
+Gruppi_Std_Prof.xlsx
+```
+
+Conține:
+
+```
+┌──────────────────────────────────────┐
+│ Matching_Servers                     │
+│ (server + grup + software)           │
+├──────────────────────────────────────┤
+│ Office Standard                      │
+├──────────────────────────────────────┤
+│ Office Professional                  │
+├──────────────────────────────────────┤
+│ Office Standard Univoci              │
+├──────────────────────────────────────┤
+│ Office Professional Univoci          │
+└──────────────────────────────────────┘
+```
+
+---
+
+## **B. TXT – listă grupuri**
+
+```
+Lista gruppi Office.txt
+```
+
+Format:
+
+```
+GRUP|STD
+GRUP|PRO
+```
+
+✔ salvat în:
+
+```
+- Output folder
+- Start folder
+```
+
+---
+
+# 🟥 **DIAGRAMĂ FINALĂ – FLOW COMPLET**
+
+```
+     ┌──────────────────────────────┐
+     │ FARM_MT.xlsx (Gruppi AD)     │
+     └──────────────────────────────┘
+                    │
+                    ▼
+     ┌──────────────────────────────┐
+     │ ICTG software.csv            │
+     └──────────────────────────────┘
+                    │
+                    ▼
+        [Normalizare + Curățare]
+                    │
+                    ▼
+             [INNER JOIN]
+                    │
+                    ▼
+     ┌──────────────────────────────┐
+     │ result_df                    │
+     │ (server + software + grup)   │
+     └──────────────────────────────┘
+                    │
+        ┌───────────┴───────────┐
+        ▼                       ▼
+[Office Standard]       [Office Professional]
+        │                       │
+        ▼                       ▼
+[Extracție grupuri]    [Extracție grupuri]
+        │                       │
+        └──────┬───────────────┘
+               ▼
+      [Deduplicare + prioritate PRO]
+               │
+               ▼
+        [Filtru excluderi]
+               │
+               ▼
+     ┌──────────────────────────────┐
+     │ Liste finale grupuri         │
+     └──────────────────────────────┘
+               │
+        ┌──────┴───────────┐
+        ▼                  ▼
+ Excel (5 sheet-uri)     TXT (liste)
+```
+
+---
+
+Dacă vrei next level 💡:
+
+* pot să-ți fac o **variantă scurtă de 5-6 rânduri pentru daily/standup**
+* sau o **explicație “cum o povestești la interviu”** (foarte utilă 👀)
