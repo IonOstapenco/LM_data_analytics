@@ -1,6 +1,12 @@
 import Common as cm
 import re
 
+
+# pentru calculare timp
+import time 
+
+start_time = time.time()
+
 print("Procedura per la elaborazione dei dati da Active Directory - AD-usersAndGroupsResult.csv.")
 
 cm.check_outdir(cm.out_path)
@@ -9,6 +15,8 @@ cm.check_outdir(cm.out_path)
 # SET-uri (fără duplicate)
 # ===============================
 USER_GROUP_PRO = set()
+
+#SEEN_PRO = set()
 USER_GROUP_STD = set()
 
 GROUP_STD = set()
@@ -117,6 +125,7 @@ for w in cm.files:
             USER_GROUP_STD.add((u, a))
 
         if a in GROUP_PRO:
+            
             USER_GROUP_PRO.add((u, a))
 
         i += 1
@@ -157,3 +166,56 @@ with open(output_file, "w") as f:
         f.write(u + cm.cs + a + "\n")
 
 print("Scris:", output_file)
+
+
+
+# --- metoda pentru univoci sam account name , dupa regula din java
+
+# ------------------------------------------
+
+def extract_unique_users(input_file, output_file):
+    unique_users = set()
+
+    with open(input_file, "r") as f:
+        lines = f.readlines()
+
+    # sari peste primele 2 linii: sep= și header
+    for line in lines[2:]:
+        line = line.strip()
+        if not line:
+            continue
+
+        parts = line.split(cm.cs)
+        sam = parts[0].strip().lower()
+        unique_users.add(sam)
+
+    # scriere output simplu
+    with open(output_file, "w") as f:
+        f.write("sep=" + cm.cs + "\n")
+        f.write("SamAccountName\n")
+
+        for u in sorted(unique_users):
+            f.write(u + "\n")
+
+
+ # ------------------------------------------------------
+ # 
+ # 
+ # input (cele deja create)
+file_pro = cm.dr.join([cm.out_path, cm.pr["FLEXERA_OUT_USER_PRO"]])
+file_std = cm.dr.join([cm.out_path, cm.pr["FLEXERA_OUT_USER_STD"]])
+
+# output (fara parametri json, direct nume)
+out_pro_unique = cm.dr.join([cm.out_path, "FLEXERA_User_list_pro_UNIQUE.csv"])
+out_std_unique = cm.dr.join([cm.out_path, "FLEXERA_User_list_std_UNIQUE.csv"])
+
+extract_unique_users(file_pro, out_pro_unique)
+extract_unique_users(file_std, out_std_unique)           
+
+# timp
+end_time = time.time()
+elapsed_time = end_time - start_time
+
+print("\n==============================================")
+print(f"Timp total de rulare: {elapsed_time:.2f} secunde")
+print("==============================================")

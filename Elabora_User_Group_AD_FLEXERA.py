@@ -1,6 +1,10 @@
 import Common as cm
 import re
 
+# pentru calculare timp
+import time 
+
+start_time = time.time()
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 USER_GROUP_PRO = []
@@ -173,7 +177,13 @@ f.close()
 
 
 
+# timp
+end_time = time.time()
+elapsed_time = end_time - start_time
 
+print("\n==============================================")
+print(f"Timp total de rulare: {elapsed_time:.2f} secunde")
+print("==============================================")
 
 #l = list(USER_GROUP.keys())
 #

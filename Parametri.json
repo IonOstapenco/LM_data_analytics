@@ -1,8 +1,8 @@
 {"Source_dir": "C:\\License_Management",
- "Report_dir": "Report_202604",
+ "Report_dir": "Report_202605",
  "Output_dir": "OutPut",
  "Exclude_dir": "key_nomi_2_excld",
- "Former_dir": "Report_202603",
+ "Former_dir": "Report_202604",
  "Separa_dir": "\\",
  "Separa_car": "|",
  "Extension_end": "csv",
@@ -68,4 +68,5 @@
   "AD_Base_Pattern": "Active Directory Results - SERVIZICED",
   "AD_Domain_Subfolder": "ServiziCed.local",
   "FLEXERA_SW_Pattern": "flexera_software_devices"
+  
 }
