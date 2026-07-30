@@ -1,0 +1,4190 @@
+schematica la proceduri, cu fisiere si campuri
+
+==== Elabora_CMDB ====
+DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora CMDB)
+
+1. INPUT FILES → CÂMPURI FOLOSITE
+
+┌──────────────────────────────────────────────┐
+│ 1. Asset Server (ALL)*.csv   → CMDB          │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (CMDB_field):
+   - Nome CI
+   - OS
+   - DNS
+   - Domain Name
+   - Is Virtual
+   - Numero CPU
+   - Numero Socket
+   - Processore
+   - Modello
+   - VM_Cluster
+   - VM_Virtualcenter
+   - VM_Host
+   - VMWare_LastReportDate
+   - Bigfix_LastReportDate
+   - Applicazione (lista)
+   - Ruolo
+   - Category
+   - Type
+   - Ambiente
+   - Responsabile
+   - Used By
+   - Contratto
+   - server_iscloud
+   - Ip_primary
+
+
+┌──────────────────────────────────────────────┐
+│ 2. Asset ServerDismessi (ALL)*.csv → DISMESSI│
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (DISS_field):
+   - server
+   - datadismissione
+
+
+┌──────────────────────────────────────────────┐
+│ 3. Asset Client (ALL)*.csv   → PDL           │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (PDL_field):
+   - Nome CI
+   - Category
+   - Type
+   - Domain Name
+   - Used By
+   (index detectat automat din header)
+
+
+2. OUTPUT FILES → CÂMPURI FOLOSITE - ce campuri contin
+
+┌──────────────────────────────────────────────┐
+│ OUT_CMDB → AssetServer_CMDB.csv             │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CONȚINE EXACT CMDB_field (24 câmpuri)
+   
+
+
+┌──────────────────────────────────────────────┐
+│ OUT_CMDB_ESX → AssetCMDB_Esx.csv            │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CONȚINE EXACT CMDB_field (24 câmpuri)
+   (doar serverele cu Ruolo = "esx*")
+
+
+┌──────────────────────────────────────────────┐
+│ OUT_DISMESSI → ServerDismessi.csv           │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CONȚINE EXACT DISS_field (2 câmpuri)
+
+   
+┌──────────────────────────────────────────────┐
+│ OUT_PDL → AssetClient.csv                   │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CONȚINE EXACT PDL_field (5 câmpuri)
+   (ordine detectată din header)   
+   
+###############################################################3
+   
+====== Elabora_BigFix ==========
+DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora BigFix)
+┌──────────────────────────────────────────────┐
+│ ICTG-0-inventario-hardware-*.csv  → BIGFIX   │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (BGFX_field):
+   - Stato
+   - Nome computer
+   - Sistema operativo
+   - Nome DNS
+   - AIX Full OS Level
+   - Technology Level
+   - NumeroCPU
+   - NumeroSocket
+   - License Type
+   - Computer Type
+   - Java Output
+   - JavaPath
+   - JavaVersion
+   - Tipo di computer
+   - Core partizione
+   - Core server
+   - Stringa marchio processore
+   - Vendor
+   - Marchio
+   - Tipo
+   - Modello
+   - PVU per core
+   - Valore PVU modificato
+   - Valore PVU predefinito
+   - Fattore core Oracle
+   - Socket attivi del server
+   - Domain
+   - Nome cluster
+   - Core cluster
+   - CPU
+   - Nome host padre
+   - Last Report Time
+   - Tipo di server
+
+!!** Notă:
+– Câmpurile sunt extrase prin index numeric din fișierul BigFix.
+– „Nome computer” este convertit la lowercase și folosit ca identificator unic.
+– Rândurile duplicate sunt eliminate.
+
+2. OUTPUT FILE → CE CÂMPURI CONȚINE
+
+┌──────────────────────────────────────────────┐
+│ OUT_BGFX → ICTG-HW.csv                       │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CONȚINE EXACT BGFX_field (33 câmpuri)
+   în aceeași ordine ca în lista de mai sus
+
+
+
+DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE
+
+                 ┌────────────────────────────────────┐
+                 │ ICTG-0-inventario-hardware-*.csv   │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                     BGFX_field (33 câmpuri)
+                               │
+                               ▼
+                 ┌────────────────────────────────────┐
+                 │ OUT_BGFX → ICTG-HW.csv             │
+                 └────────────────────────────────────┘
+                 (conține exact aceleași 33 câmpuri)
+
+###########################################################
+
+===== Elabora Host =======
+
+DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora Host)
+
+1. INPUT FILES → CÂMPURI FOLOSITE
+
+Procedura caută fișiere RVTools tabvHost
+
+RvTools_Host_Pattern = "RVTools_tabvHost"
+Extension_end = "csv"
+
+Deci INPUT-ul este:
+RVTools_tabvHost*.csv
+
+1.1. CÂMPURI FOLOSITE DIN RVTools (HOST_field)
+Aceste câmpuri sunt detectate din header și mapate la indexul corect:
+
+- Host
+- Datacenter
+- Cluster
+- Config status
+- in Maintenance Mode
+- in Quarantine Mode
+- CPU Model
+- HT Available
+- HT Active
+- # CPU
+- Cores per CPU
+- # Cores
+- # VMs total
+- # VMs
+- VMs per Core
+- # vCPUs
+- vCPUs per Core
+- VMotion support
+- Storage VMotion support
+- ESX Version
+- Vendor
+- Model
+- VI SDK Server
+- Dominio_ESX   (calculat din DNS)
+
+Total: 24 câmpuri (0–23)
+Primul este Host, ultimul este Dominio_ESX (calculat).
+
+2. INPUT SECUNDAR → CMDB ESX (pentru merge)
+Procedura citește și:
+OUT_CMDB_ESX = "AssetCMDB_Esx.csv"
+
+Din acest fișier folosește câmpurile din CMDB_field, în special:
+- Nome CI
+- DNS
+- Numero Socket
+- Numero CPU
+- VM_Virtualcenter
+- ESX Version (adăugat la final)
+- Domain Name (înlocuit cu Dominio_ESX)
+
+
+
+3. OUTPUT FILES → CE CÂMPURI CONȚIN
+Procedura generează 2 fișiere:
+
+3.1. OUT_Host → Host_list.csv
+┌──────────────────────────────────────────────┐
+│ OUT_Host → Host_list.csv                     │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE EXACT HOST_field (24 câmpuri):
+- Host
+- Datacenter
+- Cluster
+- Config status
+- in Maintenance Mode
+- in Quarantine Mode
+- CPU Model
+- HT Available
+- HT Active
+- # CPU
+- Cores per CPU
+- # Cores
+- # VMs total
+- # VMs
+- VMs per Core
+- # vCPUs
+- vCPUs per Core
+- VMotion support
+- Storage VMotion support
+- ESX Version
+- Vendor
+- Model
+- VI SDK Server
+- Dominio_ESX
+
+
+
+3.2. OUT_CMDB_ESX → AssetCMDB_Esx.csv (actualizat)
+┌──────────────────────────────────────────────┐
+│ OUT_CMDB_ESX → AssetCMDB_Esx.csv             │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE EXACT CMDB_field (24 câmpuri) + 1 câmp suplimentar:
+- Toate câmpurile CMDB_field
+- ESX Version (adăugat din HOST)
+- Domain Name (înlocuit cu Dominio_ESX)
+- Numero CPU / Numero Socket actualizate din HOST
+- VM_Virtualcenter actualizat din HOST
+
+
+
+🎯 DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE
+                 ┌────────────────────────────────────┐
+                 │ RVTools_tabvHost*.csv              │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                     HOST_field (24 câmpuri)
+                               │
+                               ▼
+                 ┌────────────────────────────────────┐
+                 │ OUT_Host → Host_list.csv           │
+                 └────────────────────────────────────┘
+
+
+                 ┌────────────────────────────────────┐
+                 │ AssetCMDB_Esx.csv (input secundar) │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                Merge cu datele HOST:
+                - CPU / Cores
+                - VI SDK Server
+                - ESX Version
+                - Dominio_ESX
+                               │
+                               ▼
+                 ┌────────────────────────────────────┐
+                 │ OUT_CMDB_ESX → AssetCMDB_Esx.csv   │
+                 └────────────────────────────────────┘
+                 (CMDB_field + actualizări din HOST)
+
+
+
+########################################################33
+
+==== Elabora_VM ====
+📘 DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora VM)
+1. INPUT FILES → CÂMPURI FOLOSITE
+Procedura folosește 3 fișiere RVTools, fiecare cu propriile câmpuri
+🔵 1.1. INPUT 1 – RVTools_tabvCPU → CPU_list
+┌──────────────────────────────────────────────┐
+│ RVTools_tabvCPU*.csv   → CPU                 │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (CPU_field):
+   - VM
+   - CPUs
+   - Sockets
+   - Cores p/s
+
+
+
+🟣 1.2. INPUT 2 – RVTools_tabvTools → TOOLS_list
+┌──────────────────────────────────────────────┐
+│ RVTools_tabvTools*.csv   → TOOLS             │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (TOOLS_field):
+   - VM
+   - VM Version
+   - Tools
+   - Tools Version
+   - Required Version
+   - Upgradeable
+   - Upgrade Policy
+
+
+
+🟢 1.3. INPUT 3 – RVTools_tabvInfo → VM_list
+┌──────────────────────────────────────────────┐
+│ RVTools_tabvInfo*.csv   → VM                 │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (VM_field):
+   - VM
+   - Powerstate
+   - Template
+   - SRM Placeholder
+   - DNS Name
+   - CPUs
+   - Memory
+   - Primary IP Address
+   - HW version
+   - Annotation
+   - Datacenter
+   - Cluster
+   - Host
+   - OS according to the configuration file
+   - OS according to the VMware Tools
+   - VM ID
+   - VI SDK Server type
+   - VI SDK API Version
+   - VI SDK Server
+   - Sockets
+   - Cores p/s
+   - Tools
+   - Tools Version
+   - Required Version
+   - Upgradeable
+   - Upgrade Policy
+
+
+⚠️ Filtrări aplicate:
+- VM-urile sunt ignorate dacă numele conține:
+indismissione, clone, replica, non_toccare, test, corrupt, template, issue_snap
+⚠️ Completări:
+- Din CPU_list → se completează:
+CPUs, Sockets, Cores p/s
+- Din TOOLS_list → se completează:
+Tools, Tools Version, Required Version, Upgradeable, Upgrade Policy
+
+2. OUTPUT FILES → CE CÂMPURI CONȚIN
+Procedura generează 3 fișiere de output:
+
+2.1. OUT_CPU → CPU_list.csv
+┌──────────────────────────────────────────────┐
+│ OUT_CPU → CPU_list.csv                       │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE EXACT CPU_field (4 câmpuri):
+- VM
+- CPUs
+- Sockets
+- Cores p/s
+
+
+
+2.2. OUT_TOOLS → Tools_list.csv
+┌──────────────────────────────────────────────┐
+│ OUT_TOOLS → Tools_list.csv                   │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE EXACT TOOLS_field (7 câmpuri):
+- VM
+- VM Version
+- Tools
+- Tools Version
+- Required Version
+- Upgradeable
+- Upgrade Policy
+
+
+
+2.3. OUT_VM → VM_list.csv
+┌──────────────────────────────────────────────┐
+│ OUT_VM → VM_list.csv                         │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE EXACT VM_field (26+ câmpuri):
+- Toate câmpurile VM_field (0–25)
+- + câmpuri suplimentare din CPU_list
+- + câmpuri suplimentare din TOOLS_list
+
+
+
+🎯 DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE
+                 ┌────────────────────────────────────┐
+                 │ RVTools_tabvCPU*.csv               │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                       CPU_field (4)
+                               │
+                               ▼
+                 OUT_CPU → CPU_list.csv
+
+
+                 ┌────────────────────────────────────┐
+                 │ RVTools_tabvTools*.csv             │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                     TOOLS_field (7)
+                               │
+                               ▼
+                 OUT_TOOLS → Tools_list.csv
+
+
+                 ┌────────────────────────────────────┐
+                 │ RVTools_tabvInfo*.csv              │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                     VM_field (26)
+                               │
+             + merge cu CPU_list (3 câmpuri)
+             + merge cu TOOLS_list (5 câmpuri)
+                               │
+                               ▼
+                 OUT_VM → VM_list.csv
+
+
+
+######################################################################3
+
+
+==== Elabora_CLUSTER ====
+📘 DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora Cluster)
+1. INPUT FILES → CÂMPURI FOLOSITE
+Procedura folosește două surse de date:
+
+🔵 1.1. INPUT 1 – VM_list.csv (generat de Elabora_VM)
+┌──────────────────────────────────────────────┐
+│ VM_list.csv   → VM                           │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE:
+   - Powerstate        (col 1)
+   - Cluster           (col 11)
+   - OS according to VMware Tools (col 14)
+
+
+Folosire:
+- număr total VM per cluster
+- număr VM active (powered on)
+- număr VM Windows
+
+🟣 1.2. INPUT 2 – RVTools_tabvCluster → Cluster_list
+┌──────────────────────────────────────────────┐
+│ RVTools_tabvCluster*.csv   → Cluster         │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (Cluster_field):
+   - Name
+   - NumHosts
+   - numEffectiveHosts
+   - TotalCpu
+   - NumCpuCores
+   - NumCpuThreads
+   - HA enabled
+   - DRS enabled
+   - DRS default VM behavior
+   - DRS vmotion rate
+   - Ambiente
+   - Cliente
+   - Destinazione
+   - VI SDK Server
+   - Vcenter
+   - Vcenter dominio
+
+
+CÂMPURI SUPLIMENTARE ADĂUGATE:
+- Vcenter (fără domeniu)
+- Domeniu Vcenter
+VMs TotalVMs ActiveVMs Windows2. OUTPUT FILES → CE CÂMPURI CONȚIN
+Procedura generează două fișiere de output:
+2.1. OUT_CLUSTER → Cluster_list.csv
+┌──────────────────────────────────────────────┐
+│ OUT_CLUSTER → Cluster_list.csv               │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE:
+- Toate câmpurile Cluster_field (0–15)
+- + Vcenter (fără domeniu)
+- + Domeniu Vcenter
+- + # VMs Total
+- + # VMs Active
+- + # VMs Windows
+2.2. OUT_VCENTER → Vcenter_list.csv
+┌──────────────────────────────────────────────┐
+│ OUT_VCENTER → Vcenter_list.csv               │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE (agregat per Vcenter):
+- Nume Vcenter
+- Cluster (număr clustere)
+- Core Totali
+- Host (număr hosturi)
+- Domenio (domeniul Vcenter)
+🎯 DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE
+                 ┌────────────────────────────────────┐
+                 │ VM_list.csv                        │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+               Număr VM / active / Windows per cluster
+                               │
+                               ▼
+
+                 ┌────────────────────────────────────┐
+                 │ RVTools_tabvCluster*.csv           │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                     Cluster_field (0–15)
+                               │
+             + Vcenter fără domeniu
+             + Domeniu Vcenter
+             + # VMs Total
+             + # VMs Active
+             + # VMs Windows
+                               │
+                               ▼
+                 OUT_CLUSTER → Cluster_list.csv
+
+
+                               │
+                               ▼
+                 Agregare per Vcenter:
+                 - Cluster count
+                 - Core Totali
+                 - Host count
+                 - Domenio
+                               │
+                               ▼
+                 OUT_VCENTER → Vcenter_list.csv
+				 
+
+
+
+#################################333
+
+
+---
+
+ ==== Elabora_CITRIX ====
+
+# 📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora Citrix)**
+
+---
+
+# **1. INPUT FILES → CÂMPURI FOLOSITE**
+
+Procedura folosește **un singur fișier Excel Citrix**, cu pattern:
+
+```
+Citrix_files_Pattern = "Report_all_POOLS_e_VM_farm_Citrix"
+XLS_end = ".xlsx"
+```
+
+Fișierul conține mai multe sheet‑uri:
+
+- **Riepilogo** → pentru maparea pool‑urilor  
+- **Sheet‑urile individuale ale farm‑urilor Citrix** → conțin secțiuni "Servers" și "VMs"
+
+---
+
+## 🔵 **1.1. INPUT – Sheet‑urile Citrix → Server_list**
+
+```text
+┌──────────────────────────────────────────────┐
+│ Citrix Excel file → Section “Servers”        │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (Server_field):
+   - name                (col A)
+   - address             (col K)
+   - cpus                (col O → parsed)
+   - description         (col AO)
+   - funzione            (din sheet Riepilogo → pool mapping)
+   - pool                (numele sheet‑ului)
+```
+
+### Filtrări:
+- Serverele cu `funzione` în:
+  - "passivo produzione"
+  - "sviluppo"
+  - "dr - bolla - wpr"
+  
+sunt **eliminate**.
+
+---
+
+## 🟣 **1.2. INPUT – Sheet‑urile Citrix → Vms_list**
+
+```text
+┌──────────────────────────────────────────────┐
+│ Citrix Excel file → Section “VMs”            │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (Vms_field):
+   - name                (col A)
+   - address             (col G)
+   - cpus                (col AF → parsed)
+   - funzione            (din sheet Riepilogo → pool mapping)
+   - operating_system    (col U)
+   - pool                (numele sheet‑ului)
+   - power_state         (col B)
+   - running_on          (col D)
+```
+
+### Filtrări:
+- VM‑urile cu `funzione` în ExcludeSRV  
+- VM‑urile cu `power_state = "Halted"`  
+
+sunt **eliminate**.
+
+---
+
+# **2. OUTPUT FILES → CE CÂMPURI CONȚIN**
+
+Procedura generează **două fișiere de output**:
+
+---
+
+## **2.1. OUT_Server_Citrix → Server_Citrix_list.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_Server_Citrix → Server_Citrix_list.csv   │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE EXACT Server_field (6 câmpuri):
+- name
+- address
+- cpus
+- description
+- funzione
+- pool
+```
+
+---
+
+## **2.2. OUT_Vms_Citrix → Vms_Citrix_list.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_Vms_Citrix → Vms_Citrix_list.csv         │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE EXACT Vms_field (8 câmpuri):
+- name
+- address
+- cpus
+- funzione
+- operating_system
+- pool
+- power_state
+- running_on
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE**
+
+```text
+                 ┌────────────────────────────────────┐
+                 │ Citrix Excel file (*.xlsx)         │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                   Sheet “Riepilogo” → pool mapping
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Sheet “Servers”                                      │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+                     Server_field (6 câmpuri)
+                               │
+                     - filtrare ExcludeSRV
+                               │
+                               ▼
+        OUT_Server_Citrix → Server_Citrix_list.csv
+
+
+        ┌──────────────────────────────────────────────────────┐
+        │ Sheet “VMs”                                          │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+                       Vms_field (8 câmpuri)
+                               │
+                     - filtrare ExcludeSRV
+                     - filtrare power_state = Halted
+                               │
+                               ▼
+        OUT_Vms_Citrix → Vms_Citrix_list.csv
+```
+
+---
+
+
+
+
+####################################################################################3
+
+
+
+===== Merge_CMDB_Citrix  =============
+---
+
+# 📘 **DIAGRAMĂ VIZUALĂ – Merge_CMDB_Citrix.py**  
+*(în stilul modelului tău original)*
+
+---
+
+# **1. INPUT FILES → CÂMPURI FOLOSITE**
+
+Procedura folosește **trei fișiere CSV**:
+
+### 🔹 1.1. **AssetServer_CMDB.csv**  
+Pattern: `OUT_CMDB` din Parametri.json  
+Conține **23 câmpuri CMDB** → încărcate integral.
+
+```text
+┌──────────────────────────────────────────────┐
+│ AssetServer_CMDB.csv                         │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (toate cele 23):
+   - Nome CI
+   - OS
+   - DNS
+   - Domain Name
+   - Is Virtual
+   - Numero CPU
+   - Numero Socket
+   - Processore
+   - Modello
+   - VM_Cluster
+   - VM_Virtualcenter
+   - VM_Host
+   - VMWare_LastReportDate
+   - Bigfix_LastReportDate
+   - Applicazione (lista)
+   - Ruolo
+   - Category
+   - Type
+   - Ambiente
+   - Responsabile
+   - Used By
+   - Contratto
+   - server_iscloud
+```
+
+---
+
+### 🔹 1.2. **Server_Citrix_list.csv**  
+Pattern: `OUT_Server_Citrix`
+
+```text
+┌──────────────────────────────────────────────┐
+│ Server_Citrix_list.csv                       │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CÂMPURI FOLOSITE:
+- name
+- CPUs
+- Pool
+```
+
+**Valori implicite setate în CMDB:**
+
+- Used By = "CEDACRI"
+- server_iscloud = "0"
+- Is Virtual = "NO"
+- OS = "XenServer Type"
+- Type = "Server"
+- Category = "Server"
+- Ruolo = "CITRIX"
+- Contratto = "MS SPLA"
+
+---
+
+### 🔹 1.3. **Vms_Citrix_list.csv**  
+Pattern: `OUT_Vms_Citrix`
+
+```text
+┌──────────────────────────────────────────────┐
+│ Vms_Citrix_list.csv                          │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CÂMPURI FOLOSITE:
+- name
+- CPUs
+- Pool
+- OS
+- Running on
+```
+
+**Valori implicite setate în CMDB:**
+
+- Used By = "CEDACRI"
+- server_iscloud = "0"
+- Is Virtual = "SI"
+- Type = "Server"
+- Category = "Server"
+- Ruolo = "CITRIX"
+- Contratto = "MS SPLA"
+
+---
+
+# **2. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+## **2.1. OUT_CMDB_Citrix → Server_CMDB_Citrix.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_CMDB_Citrix → Server_CMDB_Citrix.csv     │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE TOATE cele 23 câmpuri CMDB:
+- Nome CI
+- OS
+- DNS
+- Domain Name
+- Is Virtual
+- Numero CPU
+- Numero Socket
+- Processore
+- Modello
+- VM_Cluster
+- VM_Virtualcenter
+- VM_Host
+- VMWare_LastReportDate
+- Bigfix_LastReportDate
+- Applicazione (lista)
+- Ruolo
+- Category
+- Type
+- Ambiente
+- Responsabile
+- Used By
+- Contratto
+- server_iscloud
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stil identic cu modelul tău)**
+
+```text
+                 ┌────────────────────────────────────┐
+                 │ AssetServer_CMDB.csv               │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                 Încarcă toate cele 23 câmpuri CMDB
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Server_Citrix_list.csv                               │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+               Actualizează câmpuri CMDB:
+               - Nome CI
+               - Numero CPU
+               - Ambiente (Pool)
+               - VM_Cluster (Pool)
+               + valori implicite Citrix (server fizic)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Vms_Citrix_list.csv                                  │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+               Actualizează câmpuri CMDB:
+               - Nome CI
+               - Numero CPU
+               - Ambiente (Pool)
+               - OS
+               - VM_Cluster (Pool)
+               - VM_Host (Running on)
+               + valori implicite Citrix (VM)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_CMDB_Citrix → Server_CMDB_Citrix.csv             │
+        └──────────────────────────────────────────────────────┘
+```
+
+---
+
+#########################################33
+
+
+==== Elabora HW ===============
+ 
+📘 DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_HW)
+
+---
+
+# **1. INPUT FILES → CÂMPURI FOLOSITE**
+
+Procedura folosește **8 fișiere CSV** generate anterior:
+
+```text
+OUT_CLUSTER        → Cluster_list.csv
+OUT_VM             → VM_list.csv
+OUT_Host           → Host_list.csv
+OUT_BGFX           → ICTG-HW.csv
+OUT_CMDB_Citrix    → Server_CMDB_Citrix.csv
+OUT_VCENTER        → Vcenter_list.csv
+OUT_DISMESSI       → ServerDismessi.csv
+OUT_PDL            → AssetClient.csv
+```
+
+Toate sunt încărcate în dicționare Python:
+
+- `Cluster`
+- `VM`
+- `HOST`
+- `BGFX`
+- `CMDB_Citrix`
+- `VCenter`
+- `DISS`
+- `PDL`
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSA**
+
+## 🔵 **2.1. CMDB_Citrix → baza principală**
+
+Folosit pentru:
+
+- nume server
+- OS
+- DNS
+- Domain Name
+- Is Virtual
+- Numero CPU
+- Numero Socket
+- Processore
+- Modello
+- VM_Cluster
+- VM_Virtualcenter
+- VM_Host
+- Ambiente
+- Ruolo
+- Category
+- Type
+- Used By
+- Contratto
+- server_iscloud
+
+---
+
+## 🟣 **2.2. BGFX → hardware inventory**
+
+Folosit pentru câmpuri precum:
+
+- operating_system
+- dns_name
+- n_cpu
+- n_core
+- cpu_model
+- pvu_per_core
+- valori PVU
+- fattore_core_oracle
+- cluster_cores
+- host parent
+- vendor / model
+
+---
+
+## 🟡 **2.3. HOST → host ESX (doar pentru servere fizice)**
+
+Folosit doar dacă:
+
+```
+Is Virtual = NO
+```
+
+Câmpuri:
+
+- dominio
+- cpu_model
+- #CPU
+- #Cores
+- hyperthreading
+- site
+- vcenter
+- cluster
+
+---
+
+## 🟢 **2.4. VM → VM_list (doar pentru servere virtuale)**
+
+Folosit doar dacă:
+
+```
+Is Virtual = SI
+```
+
+Câmpuri:
+
+- host
+- vm_hw_version
+- n_core
+- powerstate
+- operating_system
+- vcenter
+- cluster
+- annotation
+
+---
+
+## 🟤 **2.5. Cluster → doar pentru VM**
+
+Folosit pentru:
+
+- cluster_name
+- cluster_ambiente
+- cluster_cliente
+- cluster_destinazione
+- cluster_cores
+- cluster_numhosts
+- cluster_n_vms
+- cluster_n_vms_win
+
+---
+
+## 🟠 **2.6. VCenter → doar pentru VM**
+
+Folosit pentru:
+
+- vcenter
+- vcenter_cores
+- vcenter_hosts
+- vcenter_dominio
+- vcenter_cluster
+
+---
+
+## 🔴 **2.7. PDL → client machines**
+
+Folosit pentru:
+
+- nome
+- dominio
+- cliente
+- ruolo = Desktop
+- ambiente = Produzione
+- virtuale = NO
+
+---
+
+# **3. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+## **3.1. OUT_Hardware_TAB → Tabella_HW.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_Hardware_TAB → Tabella_HW.csv            │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE TOATE câmpurile din Hardware_field:
+- nome
+- operating_system
+- dominio
+- dns_name
+- virtuale
+- tipo
+- cluster_name
+- cluster_ambiente
+- cluster_cliente
+- cluster_destinazione
+- cluster_cores
+- cluster_numhosts
+- cluster_n_vms_total
+- cluster_n_vms
+- cluster_n_vms_win
+- hyperthreadactive
+- ha_enabled
+- drs_enabled
+- host
+- vm_hw_version
+- n_cpu
+- n_core
+- pvu_per_core
+- valori PVU
+- fattore_core_oracle
+- powerstate
+- vcenter
+- cpu_model
+- applicazione
+- ruolo
+- ambiente
+- responsabile
+- cliente
+- contratto
+- sito
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stil identic cu modelul tău original)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ 8 INPUT CSV FILES                          │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Cluster_list.csv → Cluster
+     VM_list.csv → VM
+     Host_list.csv → HOST
+     ICTG-HW.csv → BGFX
+     Server_CMDB_Citrix.csv → CMDB_Citrix
+     Vcenter_list.csv → VCenter
+     ServerDismessi.csv → DISS
+     AssetClient.csv → PDL
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Pentru fiecare server din CMDB_Citrix                │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Construiește Hardware[k] pe baza priorităților:
+        - CMDB_Citrix
+        - BGFX
+        - HOST (doar fizice)
+        - VM (doar virtuale)
+        - Cluster (doar virtuale)
+        - VCenter (doar virtuale)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Adaugă PDL (client machines)                         │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Setează valori implicite:
+        - tipo = "PDL"
+        - ruolo = "Desktop"
+        - ambiente = "Produzione"
+        - virtuale = "NO"
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_Hardware_TAB → Tabella_HW.csv                    │
+        └──────────────────────────────────────────────────────┘
+```
+
+---
+
+##########################################################################3
+
+
+==== Elabora SW ========================
+==== Elabora SW – versiunea nouă ==============
+📘 DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_SW.py – nou)
+
+1. INPUT FILES → SURSE DE DATE
+Procedura folosește:
+OUT_Hardware_TAB   → Tabella_HW.csv        (HW consolidat)
+BGFXSW input       → fișier BigFix SW     (pattern: BFGX_SW_Pattern)
+CMDBSW input       → fișier CMDB SW       (pattern: CMDB_SW_Pattern)
+Liste excludere    → *.csv din exc_path   (IBM, Microsoft, Oracle, RedHat, VMware)
+
+
+Toate sunt încărcate în structuri Python:
+- Hardware   → servere + câmpuri HW (40 câmpuri)
+- BGFXSW     → software per server din BigFix
+- CMDBSW     → software per server din CMDB
+- liste de excludere:
+- ibm_kywrd_2_xcld, ibm_nomi_2_xcld
+- mcrsft_kywrd_2_xcld, mcrsft_nomi_2_xcld
+- orcl_nomi_2_xcld
+- rdht_nomi_2_xcld
+- vmwr_kywrd_2_xcld, vmwr_nomi_2_xcld
+
+2. STRUCTURI ȘI CÂMPURI
+🔵 2.1. Structuri de date
+- AssetSW
+→ conține datisw (lista celor 10 câmpuri SW)
+- c_TABSW
+→ nome (server)
+→ datihw (lista celor ~40 câmpuri HW)
+→ sw (listă de AssetSW)
+- c_BGFXSW, c_CMDBSW
+→ nome (server)
+→ sw (listă de AssetSW)
+
+🟣 2.2. Structura completă SW_field (OUTPUT)
+Lista finală de câmpuri (50 total):
+- 40 câmpuri HW (din Tabella_HW):
+- nome, operating_system, dominio, dns_name, virtuale, tipo,
+cluster_name, cluster_ambiente, cluster_cliente, cluster_destinazione,
+cluster_cores, cluster_numhosts, cluster_n_vms_total, cluster_n_vms,
+cluster_n_vms_win, hyperthreadactive, ha_enabled, drs_enabled, host,
+vm_hw_version, n_cpu, n_core, pvu_per_core, valore_pvu_modificato,
+valore_pvu_predefinito, fattore_core_oracle, powerstate, vcenter,
+vcenter_cores, vcenter_hosts, vcenter_dominio, vcenter_cluster,
+cpu_model, applicazione, ruolo, ambiente, responsabile, cliente,
+contratto, sito
+- 10 câmpuri SW (per fiecare software instalat):
+- nome publisher
+- nome componente
+- versione_componente
+- versione dettagliata componente
+- percorso_di_installazione
+- nome prodotto
+- versione_prodotto
+- metrica
+- nome_edizione
+- versione_edizione
+
+3. INPUT → CUM SUNT FOLOSITE SURSELE
+🟢 3.1. OUT_Hardware_TAB → baza HW
+Folosit pentru:
+- lista completă de servere (chei în Hardware)
+- toate câmpurile HW (40 câmpuri) care vor fi prefixate în output
+
+🟡 3.2. BigFix SW (BGFXSW)
+Pentru fiecare linie din fișierul BigFix:
+- normalizează linia (separator, ghilimele)
+- extrage:
+- Nome computer
+- Nome publisher
+- Nome componente
+- versione_componente
+- Versione dettagliata componente
+- percorso_di_installazione
+- Nome prodotto
+- versione_prodotto
+- metrica
+- verifică:
+- dacă Nome publisher este în lista Vendor
+- dacă produsul trebuie exclus (listele de excludere per vendor)
+- dacă trece filtrele:
+- construiește lista SW (10 câmpuri)
+- salvează în BGFXSW[nome_computer].sw
+
+🟠 3.3. CMDB SW (CMDBSW)
+Pentru fiecare linie din fișierul CMDB:
+- sare peste primele 2 linii (header)
+- normalizează linia
+- extrage:
+- server
+- software
+- manufacturer_name_
+- version_number
+- verifică:
+- vendor valid
+- liste de excludere (aceleași reguli ca la BigFix)
+- dacă trece filtrele:
+- construiește lista SW (10 câmpuri):
+- publisher, software, version_number, '-', '-', software, version_number, '-', '-', '-'
+- salvează în CMDBSW[nome_server].sw
+
+4. LOGICA DE CALCUL – EDIZIONI
+Funcția calcola_edizione(dati_sw):
+- primește lista SW (10 câmpuri)
+- analizează nome componente:
+- dacă conține sql server + edition → extrage ediția și versiunea (inclusiv caz R2)
+- dacă conține office:
+- detectează 365 / ProPlus / 2003 / alte versiuni
+- returnează:
+- nome_edizione
+- versione_edizione
+Aceste valori sunt apoi scrise în pozițiile 8 și 9 din lista SW.
+
+5. COMBINARE HW + SW
+🧩 5.1. Construirea structurii Software
+Pentru fiecare nome din Hardware:
+- se creează Software[nome] = c_TABSW(nome, Hardware[nome])
+Astfel:
+- Software[nome].datihw = lista celor 40 câmpuri HW
+- Software[nome].sw = listă de software (inițial goală)
+
+🧩 5.2. Adăugare SW din BGFXSW
+Pentru fiecare server nome:
+- dacă nome este în BGFXSW:
+- pentru fiecare sw_data din BGFXSW[nome].sw:
+- se calculează ediția: calcola_edizione(sw_data.datisw)
+- se scriu nome_edizione și versione_edizione în câmpurile 8 și 9
+- se adaugă copia listei în Software[nome].sw
+
+🧩 5.3. Adăugare SW din CMDBSW
+Analog:
+- dacă nome este în CMDBSW:
+- pentru fiecare sw_data:
+- se calculează ediția
+- se completează câmpurile 8 și 9
+- se adaugă în Software[nome].sw
+
+6. OUTPUT FILE → CE CONȚINE
+Procedura generează un singur fișier final:
+6.1. OUT_Software_TAB → Tabella_SW.csv
+┌──────────────────────────────────────────────┐
+│ OUT_Software_TAB → Tabella_SW.csv           │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE, pentru FIECARE SOFTWARE instalat pe FIECARE server:
+- toate cele 40 câmpuri HW (din Tabella_HW)
+- cele 10 câmpuri SW (din BigFix sau CMDB, cu ediție calculată)
+
+
+Structura unei linii:
+[40 câmpuri HW] | [10 câmpuri SW]  → total 50 câmpuri
+
+
+
+🎯 DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stil identic)
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     BigFix SW file      → BGFXSW
+     CMDB SW file        → CMDBSW
+     Liste excludere     → IBM / MS / Oracle / RedHat / VMware
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Construiește structuri SW per server                 │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare linie BigFix:
+        - normalizează
+        - verifică vendor
+        - verifică excluderi
+        - construiește 10 câmpuri SW
+        - adaugă în BGFXSW[server]
+
+        Pentru fiecare linie CMDB:
+        - normalizează
+        - verifică vendor
+        - verifică excluderi
+        - construiește 10 câmpuri SW
+        - adaugă în CMDBSW[server]
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Combină HW + SW                                      │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare server din Hardware:
+        - creează Software[server] cu datihw (40 câmpuri)
+        - dacă are BGFXSW → adaugă SW (cu ediție calculată)
+        - dacă are CMDBSW → adaugă SW (cu ediție calculată)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_Software_TAB → Tabella_SW.csv                    │
+        └──────────────────────────────────────────────────────┘
+        Conține:
+        - 40 câmpuri HW
+        - 10 câmpuri SW
+        pentru fiecare software instalat pe fiecare server
+
+
+****************************************************************************************
+
+==== Elabora_Tabella-WIN =================
+
+
+# ==== Elabora_Tabella-WIN.py ==============
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-WIN)**
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două fișiere principale**:
+
+```text
+OUT_Hardware_TAB   → Tabella_HW.csv     (baza hardware)
+OUT_Software_TAB   → Tabella_SW.csv     (lista software instalat)
+```
+
+Acestea sunt încărcate în dicționare Python:
+
+- `Hardware` → toate serverele + câmpuri HW  
+- `Software` → ediția Windows detectată din software (standard / datacenter / enterprise)  
+- `WIN` → structura finală pentru Tabella_WIN  
+
+---
+
+# **2. STRUCTURI ȘI CÂMPURI**
+
+## 🔵 **2.1. Structura WIN_Field (OUTPUT)**
+
+WIN_Field definește câmpurile extrase din Hardware + câmpuri calculate:
+
+- nome  
+- powerstate  
+- virtuale  
+- tipo  
+- n_cpu  
+- n_core  
+- cluster_name  
+- cluster_cores  
+- cluster_numhosts  
+- cluster_n_vms_win  
+- cliente  
+- ambiente  
+- destinazione  
+- contratto  
+- nome_edizione (din Software)  
+- standard_lic_number (calculat)  
+- datacenter_lic_number (calculat)  
+
+Total câmpuri WIN: **17**
+
+---
+
+## 🟣 **2.2. Structura Software (doar pentru Windows Server)**
+
+Din Tabella_SW se extrage:
+
+- `nome componente`  
+- dacă conține:
+  - *windows server datacenter* → ediție = datacenter  
+  - *windows server standard* → ediție = standard  
+  - *windows server enterprise* → ediție = enterprise  
+
+Rezultatul este:
+
+```
+Software[nome_server] = "datacenter" | "standard" | "enterprise"
+```
+
+---
+
+# **3. INPUT → CUM SUNT FOLOSITE SURSELE**
+
+## 🟢 **3.1. OUT_Hardware_TAB → baza HW**
+
+Pentru fiecare server:
+
+- se verifică dacă OS conține:
+  - "windows server"
+  - sau "win20" (Windows 2000 / 2003 / 2008 etc.)
+
+Dacă DA → serverul intră în Tabella_WIN.
+
+---
+
+## 🟡 **3.2. OUT_Software_TAB → detectare ediție Windows**
+
+Pentru fiecare linie din Tabella_SW:
+
+- se citește `nome componente`
+- dacă conține "windows server":
+  - se detectează ediția (datacenter / standard / enterprise)
+  - se salvează în `Software[nome_server]`
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI WIN**
+
+## 🔵 **4.1. Construirea structurii WIN**
+
+Pentru fiecare server Windows:
+
+1. Se creează `WIN[k] = {}`  
+2. Se extrag primele **WIN_read = 14** câmpuri din Hardware conform WIN_Field  
+3. Se tratează câmpul special `cluster_cores`:
+   - dacă același cluster a fost deja procesat → cluster_cores = 0  
+   - altfel → se păstrează valoarea și se marchează clusterul în `ClusterName`  
+4. Se adaugă `nome_edizione`:
+   - dacă serverul apare în Software → ediția detectată  
+   - altfel → '-'  
+
+---
+
+## 🔵 **4.2. Calcul licențe Windows Server**
+
+Regulile:
+
+### **Pentru servere virtuale (virtuale = SI)**
+
+- se calculează:
+  - `n_core` → număr core VM  
+  - `cluster_n_vms_win` → nr. VM Windows în cluster  
+  - `cluster_numhosts` → nr. hosturi ESX  
+  - `cluster_cores` → total core cluster  
+
+- se calculează raportul:
+  ```
+  w = n_vmwin / n_hosts
+  ```
+
+- dacă `w > 6` → licențiere pe host (Datacenter):
+  - standard_lic_number = 0  
+  - datacenter_lic_number = cluster_cores / 2  
+
+- altfel → licențiere pe VM (Standard):
+  - standard_lic_number = max(n_core/2, Minimo_lic_Win_vm)  
+  - datacenter_lic_number = 0  
+
+---
+
+### **Pentru servere fizice (virtuale = NO)**
+
+- dacă ediția este **datacenter**:
+  - standard_lic_number = 0  
+  - datacenter_lic_number = max(n_core/2, Minimo_lic_Win_fs)  
+
+- altfel (standard / enterprise):
+  - standard_lic_number = max(n_core/2, Minimo_lic_Win_fs)  
+  - datacenter_lic_number = 0  
+
+---
+
+# **5. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+## **5.1. OUT_WIN_TAB → Tabella_WIN.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_WIN_TAB → Tabella_WIN.csv               │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE câmpurile WIN_Field:
+- nome
+- powerstate
+- virtuale
+- tipo
+- n_cpu
+- n_core
+- cluster_name
+- cluster_cores
+- cluster_numhosts
+- cluster_n_vms_win
+- cliente
+- ambiente
+- destinazione
+- contratto
+- nome_edizione
+- standard_lic_number
+- datacenter_lic_number
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stil identic cu celelalte)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Tabella_SW.csv      → Software (ediție Windows)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Detectare ediție Windows Server din Tabella_SW       │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare server Windows din Hardware:
+        - extrage câmpurile WIN_Field
+        - tratează cluster_cores (evită dublarea)
+        - adaugă nome_edizione (standard / datacenter / enterprise)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Calcul licențe Windows Server                        │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Reguli:
+        - VM: dacă VM_per_host > 6 → licențiere Datacenter
+        - VM: altfel → licențiere Standard
+        - Fizic: depinde de ediție (datacenter / standard)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_WIN_TAB → Tabella_WIN.csv                        │
+        └──────────────────────────────────────────────────────┘
+```
+
+---
+
+##################################################################################33
+
+==== Elabora_Tabella-SQL.py ==============
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-SQL)**  
+*(modelul tău clasic, complet desfășurat și clar)*
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două fișiere CSV**:
+
+```text
+OUT_Hardware_TAB   → Tabella_HW.csv
+OUT_Software_TAB   → Tabella_SW.csv
+```
+
+Acestea sunt încărcate în dicționare Python:
+
+- `Hardware` → toate serverele + câmpuri HW (socket, core, destinazione, cliente etc.)
+- `Software` → ediția SQL Server detectată din software
+- `SQL` → structura finală pentru Tabella_SQL
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSA**
+
+## 🔵 **2.1. Tabella_SW → detectarea ediției SQL Server**
+
+Din fiecare linie SW se extrage:
+
+- `nome componente` (index 41)
+
+Dacă conține:
+
+- **sql server enterprise** → ediție = enterprise  
+- **sql server standard** → ediție = standard  
+- **sql server developer** → ediție = developer  
+
+Rezultatul:
+
+```
+Software[nome_server] = "enterprise" | "standard" | "developer"
+```
+
+---
+
+## 🟣 **2.2. Tabella_HW → baza hardware pentru SQL**
+
+Pentru fiecare server:
+
+- se verifică OS:
+  - conține "sql"
+  - sau serverul apare în Software (are SQL instalat)
+
+Câmpuri folosite din Hardware:
+
+- nome  
+- virtuale  
+- tipo  
+- n_socket  
+- n_core  
+- cluster_name  
+- cluster_cores  
+- cluster_n_vms_sql  
+- cliente  
+- ambiente  
+- destinazione  
+- contratto  
+
+Acestea sunt mapate în `SQL_Field`.
+
+---
+
+# **3. STRUCTURA SQL (OUTPUT)**
+
+SQL_Field definește câmpurile finale:
+
+- nome  
+- virtuale  
+- tipo  
+- n_socket  
+- n_core  
+- cluster_name  
+- cluster_cores  
+- cluster_n_vms_sql  
+- cliente  
+- ambiente  
+- destinazione  
+- edizione (din Software)  
+- tipo_licenza (calculat)  
+- licenze_calcolate (calculat)  
+- contrattualizzato (din Hardware)  
+
+Total câmpuri SQL: **15**
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI SQL**
+
+## 🟢 **4.1. Identificarea serverelor SQL**
+
+Un server intră în Tabella_SQL dacă:
+
+```
+OS conține "sql"
+sau
+serverul apare în Software (are SQL instalat)
+```
+
+---
+
+## 🟢 **4.2. Construirea fiecărui rând SQL**
+
+Pentru fiecare server SQL:
+
+1. Se creează `row = {}`  
+2. Se extrag câmpurile definite în `SQL_Field`  
+3. Se adaugă ediția SQL:
+   ```
+   row["edizione"] = Software.get(k, "-")
+   ```
+4. Se convertesc numeric:
+   - `n_core`
+   - `n_socket`
+
+---
+
+# **5. CALCUL LICENȚE SQL SERVER**
+
+Regulile sunt:
+
+---
+
+## 🔵 **5.1. Excludere Linux**
+
+Dacă `destinazione` conține "linux" → serverul este ignorat.
+
+---
+
+## 🔵 **5.2. Servere virtuale (virtuale = SI)**
+
+Licențiere **Enterprise**:
+
+```
+tipo_licenza = "enterprise"
+licenze_calcolate = n_core / 2
+```
+
+---
+
+## 🔵 **5.3. Servere fizice (virtuale = NO)**
+
+Licențiere **Standard**:
+
+```
+tipo_licenza = "standard"
+```
+
+Formula:
+
+- dacă `n_core / n_socket <= 4` → licențe = `2 * n_socket`
+- altfel → licențe = `n_core / 2`
+
+---
+
+## 🔵 **5.4. Contrattualizzato**
+
+Din Hardware:
+
+```
+contrattualizzato = int(Hardware[k][contratto])
+```
+
+Dacă nu este numeric → se pune 0.
+
+---
+
+# **6. OUTPUT FILES → CE CONȚIN**
+
+Procedura generează **două fișiere finale**:
+
+---
+
+## **6.1. OUT_SQL_TAB → Tabella_SQL.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_SQL_TAB → Tabella_SQL.csv               │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE câmpurile SQL_Field + câmpurile calculate:
+- 11 câmpuri HW
+- 1 câmp ediție SQL
+- 1 câmp tip licență
+- 1 câmp licențe calculate
+- 1 câmp contrattualizzato
+```
+
+---
+
+## **6.2. Tabella_SQL_Pivot.csv**
+
+Pivotul conține:
+
+- SQL Server Enterprise:
+  - total licenze_calcolate
+  - total contrattualizzato
+
+- SQL Server Standard:
+  - total licenze_calcolate
+  - total contrattualizzato
+
+Structură:
+
+```
+Licenza | Necessario | Contrattualizzato
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stilul tău preferat)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Tabella_SW.csv      → Software (ediție SQL)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Detectare ediție SQL Server din Tabella_SW           │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare server din Hardware:
+        - dacă OS conține "sql" sau apare în Software:
+            → extrage câmpurile SQL_Field
+            → adaugă edizione
+            → calculează licenze SQL
+            → adaugă contrattualizzato
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_SQL_TAB → Tabella_SQL.csv                        │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Creare pivot SQL (Enterprise / Standard)             │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Tabella_SQL_Pivot.csv
+```
+
+---
+#########################################################################################################
+
+=== Elabora_Tabella-REDHAT ======
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-REDHAT)**  
+*(model complet, desfășurat, identic ca stil cu celelalte)*
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două fișiere CSV**:
+
+```text
+OUT_Hardware_TAB   → Tabella_HW.csv
+OUT_Software_TAB   → Tabella_SW.csv
+```
+
+Acestea sunt încărcate în dicționare Python:
+
+- `Hardware` → toate serverele + câmpuri HW (socket, core, cluster, cliente etc.)
+- `Software` → versiunea Red Hat detectată din software
+- `REDHAT` → structura finală pentru Tabella_REDHAT
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSA**
+
+## 🔵 **2.1. Tabella_SW → detectarea versiunii Red Hat Enterprise Linux**
+
+Din fiecare linie SW se extrage:
+
+- `nome componente` (index 41)
+- `versione_componente` (index 42)
+
+Dacă `nome componente` conține:
+
+```
+"red hat enterprise"
+```
+
+Atunci:
+
+```
+Software[nome_server] = versione_componente
+```
+
+Exemplu:
+
+- "red hat enterprise linux server" → versiune "7.9"
+
+---
+
+## 🟣 **2.2. Tabella_HW → baza hardware pentru REDHAT**
+
+Pentru fiecare server:
+
+- se verifică OS:
+  - conține "red hat enterprise"
+
+Câmpuri folosite din Hardware (REDHAT_Field):
+
+- nome  
+- powerstate  
+- operating_system  
+- virtuale  
+- tipo  
+- n_socket  
+- n_core  
+- cluster_name  
+- cluster_cores  
+- cluster_numhosts  
+- cliente  
+- ambiente  
+- destinazione  
+- versione_componente (din Software)
+
+---
+
+# **3. STRUCTURA REDHAT (OUTPUT)**
+
+REDHAT_Field definește câmpurile finale:
+
+- 13 câmpuri HW  
+- 1 câmp versiune Red Hat (din Software)
+
+Total câmpuri REDHAT: **14**
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI REDHAT**
+
+## 🟢 **4.1. Identificarea serverelor Red Hat**
+
+Un server intră în Tabella_REDHAT dacă:
+
+```
+OS conține "red hat enterprise"
+```
+
+---
+
+## 🟢 **4.2. Construirea fiecărui rând REDHAT**
+
+Pentru fiecare server Red Hat:
+
+1. Se creează `REDHAT[k] = []`
+2. Se extrag câmpurile definite în `REDHAT_Field`  
+3. Se tratează câmpurile speciale:
+
+### **4.2.1. cluster_cores**
+
+- dacă același cluster a fost deja procesat → cluster_cores = 0  
+- altfel → se păstrează valoarea și se marchează clusterul în `ClusterCores`
+
+### **4.2.2. cluster_numhosts**
+
+- dacă același cluster a fost deja procesat → cluster_numhosts = 0  
+- altfel → se păstrează valoarea și se marchează clusterul în `ClusterNumHosts`
+
+### **4.2.3. versione_componente**
+
+- dacă serverul apare în Software → versiunea detectată  
+- altfel → "-"
+
+---
+
+# **5. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+---
+
+## **5.1. OUT_REDHAT_TAB → Tabella_REDHAT.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_REDHAT_TAB → Tabella_REDHAT.csv         │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE câmpurile REDHAT_Field:
+- 13 câmpuri HW
+- 1 câmp versiune Red Hat (din Software)
+```
+
+Structura unei linii:
+
+```
+nome | powerstate | operating_system | virtuale | tipo |
+n_socket | n_core | cluster_name | cluster_cores | cluster_numhosts |
+cliente | ambiente | destinazione | versione_componente
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stilul tău preferat)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Tabella_SW.csv      → Software (versiune Red Hat)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Detectare versiune Red Hat din Tabella_SW            │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare server din Hardware:
+        - dacă OS conține "red hat enterprise":
+            → extrage câmpurile REDHAT_Field
+            → tratează cluster_cores (evită dublarea)
+            → tratează cluster_numhosts (evită dublarea)
+            → adaugă versione_componente (din Software)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_REDHAT_TAB → Tabella_REDHAT.csv                 │
+        └──────────────────────────────────────────────────────┘
+```
+
+---
+
+#####################################################333
+Ion, îți pregătesc acum **diagrama completă, în stilul tău clasic, foarte detaliat și ușor de urmărit**, pentru procedura **Elabora_Tabella-JBOSS.py**.  
+Este în același format ca cele pentru HW, SW, WIN, SQL și REDHAT — clară, structurată, profesională.
+
+---
+
+# ==== Elabora_Tabella-JBOSS.py ==============
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-JBOSS)**  
+*(model complet, desfășurat, identic ca stil cu celelalte)*
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două fișiere CSV**:
+
+```text
+OUT_Hardware_TAB   → Tabella_HW.csv
+OUT_Software_TAB   → Tabella_SW.csv
+```
+
+Acestea sunt încărcate în dicționare Python:
+
+- `Hardware` → toate serverele + câmpuri HW (socket, core, cluster, cliente etc.)
+- `Software` → informații despre JBOSS detectate din software
+- `JBOSS` → structura finală pentru Tabella_JBOSS
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSA**
+
+## 🔵 **2.1. Tabella_SW → detectarea instalărilor JBOSS**
+
+Din fiecare linie SW se extrage:
+
+- `nome componente` (index 41)
+- `versione_componente` (index 42)
+
+Dacă `nome componente` conține:
+
+```
+"red hat jboss"
+```
+
+Atunci:
+
+- dacă conține „enterprise” → ediție = enterprise  
+- dacă conține „web server” → ediție = web server  
+
+Rezultatul:
+
+```
+Software[nome_server] = [nome_componente, edizione, versione_componente]
+```
+
+---
+
+## 🟣 **2.2. Tabella_HW → baza hardware pentru JBOSS**
+
+Un server intră în Tabella_JBOSS dacă:
+
+```
+OS conține "red hat"
+sau
+serverul apare în Software (are JBOSS instalat)
+```
+
+Câmpuri folosite din Hardware (JBOSS_Field):
+
+- nome  
+- powerstate  
+- operating_system  
+- virtuale  
+- tipo  
+- n_socket  
+- n_core  
+- cluster_name  
+- cluster_cores  
+- cluster_numhosts  
+- cliente  
+- ambiente  
+- destinazione  
+- (din Software) → nome componente  
+- (din Software) → edizione  
+- (din Software) → versione_componente  
+
+---
+
+# **3. STRUCTURA JBOSS (OUTPUT)**
+
+JBOSS_Field definește câmpurile finale:
+
+- 13 câmpuri HW  
+- 3 câmpuri SW (JBOSS):
+  - nome componente  
+  - edizione  
+  - versione_componente  
+
+Total câmpuri JBOSS: **16**
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI JBOSS**
+
+## 🟢 **4.1. Identificarea serverelor JBOSS**
+
+Un server intră în Tabella_JBOSS dacă:
+
+- rulează Red Hat  
+**sau**
+- are JBOSS instalat (detectat în Tabella_SW)
+
+---
+
+## 🟢 **4.2. Construirea fiecărui rând JBOSS**
+
+Pentru fiecare server eligibil:
+
+1. Se creează `JBOSS[k] = []`
+2. Se extrag câmpurile definite în `JBOSS_Field`  
+3. Se tratează câmpul special:
+
+### **4.2.1. cluster_cores**
+
+- dacă același cluster a fost deja procesat → cluster_cores = 0  
+- altfel → se păstrează valoarea și se marchează clusterul în `ClusterName`
+
+### **4.2.2. câmpurile JBOSS din Software**
+
+Dacă serverul apare în Software:
+
+```
+JBOSS[k].append(nome_componente)
+JBOSS[k].append(edizione)
+JBOSS[k].append(versione_componente)
+```
+
+Altfel:
+
+```
+JBOSS[k].append("-")
+JBOSS[k].append("-")
+JBOSS[k].append("-")
+```
+
+---
+
+# **5. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+---
+
+## **5.1. OUT_JBOSS_TAB → Tabella_JBOSS.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_JBOSS_TAB → Tabella_JBOSS.csv           │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE câmpurile JBOSS_Field:
+- 13 câmpuri HW
+- 3 câmpuri JBOSS (din Software)
+```
+
+Structura unei linii:
+
+```
+nome | powerstate | operating_system | virtuale | tipo |
+n_socket | n_core | cluster_name | cluster_cores | cluster_numhosts |
+cliente | ambiente | destinazione |
+nome_componente | edizione | versione_componente
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stilul tău preferat)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Tabella_SW.csv      → Software (JBOSS)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Detectare JBOSS din Tabella_SW                       │
+        │  - enterprise                                        │
+        │  - web server                                        │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare server din Hardware:
+        - dacă OS conține "red hat"
+          sau serverul apare în Software:
+            → extrage câmpurile JBOSS_Field
+            → tratează cluster_cores (evită dublarea)
+            → adaugă nome componente, edizione, versione
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_JBOSS_TAB → Tabella_JBOSS.csv                   │
+        └──────────────────────────────────────────────────────┘
+```
+
+---
+
+###################################################################################################
+
+
+ ==== Elabora_Tabella-Rapid7.py ==============
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-Rapid7)**  
+*(model complet, desfășurat, identic ca stil cu celelalte)*
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două fișiere CSV**:
+
+```text
+OUT_Hardware_TAB   → Tabella_HW.csv
+OUT_Software_TAB   → Tabella_SW.csv
+```
+
+Acestea sunt încărcate în dicționare Python:
+
+- `Hardware` → toate serverele + câmpuri HW (virtuale, tipo, cliente etc.)
+- `Software` → versiunea Rapid7 detectată din software
+- `Rapid7` → structura finală pentru Tabella_Rapid7
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSA**
+
+## 🔵 **2.1. Tabella_SW → detectarea instalărilor Rapid7**
+
+Din fiecare linie SW se extrage:
+
+- `nome componente` (index 41)
+- `versione_componente` (index 42)
+
+Dacă `nome componente` conține:
+
+```
+"rapid7"
+```
+
+Atunci:
+
+```
+Software[nome_server] = versione_componente
+```
+
+---
+
+## 🟣 **2.2. Tabella_HW → baza hardware pentru Rapid7**
+
+Un server intră în Tabella_Rapid7 dacă:
+
+```
+apare în Software (are Rapid7 instalat)
+```
+
+Câmpuri folosite din Hardware (Rapid7_Field):
+
+- nome  
+- virtuale  
+- tipo  
+- cliente  
+- ambiente  
+- destinazione  
+- versione_componente (din Software)
+
+---
+
+# **3. STRUCTURA RAPID7 (OUTPUT)**
+
+Rapid7_Field definește câmpurile finale:
+
+- 6 câmpuri HW  
+- 1 câmp versiune Rapid7 (din Software)
+
+Total câmpuri Rapid7: **7**
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI RAPID7**
+
+## 🟢 **4.1. Identificarea serverelor Rapid7**
+
+Un server intră în Tabella_Rapid7 dacă:
+
+```
+Software[k] există → serverul are Rapid7 instalat
+```
+
+---
+
+## 🟢 **4.2. Construirea fiecărui rând Rapid7**
+
+Pentru fiecare server detectat:
+
+1. Se creează `Rapid7[k] = []`
+2. Se extrag câmpurile definite în `Rapid7_Field`  
+3. Se adaugă versiunea Rapid7:
+
+```
+Rapid7[k].append(Software[k])
+```
+
+---
+
+# **5. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+---
+
+## **5.1. OUT_Rapid7_TAB → Tabella_Rapid7.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_Rapid7_TAB → Tabella_Rapid7.csv         │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE câmpurile Rapid7_Field:
+- 6 câmpuri HW
+- 1 câmp versiune Rapid7 (din Software)
+```
+
+Structura unei linii:
+
+```
+nome | virtuale | tipo | cliente | ambiente | destinazione | versione_componente
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stilul tău preferat)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Tabella_SW.csv      → Software (Rapid7)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Detectare Rapid7 din Tabella_SW                      │
+        │  - extrage versione_componente                       │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare server din Hardware:
+        - dacă apare în Software:
+            → extrage câmpurile Rapid7_Field
+            → adaugă versione_componente
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_Rapid7_TAB → Tabella_Rapid7.csv                 │
+        └──────────────────────────────────────────────────────┘
+```
+
+---
+
+###########################################################################3333
+
+---
+
+# ==== Elabora_CTX_User.py ==============
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_CTX_User)**  
+*(model complet, desfășurat, identic ca stil cu celelalte)*
+
+---
+
+# **1. INPUT FILES → SURSA DE DATE**
+
+Procedura folosește **un singur fișier CSV**, generat lunar:
+
+```text
+ConteggioMensileCitrix_AAAAMMGG.csv
+```
+
+Structura fișierului:
+
+```
+User ID,Cliente/Dominio,Data ultima connessione
+BB01925,BANCA POPOLARE DI BARI,2025-01-23 07:27:30.000
+```
+
+Acesta este încărcat în:
+
+- `CTX_User` → dicționar cu utilizatori activi grupați pe domeniu/client
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIȘIER**
+
+Procedura folosește 3 câmpuri:
+
+| Câmp CSV            | Index | Folosință |
+|---------------------|--------|-----------|
+| User ID             | 0      | identificare utilizator |
+| Dominio / Cliente   | 1      | grupare pe client |
+| Last Logon          | 2      | calcul vechime logon |
+
+---
+
+# **3. LOGICA PRINCIPALĂ – FILTRAREA UTILIZATORILOR**
+
+## 🟢 **3.1. Determinarea datei de referință**
+
+Data este extrasă din numele fișierului:
+
+```
+ConteggioMensileCitrix_20250123.csv
+                           ↑↑↑↑↑↑↑↑
+                           AAAAMMGG
+```
+
+Aceasta devine **data de extracție**.
+
+---
+
+## 🟢 **3.2. Calculul vechimii logon-ului**
+
+Pentru fiecare utilizator:
+
+1. Se citește `Last Logon`
+2. Se transformă în `datetime`
+3. Se calculează:
+
+```
+n_giorni = data_estrazione - data_user
+```
+
+---
+
+## 🟢 **3.3. Regula de filtrare**
+
+Un utilizator este considerat **activ** dacă:
+
+```
+n_giorni <= 90
+```
+
+Dacă este activ:
+
+- este adăugat în `CTX_User[domeniu]`
+- se incrementează `n_citrix_active`
+
+Indiferent de activitate:
+
+- `n_citrix_users` crește (număr total de conturi definite)
+
+---
+
+# **4. STRUCTURA CTX_User (OUTPUT INTERMEDIAR)**
+
+Dicționarul final:
+
+```
+CTX_User = {
+    "cliente1": [user1, user2, ...],
+    "cliente2": [user3, user4, ...],
+    ...
+}
+```
+
+Se creează și un sumar:
+
+```
+d_ctx[cliente] = număr utilizatori activi
+```
+
+---
+
+# **5. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier text**:
+
+```
+STAT_CTX_Users.txt
+```
+
+Acesta conține:
+
+### 🔹 **5.1. Număr total de conturi Citrix definite**
+
+```
+Risultano definite XXXX utenze...
+```
+
+### 🔹 **5.2. Număr total de conturi active (< 90 zile)**
+
+```
+-> YYYY utenze attive
+```
+
+### 🔹 **5.3. Tabel cu utilizatori activi pe client**
+
+Format:
+
+```
++--------+--------------------------------------------------------------+
+|   125  | BANCA POPOLARE DI BARI                                      |
+|    87  | GRUPPO CASSA CENTRALE                                       |
+|    12  | ALTRO CLIENTE                                               |
++--------+--------------------------------------------------------------+
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stilul tău preferat)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILE                             │
+                 │ ConteggioMensileCitrix_AAAAMMGG.csv        │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Extrage data AAAAMMGG din numele fișierului          │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare rând:
+        - citește User ID, Dominio, Last Logon
+        - calculează diferența în zile față de data_estrazione
+        - dacă n_giorni ≤ 90 → utilizator activ
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ CTX_User[domeniu] = listă utilizatori activi         │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ STAT_CTX_Users.txt                                   │
+        │  - total conturi                                     │
+        │  - total active (<90 zile)                           │
+        │  - tabel utilizatori activi per cliente              │
+        └──────────────────────────────────────────────────────┘
+```
+
+---
+
+
+################################################################
+
+==== Elabora_Tabella-Oracle ==== 
+
+# ==== Elabora_Tabella-Oracle.py ==============
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-Oracle)**  
+*(model complet, desfășurat, identic ca stil cu celelalte)*
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două fișiere CSV**:
+
+```text
+OUT_Hardware_TAB           → Tabella_HW.csv
+ICTG-0-database-oracle-*   → report Oracle BigFix
+```
+
+Acestea sunt încărcate în:
+
+- `Hardware` → toate serverele + câmpuri HW (OS, core, socket, cliente, ambiente etc.)
+- `Oracle` → structura finală pentru Tabella_Oracle
+- `Funzioni` → funcțiile Oracle Enterprise detectate
+- `Software` → funcțiile Oracle extrase din BigFix
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSA**
+
+## 🔵 **2.1. Tabella_HW → completarea câmpurilor Oracle**
+
+Din Tabella_HW se extrag câmpurile:
+
+- ambiente  
+- contratto  
+- cliente  
+
+Acestea sunt adăugate la fiecare server Oracle dacă serverul există în Hardware.
+
+---
+
+## 🟣 **2.2. BigFix Oracle Report → baza principală**
+
+Din fișierul BigFix se extrag câmpurile definite în `BGFX_Field`:
+
+- Nome computer  
+- Nome  
+- Versione  
+- Edizione  
+- Sistema operativo  
+- Funzione  
+- SID  
+- AIX Full OS Level  
+- NumeroCpu  
+- NumeroCore  
+- Domain  
+- Tipo di computer  
+- NumeroSocket  
+- Processore  
+- Core partizione  
+- Fattore core Oracle  
+- Socket attivi del server  
+
+Acestea formează structura de bază pentru fiecare server Oracle.
+
+---
+
+# **3. STRUCTURA ORACLE (OUTPUT)**
+
+`Oracle_Field` definește câmpurile finale:
+
+- 17 câmpuri standard Oracle (nume, versiune, edizione, core, socket etc.)
+- 3 câmpuri din HW (ambiente, contratto, cliente)
+- câmpuri dinamice pentru funcțiile Enterprise (diagnostics, tuning, RAC, partitioning etc.)
+
+Total câmpuri Oracle: **17 + 3 + N funcții Enterprise**
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI ORACLE**
+
+## 🟢 **4.1. Citirea fișierului BigFix**
+
+Pentru fiecare rând:
+
+1. Se elimină ghilimelele și separatorii ambigui  
+2. Se extrag câmpurile din `BGFX_Field`  
+3. Se normalizează numele serverului (se elimină domeniul)  
+4. Se creează lista `t` cu toate câmpurile Oracle standard  
+5. Se adaugă câmpurile HW (ambiente, contratto, cliente)  
+6. Se adaugă 15 câmpuri goale pentru funcțiile Enterprise
+
+---
+
+## 🟢 **4.2. Construirea obiectului Oracle**
+
+Pentru fiecare server:
+
+```
+Oracle[nome] = c_Oracle(nome, t)
+```
+
+Apoi se adaugă funcția Oracle:
+
+```
+Oracle[nome].software(funzione)
+```
+
+---
+
+## 🟢 **4.3. Identificarea funcțiilor Oracle Enterprise**
+
+Funcțiile sunt extrase din câmpul "Funzione":
+
+- doar pentru edițiile **Enterprise**
+- se ignoră Standard și Express
+
+Pentru fiecare funcție:
+
+1. se extrage partea finală a stringului (după poziția 36)
+2. dacă funcția nu există în `Funzioni`, se adaugă cu un index nou
+3. se completează câmpul corespunzător în `datihw`
+
+Exemplu:
+
+```
+Funzione: "...diagnostics pack"
+→ Funzioni["diagnostics pack"] = 20
+→ Oracle[c].datihw[20] = "diagnostics pack"
+```
+
+---
+
+# **5. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+---
+
+## **5.1. OUT_Oracle_TAB → Tabella_Oracle.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_Oracle_TAB → Tabella_Oracle.csv         │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE:
+- 17 câmpuri Oracle standard
+- 3 câmpuri HW (ambiente, contratto, cliente)
+- N câmpuri dinamice pentru funcțiile Enterprise
+```
+
+Structura unei linii:
+
+```
+Nome computer | Nome | Versione | Edizione | Sistema operativo |
+Funzione | SID | AIX Full OS Level | NumeroCore | NumeroCore x Socket |
+Domain | Tipo di computer | NumeroSocket | Processore |
+Core partizione | Fattore core Oracle | Socket attivi |
+ambiente | contratto | cliente |
+Funzione1 | Funzione2 | Funzione3 | ...
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stilul tău preferat)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Oracle BigFix CSV   → BGFX_Field
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Construire structura Oracle pentru fiecare server     │
+        │  - extrage câmpurile BGFX                            │
+        │  - normalizează numele                               │
+        │  - adaugă ambiente / contratto / cliente din HW      │
+        │  - adaugă 15 câmpuri goale pentru funcții            │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Identificare funcții Oracle Enterprise               │
+        │  - diagnostics pack                                  │
+        │  - tuning pack                                       │
+        │  - advanced compression                              │
+        │  - RAC                                               │
+        │  - partitioning                                      │
+        │  - etc.                                              │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_Oracle_TAB → Tabella_Oracle.csv                  │
+        └──────────────────────────────────────────────────────┘
+```
+
+---
+#################################################################################33
+
+Perfect, asta e exact aceeași procedură — doar că acum o pun clar, structurată și “de prezentat” sub numele tău 👇
+
+---
+
+# 📘 **====== Inner_Join_Office.py ======**
+
+# **DIAGRAMĂ VIZUALĂ – INPUT / PROCESARE / OUTPUT**
+
+---
+
+# 🟦 **1. INPUT – Fișiere și surse**
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ FARM_MT*.xlsx → Grupuri AD + Servere                         │
+│ Sheet: DNSName_sec_group_evo                                 │
+└──────────────────────────────────────────────────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────────────────────────────────┐
+│ ICTG-0-classificazione-software-*.csv → Software instalat    │
+└──────────────────────────────────────────────────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────────────────────────────────┐
+│ Parametri.json → pattern-uri + directoare                    │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+# 🟩 **2. PRELUCRARE – LOGICA PROCEDURII**
+
+---
+
+## **A. Identificare fișiere (cele mai recente)**
+
+```
+cm.list_files_scandir
+     │
+     ├─ FARM_MT*.xlsx → farm_file
+     └─ ICTG*.csv → ictgc_file
+```
+
+✔ sortare descrescătoare
+✔ se ia primul (cel mai recent)
+
+---
+
+## **B. Citire și normalizare**
+
+```
+FARM:
+  DNSName → split(".")
+           → prima parte
+           → trim → UPPER
+           → DNSName_processed
+
+ICTG:
+  Nome computer → trim → UPPER
+```
+
+---
+
+## **C. Curățare și deduplicare**
+
+```
+FARM:
+  [DNSName_processed, Gruppi di AD]
+
+ICTG:
+  [Nome computer, Nome componente]
+
+→ drop_duplicates()
+```
+
+---
+
+## **D. INNER JOIN (partea centrală)**
+
+```
+JOIN:
+  DNSName_processed  =  Nome computer
+```
+
+✔ doar serverele care există în ambele fișiere
+
+---
+
+## **E. Rezultat inițial**
+
+```
+result_df:
+  - Nome Server
+  - Gruppi di AD
+  - Nome componente
+```
+
+---
+
+## **F. Excludere servere**
+
+```
+EXCLUDE:
+  XA02MB2C
+  XA11MA2C
+```
+
+---
+
+## **G. Filtrare pe tip Office**
+
+```
+┌──────────────────────────────┐
+│ Office Standard              │
+│ contains "Office Standard"   │
+└──────────────────────────────┘
+
+┌──────────────────────────────┐
+│ Office Professional          │
+│ contains "Professional Plus" │
+└──────────────────────────────┘
+```
+
+→ rezultă:
+
+```
+standard_df
+professional_df
+```
+
+---
+
+## **H. Extracție grupuri AD (regex)**
+
+```
+Pentru fiecare rând:
+   Gruppi di AD → aplic regex
+```
+
+Exemple detectate:
+
+```
+CTX_121_XXX_PRD
+Utenti CCM 099
+UTENTI SDB 099
+Sap 99
+```
+
+→ rezultat:
+
+```
+(gruppo, source)
+  STD / PRO
+```
+
+---
+
+## **I. Eliminare duplicate + logică prioritate**
+
+```
+1. eliminare duplicate
+2. dacă apare în ambele:
+      → păstrăm PRO
+```
+
+---
+
+## **J. Filtru excluderi (keyword)**
+
+```
+EXCLUDE:
+  TOOL
+  YHC0062
+  SAP
+```
+
+✔ doar dacă apare ca “cuvânt separat” (regex \b)
+
+---
+
+## **K. Variante pentru Excel (liste unice)**
+
+```
+Extrage grupuri diferite:
+  CRxxxxx
+  CRExxxx
+  CTX_...
+  Utenti ...
+```
+
+→ fără STD/PRO
+→ doar liste unice
+
+---
+
+# 🟧 **3. OUTPUT – CE SE GENEREAZĂ**
+
+---
+
+## **A. Excel final**
+
+```
+Gruppi_Std_Prof.xlsx
+```
+
+Conține:
+
+```
+┌──────────────────────────────────────┐
+│ Matching_Servers                     │
+│ (server + grup + software)           │
+├──────────────────────────────────────┤
+│ Office Standard                      │
+├──────────────────────────────────────┤
+│ Office Professional                  │
+├──────────────────────────────────────┤
+│ Office Standard Univoci              │
+├──────────────────────────────────────┤
+│ Office Professional Univoci          │
+└──────────────────────────────────────┘
+```
+
+---
+
+## **B. TXT – listă grupuri**
+
+```
+Lista gruppi Office.txt
+```
+
+Format:
+
+```
+GRUP|STD
+GRUP|PRO
+```
+
+✔ salvat în:
+
+```
+- Output folder
+- Start folder
+```
+
+---
+
+# 🟥 **DIAGRAMĂ FINALĂ – FLOW COMPLET**
+
+```
+     ┌──────────────────────────────┐
+     │ FARM_MT.xlsx (Gruppi AD)     │
+     └──────────────────────────────┘
+                    │
+                    ▼
+     ┌──────────────────────────────┐
+     │ ICTG software.csv            │
+     └──────────────────────────────┘
+                    │
+                    ▼
+        [Normalizare + Curățare]
+                    │
+                    ▼
+             [INNER JOIN]
+                    │
+                    ▼
+     ┌──────────────────────────────┐
+     │ result_df                    │
+     │ (server + software + grup)   │
+     └──────────────────────────────┘
+                    │
+        ┌───────────┴───────────┐
+        ▼                       ▼
+[Office Standard]       [Office Professional]
+        │                       │
+        ▼                       ▼
+[Extracție grupuri]    [Extracție grupuri]
+        │                       │
+        └──────┬───────────────┘
+               ▼
+      [Deduplicare + prioritate PRO]
+               │
+               ▼
+        [Filtru excluderi]
+               │
+               ▼
+     ┌──────────────────────────────┐
+     │ Liste finale grupuri         │
+     └──────────────────────────────┘
+               │
+        ┌──────┴───────────┐
+        ▼                  ▼
+ Excel (5 sheet-uri)     TXT (liste)
+```
+
+---
+--------
+
+
+
+
+############################################################################333
+
+
+ ==== Elabora_Tabella-Rapid7.py ==============
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-Rapid7)**  
+*(model complet, desfășurat, identic ca stil cu celelalte)*
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două fișiere CSV**:
+
+```text
+OUT_Hardware_TAB   → Tabella_HW.csv
+OUT_Software_TAB   → Tabella_SW.csv
+```
+
+Acestea sunt încărcate în dicționare Python:
+
+- `Hardware` → toate serverele + câmpuri HW (virtuale, tipo, cliente etc.)
+- `Software` → versiunea Rapid7 detectată din software
+- `Rapid7` → structura finală pentru Tabella_Rapid7
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSA**
+
+## 🔵 **2.1. Tabella_SW → detectarea instalărilor Rapid7**
+
+Din fiecare linie SW se extrage:
+
+- `nome componente` (index 41)
+- `versione_componente` (index 42)
+
+Dacă `nome componente` conține:
+
+```
+"rapid7"
+```
+
+Atunci:
+
+```
+Software[nome_server] = versione_componente
+```
+
+---
+
+## 🟣 **2.2. Tabella_HW → baza hardware pentru Rapid7**
+
+Un server intră în Tabella_Rapid7 dacă:
+
+```
+apare în Software (are Rapid7 instalat)
+```
+
+Câmpuri folosite din Hardware (Rapid7_Field):
+
+- nome  
+- virtuale  
+- tipo  
+- cliente  
+- ambiente  
+- destinazione  
+- versione_componente (din Software)
+
+---
+
+# **3. STRUCTURA RAPID7 (OUTPUT)**
+
+Rapid7_Field definește câmpurile finale:
+
+- 6 câmpuri HW  
+- 1 câmp versiune Rapid7 (din Software)
+
+Total câmpuri Rapid7: **7**
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI RAPID7**
+
+## 🟢 **4.1. Identificarea serverelor Rapid7**
+
+Un server intră în Tabella_Rapid7 dacă:
+
+```
+Software[k] există → serverul are Rapid7 instalat
+```
+
+---
+
+## 🟢 **4.2. Construirea fiecărui rând Rapid7**
+
+Pentru fiecare server detectat:
+
+1. Se creează `Rapid7[k] = []`
+2. Se extrag câmpurile definite în `Rapid7_Field`  
+3. Se adaugă versiunea Rapid7:
+
+```
+Rapid7[k].append(Software[k])
+```
+
+---
+
+# **5. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+---
+
+## **5.1. OUT_Rapid7_TAB → Tabella_Rapid7.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_Rapid7_TAB → Tabella_Rapid7.csv         │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE câmpurile Rapid7_Field:
+- 6 câmpuri HW
+- 1 câmp versiune Rapid7 (din Software)
+```
+
+Structura unei linii:
+
+```
+nome | virtuale | tipo | cliente | ambiente | destinazione | versione_componente
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stilul tău preferat)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Tabella_SW.csv      → Software (Rapid7)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Detectare Rapid7 din Tabella_SW                      │
+        │  - extrage versione_componente                       │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare server din Hardware:
+        - dacă apare în Software:
+            → extrage câmpurile Rapid7_Field
+            → adaugă versione_componente
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_Rapid7_TAB → Tabella_Rapid7.csv                 │
+        └──────────────────────────────────────────────────────┘
+```
+
+---
+###########################################################################
+
+
+=== Elabora_Tabella-REDHAT ======
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-REDHAT)**  
+*(model complet, desfășurat, identic ca stil cu celelalte)*
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două fișiere CSV**:
+
+```text
+OUT_Hardware_TAB   → Tabella_HW.csv
+OUT_Software_TAB   → Tabella_SW.csv
+```
+
+Acestea sunt încărcate în dicționare Python:
+
+- `Hardware` → toate serverele + câmpuri HW (socket, core, cluster, cliente etc.)
+- `Software` → versiunea Red Hat detectată din software
+- `REDHAT` → structura finală pentru Tabella_REDHAT
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSA**
+
+## 🔵 **2.1. Tabella_SW → detectarea versiunii Red Hat Enterprise Linux**
+
+Din fiecare linie SW se extrage:
+
+- `nome componente` (index 41)
+- `versione_componente` (index 42)
+
+Dacă `nome componente` conține:
+
+```
+"red hat enterprise"
+```
+
+Atunci:
+
+```
+Software[nome_server] = versione_componente
+```
+
+Exemplu:
+
+- "red hat enterprise linux server" → versiune "7.9"
+
+---
+
+## 🟣 **2.2. Tabella_HW → baza hardware pentru REDHAT**
+
+Pentru fiecare server:
+
+- se verifică OS:
+  - conține "red hat enterprise"
+
+Câmpuri folosite din Hardware (REDHAT_Field):
+
+- nome  
+- powerstate  
+- operating_system  
+- virtuale  
+- tipo  
+- n_socket  
+- n_core  
+- cluster_name  
+- cluster_cores  
+- cluster_numhosts  
+- cliente  
+- ambiente  
+- destinazione  
+- versione_componente (din Software)
+
+---
+
+# **3. STRUCTURA REDHAT (OUTPUT)**
+
+REDHAT_Field definește câmpurile finale:
+
+- 13 câmpuri HW  
+- 1 câmp versiune Red Hat (din Software)
+
+Total câmpuri REDHAT: **14**
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI REDHAT**
+
+## 🟢 **4.1. Identificarea serverelor Red Hat**
+
+Un server intră în Tabella_REDHAT dacă:
+
+```
+OS conține "red hat enterprise"
+```
+
+---
+
+## 🟢 **4.2. Construirea fiecărui rând REDHAT**
+
+Pentru fiecare server Red Hat:
+
+1. Se creează `REDHAT[k] = []`
+2. Se extrag câmpurile definite în `REDHAT_Field`  
+3. Se tratează câmpurile speciale:
+
+### **4.2.1. cluster_cores**
+
+- dacă același cluster a fost deja procesat → cluster_cores = 0  
+- altfel → se păstrează valoarea și se marchează clusterul în `ClusterCores`
+
+### **4.2.2. cluster_numhosts**
+
+- dacă același cluster a fost deja procesat → cluster_numhosts = 0  
+- altfel → se păstrează valoarea și se marchează clusterul în `ClusterNumHosts`
+
+### **4.2.3. versione_componente**
+
+- dacă serverul apare în Software → versiunea detectată  
+- altfel → "-"
+
+---
+
+# **5. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+---
+
+## **5.1. OUT_REDHAT_TAB → Tabella_REDHAT.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_REDHAT_TAB → Tabella_REDHAT.csv         │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE câmpurile REDHAT_Field:
+- 13 câmpuri HW
+- 1 câmp versiune Red Hat (din Software)
+```
+
+Structura unei linii:
+
+```
+nome | powerstate | operating_system | virtuale | tipo |
+n_socket | n_core | cluster_name | cluster_cores | cluster_numhosts |
+cliente | ambiente | destinazione | versione_componente
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stilul tău preferat)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Tabella_SW.csv      → Software (versiune Red Hat)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Detectare versiune Red Hat din Tabella_SW            │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare server din Hardware:
+        - dacă OS conține "red hat enterprise":
+            → extrage câmpurile REDHAT_Field
+            → tratează cluster_cores (evită dublarea)
+            → tratează cluster_numhosts (evită dublarea)
+            → adaugă versione_componente (din Software)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_REDHAT_TAB → Tabella_REDHAT.csv                 │
+        └──────────────────────────────────────────────────────┘
+```
+
+---
+########################################################################3333
+
+
+==== Elabora_Tabella-SQL.py ==============
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-SQL)**  
+*(modelul tău clasic, complet desfășurat și clar)*
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două fișiere CSV**:
+
+```text
+OUT_Hardware_TAB   → Tabella_HW.csv
+OUT_Software_TAB   → Tabella_SW.csv
+```
+
+Acestea sunt încărcate în dicționare Python:
+
+- `Hardware` → toate serverele + câmpuri HW (socket, core, destinazione, cliente etc.)
+- `Software` → ediția SQL Server detectată din software
+- `SQL` → structura finală pentru Tabella_SQL
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSA**
+
+## 🔵 **2.1. Tabella_SW → detectarea ediției SQL Server**
+
+Din fiecare linie SW se extrage:
+
+- `nome componente` (index 41)
+
+Dacă conține:
+
+- **sql server enterprise** → ediție = enterprise  
+- **sql server standard** → ediție = standard  
+- **sql server developer** → ediție = developer  
+
+Rezultatul:
+
+```
+Software[nome_server] = "enterprise" | "standard" | "developer"
+```
+
+---
+
+## 🟣 **2.2. Tabella_HW → baza hardware pentru SQL**
+
+Pentru fiecare server:
+
+- se verifică OS:
+  - conține "sql"
+  - sau serverul apare în Software (are SQL instalat)
+
+Câmpuri folosite din Hardware:
+
+- nome  
+- virtuale  
+- tipo  
+- n_socket  
+- n_core  
+- cluster_name  
+- cluster_cores  
+- cluster_n_vms_sql  
+- cliente  
+- ambiente  
+- destinazione  
+- contratto  
+
+Acestea sunt mapate în `SQL_Field`.
+
+---
+
+# **3. STRUCTURA SQL (OUTPUT)**
+
+SQL_Field definește câmpurile finale:
+
+- nome  
+- virtuale  
+- tipo  
+- n_socket  
+- n_core  
+- cluster_name  
+- cluster_cores  
+- cluster_n_vms_sql  
+- cliente  
+- ambiente  
+- destinazione  
+- edizione (din Software)  
+- tipo_licenza (calculat)  
+- licenze_calcolate (calculat)  
+- contrattualizzato (din Hardware)  
+
+Total câmpuri SQL: **15**
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI SQL**
+
+## 🟢 **4.1. Identificarea serverelor SQL**
+
+Un server intră în Tabella_SQL dacă:
+
+```
+OS conține "sql"
+sau
+serverul apare în Software (are SQL instalat)
+```
+
+---
+
+## 🟢 **4.2. Construirea fiecărui rând SQL**
+
+Pentru fiecare server SQL:
+
+1. Se creează `row = {}`  
+2. Se extrag câmpurile definite în `SQL_Field`  
+3. Se adaugă ediția SQL:
+   ```
+   row["edizione"] = Software.get(k, "-")
+   ```
+4. Se convertesc numeric:
+   - `n_core`
+   - `n_socket`
+
+---
+
+# **5. CALCUL LICENȚE SQL SERVER**
+
+Regulile sunt:
+
+---
+
+## 🔵 **5.1. Excludere Linux**
+
+Dacă `destinazione` conține "linux" → serverul este ignorat.
+
+---
+
+## 🔵 **5.2. Servere virtuale (virtuale = SI)**
+
+Licențiere **Enterprise**:
+
+```
+tipo_licenza = "enterprise"
+licenze_calcolate = n_core / 2
+```
+
+---
+
+## 🔵 **5.3. Servere fizice (virtuale = NO)**
+
+Licențiere **Standard**:
+
+```
+tipo_licenza = "standard"
+```
+
+Formula:
+
+- dacă `n_core / n_socket <= 4` → licențe = `2 * n_socket`
+- altfel → licențe = `n_core / 2`
+
+---
+
+## 🔵 **5.4. Contrattualizzato**
+
+Din Hardware:
+
+```
+contrattualizzato = int(Hardware[k][contratto])
+```
+
+Dacă nu este numeric → se pune 0.
+
+---
+
+# **6. OUTPUT FILES → CE CONȚIN**
+
+Procedura generează **două fișiere finale**:
+
+---
+
+## **6.1. OUT_SQL_TAB → Tabella_SQL.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_SQL_TAB → Tabella_SQL.csv               │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE câmpurile SQL_Field + câmpurile calculate:
+- 11 câmpuri HW
+- 1 câmp ediție SQL
+- 1 câmp tip licență
+- 1 câmp licențe calculate
+- 1 câmp contrattualizzato
+```
+
+---
+
+## **6.2. Tabella_SQL_Pivot.csv**
+
+Pivotul conține:
+
+- SQL Server Enterprise:
+  - total licenze_calcolate
+  - total contrattualizzato
+
+- SQL Server Standard:
+  - total licenze_calcolate
+  - total contrattualizzato
+
+Structură:
+
+```
+Licenza | Necessario | Contrattualizzato
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stilul tău preferat)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Tabella_SW.csv      → Software (ediție SQL)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Detectare ediție SQL Server din Tabella_SW           │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare server din Hardware:
+        - dacă OS conține "sql" sau apare în Software:
+            → extrage câmpurile SQL_Field
+            → adaugă edizione
+            → calculează licenze SQL
+            → adaugă contrattualizzato
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_SQL_TAB → Tabella_SQL.csv                        │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Creare pivot SQL (Enterprise / Standard)             │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Tabella_SQL_Pivot.csv
+```
+
+---
+
+############################################################################33
+
+
+ ==== Elabora_Tabella-WIN.py ==============
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-WIN)**
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două fișiere principale**:
+
+```text
+OUT_Hardware_TAB   → Tabella_HW.csv     (baza hardware)
+OUT_Software_TAB   → Tabella_SW.csv     (lista software instalat)
+```
+
+Acestea sunt încărcate în dicționare Python:
+
+- `Hardware` → toate serverele + câmpuri HW  
+- `Software` → ediția Windows detectată din software (standard / datacenter / enterprise)  
+- `WIN` → structura finală pentru Tabella_WIN  
+
+---
+
+# **2. STRUCTURI ȘI CÂMPURI**
+
+## 🔵 **2.1. Structura WIN_Field (OUTPUT)**
+
+WIN_Field definește câmpurile extrase din Hardware + câmpuri calculate:
+
+- nome  
+- powerstate  
+- virtuale  
+- tipo  
+- n_cpu  
+- n_core  
+- cluster_name  
+- cluster_cores  
+- cluster_numhosts  
+- cluster_n_vms_win  
+- cliente  
+- ambiente  
+- destinazione  
+- contratto  
+- nome_edizione (din Software)  
+- standard_lic_number (calculat)  
+- datacenter_lic_number (calculat)  
+
+Total câmpuri WIN: **17**
+
+---
+
+## 🟣 **2.2. Structura Software (doar pentru Windows Server)**
+
+Din Tabella_SW se extrage:
+
+- `nome componente`  
+- dacă conține:
+  - *windows server datacenter* → ediție = datacenter  
+  - *windows server standard* → ediție = standard  
+  - *windows server enterprise* → ediție = enterprise  
+
+Rezultatul este:
+
+```
+Software[nome_server] = "datacenter" | "standard" | "enterprise"
+```
+
+---
+
+# **3. INPUT → CUM SUNT FOLOSITE SURSELE**
+
+## 🟢 **3.1. OUT_Hardware_TAB → baza HW**
+
+Pentru fiecare server:
+
+- se verifică dacă OS conține:
+  - "windows server"
+  - sau "win20" (Windows 2000 / 2003 / 2008 etc.)
+
+Dacă DA → serverul intră în Tabella_WIN.
+
+---
+
+## 🟡 **3.2. OUT_Software_TAB → detectare ediție Windows**
+
+Pentru fiecare linie din Tabella_SW:
+
+- se citește `nome componente`
+- dacă conține "windows server":
+  - se detectează ediția (datacenter / standard / enterprise)
+  - se salvează în `Software[nome_server]`
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI WIN**
+
+## 🔵 **4.1. Construirea structurii WIN**
+
+Pentru fiecare server Windows:
+
+1. Se creează `WIN[k] = {}`  
+2. Se extrag primele **WIN_read = 14** câmpuri din Hardware conform WIN_Field  
+3. Se tratează câmpul special `cluster_cores`:
+   - dacă același cluster a fost deja procesat → cluster_cores = 0  
+   - altfel → se păstrează valoarea și se marchează clusterul în `ClusterName`  
+4. Se adaugă `nome_edizione`:
+   - dacă serverul apare în Software → ediția detectată  
+   - altfel → '-'  
+
+---
+
+## 🔵 **4.2. Calcul licențe Windows Server**
+
+Regulile:
+
+### **Pentru servere virtuale (virtuale = SI)**
+
+- se calculează:
+  - `n_core` → număr core VM  
+  - `cluster_n_vms_win` → nr. VM Windows în cluster  
+  - `cluster_numhosts` → nr. hosturi ESX  
+  - `cluster_cores` → total core cluster # de intrebat mai desfasurat p-u schema  
+
+- se calculează raportul:
+  ```
+  w = n_vmwin / n_hosts
+  ```
+
+- dacă `w > 6` → licențiere pe host (Datacenter):
+  - standard_lic_number = 0  
+  - datacenter_lic_number = cluster_cores / 2  
+
+- altfel → licențiere pe VM (Standard):
+  - standard_lic_number = max(n_core/2, Minimo_lic_Win_vm)  
+  - datacenter_lic_number = 0  
+
+---
+
+### **Pentru servere fizice (virtuale = NO)**
+
+- dacă ediția este **datacenter**:
+  - standard_lic_number = 0  
+  - datacenter_lic_number = max(n_core/2, Minimo_lic_Win_fs)  
+
+- altfel (standard / enterprise):
+  - standard_lic_number = max(n_core/2, Minimo_lic_Win_fs)  
+  - datacenter_lic_number = 0  
+
+---
+
+# **5. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+## **5.1. OUT_WIN_TAB → Tabella_WIN.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_WIN_TAB → Tabella_WIN.csv               │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE câmpurile WIN_Field:
+- nome
+- powerstate
+- virtuale
+- tipo
+- n_cpu
+- n_core
+- cluster_name
+- cluster_cores
+- cluster_numhosts
+- cluster_n_vms_win
+- cliente
+- ambiente
+- destinazione
+- contratto
+- nome_edizione
+- standard_lic_number
+- datacenter_lic_number
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stil identic cu celelalte)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Tabella_SW.csv      → Software (ediție Windows)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Detectare ediție Windows Server din Tabella_SW       │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare server Windows din Hardware:
+        - extrage câmpurile WIN_Field
+        - tratează cluster_cores (evită dublarea)
+        - adaugă nome_edizione (standard / datacenter / enterprise)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Calcul licențe Windows Server                        │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Reguli:
+        - VM: dacă VM_per_host > 6 → licențiere Datacenter
+        - VM: altfel → licențiere Standard
+        - Fizic: depinde de ediție (datacenter / standard)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_WIN_TAB → Tabella_WIN.csv                        │
+        └──────────────────────────────────────────────────────┘
+```
+
+---
+#################################################################################33
+
+
+# 📘 **====== Elabora_User_Group_AD ======**
+
+# **DIAGRAMĂ VIZUALĂ – INPUT / PROCESARE / OUTPUT**
+
+---
+
+# 🟦 **1. INPUT – Fișiere și liste folosite**
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  AD-usersAndGroupsResult-*.csv   →   Fișiere Active Directory │
+└──────────────────────────────────────────────────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────────────────────────────────┐
+│  Lista gruppi Office.txt   →   Grupuri STD / PRO             │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+# 🟩 **2. PRELUCRARE – LOGICA PROCEDURII**
+
+## **A. Încărcare grupuri STD / PRO**
+```
+Lista gruppi Office.txt
+     │
+     ▼
+[Split după separator]
+     │
+     ├── dacă tip = "std" → GROUP_STD
+     └── altfel → GROUP_PRO
+```
+
+---
+
+## **B. Căutare fișiere AD**
+```
+cm.list_files_scandir → găsește toate AD-usersAndGroupsResult-*.csv
+```
+
+---
+
+## **C. Procesarea fiecărui fișier AD**
+```
+┌──────────────────────────────────────────────┐
+│ Pentru fiecare fișier AD găsit               │
+└──────────────────────────────────────────────┘
+                 │
+                 ▼
+[Citire linii + eliminare header]
+                 │
+                 ▼
+[Curățare linie: \x00, newline]
+                 │
+                 ▼
+[Split după separator → câmpuri y[]]
+                 │
+                 ▼
+[Gestionare linii incomplete (<7 câmpuri)]
+                 │
+                 ▼
+[Excluderi]
+   ├─ SamAccountName conține: cr, cre
+   └─ GroupName conține: 099, ctx_033, ctx_870
+                 │
+                 ▼
+[Ignorăm dacă y[6] == "Group"]
+                 │
+                 ▼
+[Clasificare]
+   ├─ dacă GroupName ∈ GROUP_STD → USER_GROUP_STD
+   └─ dacă GroupName ∈ GROUP_PRO → USER_GROUP_PRO
+```
+
+---
+
+# 🟧 **3. OUTPUT – CE SE GENEREAZĂ**
+
+## **A. OUT_USER_PRO → User_list_pro.csv**
+```
+┌──────────────────────────────────────────────┐
+│ User_list_pro.csv                            │
+└──────────────────────────────────────────────┘
+Conține:
+- SamAccountName
+- GroupName
+(doar utilizatorii din grupurile PRO)
+```
+
+---
+
+## **B. OUT_USER_STD → User_list_std.csv**
+```
+┌──────────────────────────────────────────────┐
+│ User_list_std.csv                            │
+└──────────────────────────────────────────────┘
+Conține:
+- SamAccountName
+- GroupName
+(doar utilizatorii din grupurile STD)
+```
+
+---
+
+# 🟥 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE**
+
+```
+                 ┌──────────────────────────────────────────────┐
+                 │ AD-usersAndGroupsResult-*.csv (fișiere AD)   │
+                 └──────────────────────────────────────────────┘
+                                   │
+                                   ▼
+                 ┌──────────────────────────────────────────────┐
+                 │ Lista gruppi Office.txt → STD / PRO          │
+                 └──────────────────────────────────────────────┘
+                                   │
+                                   ▼
+                     [Filtrare + Clasificare utilizatori]
+                                   │
+                                   ▼
+     ┌──────────────────────────────────────────┬──────────────────────────────────────────┐
+     │                                          │                                          │
+     ▼                                          ▼                                          ▼
+┌──────────────────────────┐        ┌──────────────────────────┐                (filtre aplicate)
+│ USER_GROUP_PRO           │        │ USER_GROUP_STD           │
+└──────────────────────────┘        └──────────────────────────┘
+     │                                          │
+     ▼                                          ▼
+┌──────────────────────────┐        ┌──────────────────────────┐
+│ User_list_pro.csv        │        │ User_list_std.csv        │
+└──────────────────────────┘        └──────────────────────────┘
+```
+
+---
+
+Dacă vrei, pot să‑ți fac și o **variantă UML**, sau o **diagramă ASCII mai complexă**, sau chiar o **diagramă logică pe nivele (L1/L2/L3)**.
+

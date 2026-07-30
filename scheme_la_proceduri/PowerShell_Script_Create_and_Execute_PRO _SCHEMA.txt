@@ -1,0 +1,72 @@
+                    ┌────────────────────────────┐
+                    │ LISTĂ STATICĂ GRUPURI AD   │
+                    │ ($groups)                  │
+                    └────────────────────────────┘
+                                  │
+                                  ▼
+                 ┌────────────────────────────────┐
+                 │ IDENTIFICARE SUFIXE            │
+                 │ _prd / _ads / _col            │
+                 └────────────────────────────────┘
+                                  │
+                                  ▼
+                 ┌────────────────────────────────┐
+                 │ CREARE groupMap                │
+                 │ base_group → tipuri găsite     │
+                 │ ex: ctx_047_tta → ads/prd      │
+                 └────────────────────────────────┘
+                                  │
+                                  ▼
+                 ┌────────────────────────────────┐
+                 │ FILTRARE GRUPURI VALIDE        │
+                 │                                │
+                 │ PĂSTRĂM DOAR:                  │
+                 │ - grupuri exclusiv PRD         │
+                 │ - EXCEPȚII definite manual     │
+                 └────────────────────────────────┘
+                                  │
+                                  ▼
+                 ┌────────────────────────────────┐
+                 │ RECONSTRUIRE LISTĂ FINALĂ      │
+                 │                                │
+                 │ ex:                            │
+                 │ ctx_015_sdb_prd               │
+                 │ ctx_121_sdb_prd               │
+                 │ ctx_047_tta_ads (excepție)    │
+                 └────────────────────────────────┘
+                                  │
+                                  ▼
+          ┌─────────────────────────────────────────────┐
+          │ CĂUTARE ÎN TOATE FILE-URILE                 │
+          │ AD-usersAndGroupsResult.csv                 │
+          └─────────────────────────────────────────────┘
+                                  │
+                                  ▼
+                 ┌────────────────────────────────┐
+                 │ Select-String pentru fiecare   │
+                 │ grup din lista finală          │
+                 └────────────────────────────────┘
+                                  │
+                                  ▼
+                 ┌────────────────────────────────┐
+                 │ EXTRAGERE CÂMPURI CSV          │
+                 │                                │
+                 │ Group                          │
+                 │ Name                           │
+                 │ SamAccountName                 │
+                 │ SourceFile                     │
+                 └────────────────────────────────┘
+                                  │
+                                  ▼
+                 ┌────────────────────────────────┐
+                 │ ELIMINARE DUPLICATE            │
+                 │                                │
+                 │ Group + Name + SamAccountName  │
+                 └────────────────────────────────┘
+                                  │
+             ┌────────────────────┼────────────────────┐
+             ▼                    ▼                    ▼
+┌────────────────────┐ ┌────────────────────┐ ┌────────────────────┐
+│ EXPORT CSV FINAL   │ │ UNIQUE NAMES       │ │ UNIQUE SAMACCOUNT  │
+│ all-in-one_*.csv   │ │ Names.csv          │ │ SamAccount.csv     │
+└────────────────────┘ └────────────────────┘ └────────────────────┘

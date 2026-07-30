@@ -13,7 +13,7 @@ Procedura folosește **două fișiere CSV**:
 
 ```text
 OUT_Hardware_TAB           → Tabella_HW.csv
-ICTG-0-database-oracle-*   → report Oracle BigFix (inlocuim cu Asset Database)
+ICTG-0-database-oracle-*   → report Oracle BigFix (poate sa inlocuim cu Asset Database)
 ```
 
 Acestea sunt încărcate în:
