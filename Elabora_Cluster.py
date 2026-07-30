@@ -1,6 +1,18 @@
 # Python Classi dati dei Cluster 
 
 """
+
+Leggi VM_list.csv
+Calcola le statistiche delle VM sul cluster
+Leggi RVTools (tab vCluster)
+Esegui JOIN tra Cluster e VM
+Calcola le statistiche su vCenter
+Genera:
+• Cluster_list.csv
+• Vcenter_list.csv
+
+
+
  Citește VM_list.csv
  calculează statistici VM pe cluster
  citește RVTools (tabvCluster)
@@ -9,6 +21,8 @@
  generează:
 •	Cluster_list.csv
 •	Vcenter_list.csv
+
+
 
 """
 #from sys import exit
@@ -84,7 +98,7 @@ cm.check_outdir(cm.out_path)
 VM = {}
 
 # =============================================================
-
+# 3 ELABORAZIONE VM_list
 # 3️⃣ PRELUCRARE VM_list 
 
 # ============================================================
@@ -100,9 +114,10 @@ del Linee[0]
 
 # elaborazione delle righe del file VM_list
 
+# # per ogni VM estraiamo powerstate, nome del cluster e sistema operativo secondo VMware Tools
 # pentru fiecare VM extragem powerstate, cluster name, OS according to the VMware Tools
 for linea in Linee:
-    y = linea.split(cm.cs) # --> separator descris in Common.py 
+    y = linea.split(cm.cs) # --> separator descris in Common.py / --> separatore descritto in Common.py
     a = str(y[1]).lower() # powerstate
     b = str(y[11]).lower() # cluster name
     c = y[14] # --> coloana OS according to the VMware Tools
@@ -113,8 +128,8 @@ for linea in Linee:
         if a == "poweredon":
             VM[b]["nVM active"] += 1
 # logica pentru windows
-        if c.find("Windows") >= 0: # daca in coloana OS se contine "Windows"
-            VM[b]["nVM Windows"] += 1 # atunci creste counter, nVM Windows --> camp calculat, se aseamana cu HashMap ca in Java(key, value)
+        if c.find("Windows") >= 0: # daca in coloana OS se contine "Windows" / # se la colonna OS contiene "Windows"
+            VM[b]["nVM Windows"] += 1 # atunci creste counter, nVM Windows --> camp calculat, se aseamana cu HashMap ca in Java(key, value) / # quindi incrementa il contatore, nVM Windows --> campo calcolato, simile a HashMap come in Java(chiave, valore)
 
     else: 
         VM[b] = {}
@@ -134,6 +149,7 @@ for linea in Linee:
  # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 # =====================================================================
+# 4️ ELABORAZIONE CLUSTER (RVTools)
 # 4️⃣ PROCESAREA CLUSTER (RVTools)
 # -======================================================================
 print("Procedura per la elaborazion Cluster_liste dei dati da RVTOOLS - tabvCluster.csv")
@@ -225,7 +241,7 @@ for w in cm.files:
         # creazione oggetto cluster
         z = c_Cluster(nome, t)
 # ====================================================================
-
+# (ARRICCHIMENTO DEI DATI)
 #  5️⃣ ENRICHMENT (ÎMBOGĂȚIRE DATE) 
 # =-===================================================================
         # estrazione informazioni del vCenter
@@ -249,6 +265,7 @@ for w in cm.files:
 #
 # Verifica e aggiornamento dati per Vcenter_list.
 # ==================================================================
+#6️ Aggregazione VCenter
 #6️⃣ AGREGARE VCenter 
 # ==================================================================
     # --------- 6a. Extrage date

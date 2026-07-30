@@ -19,6 +19,7 @@ def norm(s, lower=False):
     return s.lower() if lower else s
 
 # ───────────────────────────────────────────────
+# Classi (invariate)
 # Clase (neschimbate)
 # ───────────────────────────────────────────────
 class AssetSW:
@@ -87,7 +88,7 @@ def calcola_edizione(dati_sw):
     return '-', '-'
 
 # ───────────────────────────────────────────────
-# dtruttura finala SW (50 colonne)
+# struttura finale SW (50 colonne)
 # Structura finală SW (50 coloane)
 # ───────────────────────────────────────────────
 SW_field = [
@@ -130,6 +131,7 @@ BGFXSW   = {}
 CMDBSW   = {}
 
 # ───────────────────────────────────────────────
+# # 1. Caricamento hardware (invariato)
 # 1. Încărcare Hardware (neschimbat)
 # ───────────────────────────────────────────────
 print("Caricare date Hardware...")
@@ -139,6 +141,7 @@ Hardware = {}
 cm.carica_dati(input_file, Hardware, 0)
 
 # ───────────────────────────────────────────────
+# # 2. Elenchi di esclusione (invariati)
 # 2. Listări excludere (neschimbat)
 # ───────────────────────────────────────────────
 mcrsft_kywrd_2_xcld = []; mcrsft_nomi_2_xcld = []
@@ -154,8 +157,8 @@ def carica_lista(file_name, lista):
             for line in fc:
                 lista.append(line.strip())
     except FileNotFoundError:
-        print(f"  Fișier {file_name} nu există - continuă...")
-        print(f"  File {file_name} non esista - continua...")
+        print(f"  Fișier {file_name} nu există - continuă...--- Il file {file_name} non esiste - si continua...")
+        print(f"  File {file_name} non esista - continua...-- Il file {file_name} non esiste - si continua...")
 
 carica_lista("Microsoft_keyword.csv", mcrsft_kywrd_2_xcld)
 carica_lista("Microsoft_nomi.csv",     mcrsft_nomi_2_xcld)
@@ -166,7 +169,8 @@ carica_lista("VMware_nomi.csv",        vmwr_nomi_2_xcld)
 carica_lista("Oracle_nomi.csv",        orcl_nomi_2_xcld)
 carica_lista("RedHat_nomi.csv",        rdht_nomi_2_xcld)
 
-# ───────────────────────────────────────────────
+# ───────────────────────────────────────────────----
+# 3. Elaborazione BGFX SW con DictReader
 # 3. Procesare BGFX SW cu DictReader
 # ───────────────────────────────────────────────
 print("\nElaborare BGFXSW...")
@@ -226,22 +230,24 @@ else:
 
             if exclude:
                 continue
-
+            
+            # # Costruiamo la lista in ordine fisso
             # Construim lista în ordine fixă
             sw_line = []
 
+            #DEBUG
             # debug ca sa vedem metrica
             # print("METRICA:", sw_line[7])
 
 
 
-            for col in SW_ORDER[:8]:  # primele 8 vin din fișier
+            for col in SW_ORDER[:8]:  # primele 8 vin din fișier // i primi 8 provengono dal file
                 val = clean.get(col, "")
                 sw_line.append(norm(val, lower=True) if col != "nome prodotto" else val.lower())
 
   
 
-            sw_line.extend(["-", "-"])  # edițiile se calculează mai târziu
+            sw_line.extend(["-", "-"])  # edițiile se calculează mai târziu -- # le edizioni vengono calcolate in seguito
             
             # DEBUG metrica
             if kept_count < 20:
@@ -258,9 +264,10 @@ else:
             BGFXSW[computer].software(sw_line)
             kept_count += 1
 
-        print(f"   Total rânduri: {row_count:,} → păstrate după filtre: {kept_count:,}")
+        print(f"   Total rânduri: {row_count:,} → păstrate după filtre: {kept_count:,}-- Numero totale di righe: {row_count:,} → mantenute dopo i filtri: {kept_count:,}")
 
 # ───────────────────────────────────────────────
+# # 4. Elaborazione del software CMDB con DictReader
 # 4. Procesare CMDB SW cu DictReader
 # ───────────────────────────────────────────────
 print("\nElaborare CMDBSW...")
@@ -269,7 +276,7 @@ file_pattern = cm.pr["CMDB_SW_Pattern"]
 cm.list_files_scandir(cm.start_path, file_pattern, cm.pr["Extension_end"])
 
 if not cm.files:
-    print("→ Niciun fișier CMDB_SW găsit")
+    print("→ Niciun fișier CMDB_SW găsit -- Nessun file CMDB_SW trovato")
 else:
     file_path = sorted(cm.files, reverse=True)[0]
     print(f"→ Procesez: {file_path}")
@@ -322,9 +329,10 @@ else:
             CMDBSW[server].software(sw_line)
             kept_count += 1
 
-        print(f"   Total rânduri: {row_count:,} → păstrate după filtre: {kept_count:,}")
+        print(f"   Total rânduri: {row_count:,} → păstrate după filtre: {kept_count:,}-- Numero totale di righe: {row_count:,} → mantenute dopo i filtri: {kept_count:,}")
 
 # ───────────────────────────────────────────────
+# # 5. Combinazione di HW + SW + calcolo di modifica
 # 5. Combinare HW + SW + calcul ediții
 # ───────────────────────────────────────────────
 print("\nCombinare HW + SW...")
@@ -352,15 +360,15 @@ for nume in list(Software.keys()):
 # ───────────────────────────────────────────────
 output_file = cm.dr.join([cm.out_path, cm.pr["OUT_Software_TAB"]])
 print("\n=== DIAGNOSTIC ===")
-print(f"Servere în Hardware   : {len(Hardware):>6}")
-print(f"Servere cu BGFX SW    : {len(BGFXSW):>6}")
-print(f"Servere cu CMDB SW    : {len(CMDBSW):>6}")
+print(f"Servere în Hardware  -- Server in Hardware : {len(Hardware):>6}")
+print(f"Servere cu BGFX SW  --- server con BGFX SW   : {len(BGFXSW):>6}")
+print(f"Servere cu CMDB SW  --- Serveri con CMDB SW  : {len(CMDBSW):>6}")
 
 comune_bgfx = set(Hardware.keys()) & set(BGFXSW.keys())
 comune_cmdb = set(Hardware.keys()) & set(CMDBSW.keys())
 
-print(f"Servere comune Hardware ↔ BGFX : {len(comune_bgfx):>6}")
-print(f"Servere comune Hardware ↔ CMDB : {len(comune_cmdb):>6}")
+print(f"Servere comune Hardware ↔ BGFX  -- Server condivisi Hardware ↔ BGFX: {len(comune_bgfx):>6}")
+print(f"Servere comune Hardware ↔ CMDB  Server comuni Hardware ↔ CMDB: {len(comune_cmdb):>6}")
 
 if comune_bgfx:
     print("Exemple comune BGFX:", list(comune_bgfx)[:3])
@@ -368,7 +376,7 @@ if comune_cmdb:
     print("Exemple comune CMDB:", list(comune_cmdb)[:3])
 
 total_sw = sum(len(s.sw) for s in Software.values())
-print(f"Total intrări software scrise : {total_sw:>6}")
+print(f"Total intrări software scrise  -- Totale voci software scritte: {total_sw:>6}")
 print("===================\n")
 with open(output_file, "w", encoding="utf-8") as f:
     f.write("sep=|\n")

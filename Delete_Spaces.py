@@ -37,13 +37,13 @@ def deleteSpaces(input_path):
         writer = csv.writer(outfile, delimiter=',', quoting=csv.QUOTE_MINIMAL)
         writer.writerows(rows)
 
-    print(f"✅ File ripulito: {os.path.basename(input_path)}")
+    print(f" File ripulito: {os.path.basename(input_path)}")
 
 # === Eseguiamo la procedura per tutti i file trovati ===
 if not input_paths:
-    print("⚠️ Nessun file CSV trovato nella directory specificata.")
+    print(" Nessun file CSV trovato nella directory specificata.")
 else:
     for path in input_paths:
         deleteSpaces(path)
 
-print("\n🏁 Procedura di pulizia completata.")
+print("\n Procedura di pulizia completata.")

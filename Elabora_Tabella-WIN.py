@@ -1,5 +1,4 @@
 # Python Classi dati della tabella WIN 
-
 #from sys import exit
 import csv
 import Common as cm
@@ -176,7 +175,7 @@ j = 0       # Questo serve per poter scorrere la lista di oggetti per verficiare
             # presente uno che contenga già le informazioni della riga in elaborazione.
 t = []      # Lista che contiene la riga del file elaborata e con le informazioni elencate in CMDB_field
 mesg = "Elemento [{}/{}]"
-righe=fc.readlines()
+righe = fc.readlines()
 del righe[0]
 del righe[0]
 h = len(righe)
@@ -201,7 +200,7 @@ for k in Hardware:
     if (sysop.find("windows server") > -1) or (sysop.find("win20") > -1):
 
 #        WIN[k]=[]
-        WIN[k] = {}
+        WIN[k] = {} # am schimbat in alta structura
         for c in range(0, WIN_read):
 #        for c in WIN_Field:
             if lst_win[c] == "nome_edizione":

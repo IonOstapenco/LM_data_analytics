@@ -54,7 +54,7 @@ farm_df['DNSName_processed'] = farm_df['DNSName'].str.split('.').str[0].str.stri
 # Eliminiamo i duplicati mantenendo solo le colonne necesare
 farm_df_unique = farm_df[['DNSName_processed', 'Gruppi di AD']].drop_duplicates()
 
-
+# # Pulizia dei dati Flexera
 # Curățare date Flexera
 # flexera_df['deviceName'] = flexera_df['deviceName'].str.strip().str.upper() # --> varianta mai veche 
 
@@ -64,12 +64,13 @@ flexera_df['deviceName'] = (
     .str.strip()
     .str.upper()
 )
-
+# # Filtriamo solo Office Standard e Professional Plus
 # Filtrăm doar Office Standard și Professional Plus
 flexera_df = flexera_df[
     flexera_df['name'].str.contains('Office Standard|Professional Plus', case=False, na=False)
 ]
 
+# Selezionare le colonne necessarie
 # Selectăm coloanele necesare
 flexera_df_unique = flexera_df[['deviceName', 'name']].drop_duplicates()
 
@@ -87,6 +88,7 @@ merged_df = pd.merge(
 # differencies
 # --- DIFFERENZE: server presenti in FARM ma NON in FLEXERA (Office) ---
 
+# # che sono nella fattoria, ma non sono in Flexera
 # care sunt in farm, dar nu sunt in flexera 
 differences_df = pd.merge(
     farm_df_unique,
@@ -98,10 +100,12 @@ differences_df = pd.merge(
 )
 
 
-
+# Manteniamo solo ciò che NON ha una corrispondenza in Flexera
 # Păstrăm doar ce NU are match în Flexera
 differences_df = differences_df[differences_df['_merge'] == 'left_only']
 
+
+# Seleziona le colonne pertinenti
 # Selectăm coloanele relevante
 differences_df = differences_df[['DNSName_processed', 'Gruppi di AD']].drop_duplicates()
 differences_df.columns = ['Nome Server', 'Gruppi di AD']
@@ -118,9 +122,13 @@ missing_in_farm_df = pd.merge(
     indicator=True
 )
 
+
+# # Manteniamo solo ciò che NON ha una corrispondenza nella FARM
 # Păstrăm doar ce NU are match în FARM
 missing_in_farm_df = missing_in_farm_df[missing_in_farm_df['_merge'] == 'left_only']
 
+
+# Seleziona le colonne pertinenti
 # Selectăm coloanele relevante
 missing_in_farm_df = missing_in_farm_df[['deviceName', 'name']].drop_duplicates()
 missing_in_farm_df.columns = ['Nome Server', 'Nome componente']
@@ -129,6 +137,9 @@ missing_in_farm_df.columns = ['Nome Server', 'Nome componente']
 result_df = merged_df[['DNSName_processed', 'Gruppi di AD', 'name']].drop_duplicates()
 result_df.columns = ['Nome Server', 'Gruppi di AD', 'Nome componente']
 
+
+#macchine escluse dal 29/10/2025
+#aggiunto il 29/10/2025
 
 #masini de excludere de pe data de 29 /10/2025
 #adaugat pe data de 29/10/2025
@@ -337,11 +348,11 @@ with open(output_missing_farm_txt, "w", encoding="utf-8") as f:
 
 
 
-print(f"Risultati TXT salvati in {output_missing_farm_txt}")
+print(f"Risultati output missing farm txt TXT salvati in {output_missing_farm_txt}")
 
 
 
-print(f"Risultati TXT salvati in {output_diff_txt}")
+print(f"Risultati outptut diff TXT salvati in {output_diff_txt}")
 
 
 print(f"Risultati salvati in {output_file} con i seguenti fogli:\n"

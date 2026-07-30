@@ -4,9 +4,6 @@ import csv
 import os
 
 
-# !! nu se citesc coloanele VM_Cluster	VM_Virtualcenter	VM_Host	VMWare_LastReportDate
-
-
 # ==============================================================-------------------------
 class c_CMDB:
     def __init__(self, nome, attributo):
@@ -59,7 +56,15 @@ def load_csv_dict_safe(filepath, key_field):
         return data
 
     header_line = lines[0].strip()
-    sep = ";" if ";" in header_line else "|" # --> era asa sep = "|" if "|" in header_line else ","
+    #sep = ";" if ";" in header_line else "|" # --> era asa sep = "|" if "|" in header_line else ","
+    if "|" in header_line:
+        sep = "|"
+    elif ";" in header_line:
+        sep = ";"
+    else:
+        sep = ","
+    
+    
     fieldnames = [col.strip() for col in header_line.split(sep)]
     lines = lines[1:]  # sare peste header
     # salta l'intestazione
@@ -114,7 +119,7 @@ if os.path.exists(server_path):
 
         obj.dati[0] = nome_raw
         obj.dati[CMDB_field["Numero CPU"]] = row.get("cpus", "")
-        obj.dati[CMDB_field["Ambiente"]] = row.get("pool", "")
+        #obj.dati[CMDB_field["Ambiente"]] = row.get("pool", "")
         obj.dati[CMDB_field["VM_Cluster"]] = row.get("pool", "") 
 
         # Valori implicite
@@ -145,7 +150,7 @@ if os.path.exists(vms_path):
 
         obj.dati[0] = nome_raw
         obj.dati[CMDB_field["Numero CPU"]] = row.get("cpus", "")
-        obj.dati[CMDB_field["Ambiente"]] = row.get("pool", "")
+        #obj.dati[CMDB_field["Ambiente"]] = row.get("pool", "")
         obj.dati[CMDB_field["OS"]] = row.get("operating_system", "") # -- era OS
         obj.dati[CMDB_field["VM_Cluster"]] = row.get("pool", "")
         obj.dati[CMDB_field["VM_Host"]] = row.get("running_on", "")

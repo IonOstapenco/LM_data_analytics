@@ -19,6 +19,16 @@ Citește 3 surse RVTools:
  elimină duplicate
  generează fișier final VM_list.csv
 
+ Legge 3 sorgenti RVTools:
+• CPU (tabvCPU)
+• STRUMENTI (tabvTools)
+• INFORMAZIONI (tabvInfo)
+Normalizza e filtra le VM
+Esegue un'operazione JOIN tra le 3 sorgenti
+Rimuove le VM indesiderate (test, cloni, ecc.)
+Rimuove i duplicati
+Genera il file finale VM_list.csv
+
 """
 
 #from sys import exit
@@ -31,6 +41,7 @@ class c_CPU:
         self.nome = nome
         self.dati = attributo
 
+# tratto da ---> RVtools_tabvCPU
 CPU = []  # se ia din ---> RVtools_tabvCPU
 CPU_field = { "VM": 0,
                "CPUs": 4,
@@ -45,6 +56,8 @@ class c_TOOLS:
         self.nome = nome
         self.dati = attributo
 
+
+##preso da RvTools_tabvTools --->
 TOOLS = []    #se ia din RvTools_tabvTools --->
 TOOLS_field = {"VM": 1,              
                  "VM Version": 5,      
@@ -58,10 +71,15 @@ TOOLS_field = {"VM": 1,
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-class c_VM: # structura de date pentru fisier final, de output
+
+# # struttura dati per il file di output finale
+class c_VM: # structura de date pentru fisier final, de output / 
     def __init__(self, nome, attributo):
         self.nome = nome
         self.dati = attributo
+
+
+# # --> struttura finale del file ---> è ricavata da RvTools_tabvInfo
 
 VM = [] # # --> structura fisierului final  ---> se ia din RvTools_tabvInfo
 VM_field = {
@@ -84,11 +102,11 @@ VM_field = {
     "VI SDK Server type": 16,
     "VI SDK API Version": 17,
     "VI SDK Server": 18,         # ---- Ultimo campo letto da RvTools
-    "Sockets": 19,        # ---> campuri extra (Sockets se ia din RvTools_tabvCPU)
+    "Sockets": 19,        # ---> campuri extra (Sockets se ia din RvTools_tabvCPU) / campi aggiuntivi (i socket vengono presi da RvTools_tabvCPU)
     "Cores p/s": 20,
     "Tools": 21,
-    "Tools Version": 22, # ---> se ia probabil din RvTools_tabvTools
-    "Required Version": 23, # ---> se ia probabil din RvTools_tabvTools
+    "Tools Version": 22, # ---> se ia probabil din RvTools_tabvTools /  tratto da RvTools_tabvTools
+    "Required Version": 23, # ---> se ia probabil din RvTools_tabvTools / 
     "Upgradeable": 24,  # ---> se ia probabil din RvTools_tabvTools
     "Upgrade Policy": 25
     }
@@ -142,6 +160,7 @@ cm.check_outdir(cm.out_path)
 # ==================================================================
 
 
+#  ------ --- CERCA FILE ------ 
 #               --- CAUTARE FISIER ------
 cm.list_files_scandir(cm.start_path, cm.pr["RvTools_CPU_Pattern"], cm.pr["Extension_end"])
 
@@ -177,8 +196,8 @@ for w in cm.files:
 #
         tmp = cm.togli_apici(linea, separa)
         y = tmp.split(cm.cs)
-        nome = str(y[CPU_field["VM"]]).lower() # --> Procesare rânduri
-        t = []  # --> lista pentru CPU
+        nome = str(y[CPU_field["VM"]]).lower() # --> Procesare rânduri/# --> Elaborazione delle righe
+        t = []  # --> lista pentru CPU / --> elenco per CPU
         for c in CPU_field:
             t.append(y[CPU_field[c]])
 #
@@ -209,7 +228,11 @@ print("Procedura per la elaborazione dei dati da RVTOOLS - tabvTools.")
 # Cerco il file più recente in base al pattern indicato in Parametri.json
 #
 cm.files = []
+
+
+# Ricerca file
 # Căutare fișier
+
 cm.list_files_scandir(cm.start_path, cm.pr["RvTools_Tools_Pattern"], cm.pr["Extension_end"])
 
 mesg = "Elemento [{}]"
@@ -228,6 +251,7 @@ for w in cm.files:
     fc.close()
 
 # =============================================================
+#  ELABORAZIONE TOOLS (tabvTools)
 #  PROCESAREA TOOLS (tabvTools)
 # ----- =============================================================
     with open(w,  mode ='r') as file:
@@ -274,6 +298,7 @@ mes1 = "FILE:[{}]"
 
 
 # ==================================================================
+# ELABORAZIONE VM (tabvInfo)
 # PROCESAREA VM (tabvInfo) 
 # ===================================================================
 for w in cm.files:
@@ -308,17 +333,18 @@ for w in cm.files:
             trovato = 0
             for x in key_word:
                 # ============================================================
+                # FILTRA VM
                 # FILTRARE VM-uri 
                 # =============================================================
-                if nome.find(x) >= 0: # --> returneaza pozitia unde apare x sa -1 daca NU APARE
-                     #c ---> daca s-a gasit, atunci se elimina cheile
+                if nome.find(x) >= 0: # --> returneaza pozitia unde apare x sa -1 daca NU APARE / # --> restituisce la posizione in cui appare x o -1 se NON APPARE
+                     #c ---> daca s-a gasit, atunci se elimina cheile / c ---> se trovato, rimuovere le chiavi
                     trovato = 1
-            if ( trovato == 1):  # cred ca se putea mai simplu 
+            if ( trovato == 1):  # cred ca se putea mai simplu / # Penso che potrebbe essere più semplice
                 """
                 if any(x in nome for x in key_word):
                     continue
                 """
-                continue # --> un fel de skip, sare peste cuvant din lista de chei de exlucdere
+                continue # --> un fel de skip, sare peste cuvant din lista de chei de exlucdere / una sorta di salto, salta la parola dall'elenco delle chiavi di esclusione
             l = list(VM_field.keys()) 
             t = []
             t.append(nome)
@@ -335,7 +361,8 @@ for w in cm.files:
 # viene memorizzato nella lista di oggetti 'CPU'
 
 # ===========================================================================
-# 6️⃣ MERGE CU CPU 
+# MERGING WITH CPU
+# 6 MERGE CU CPU 
 #==============================================================================
 
             trovato = next(
@@ -351,7 +378,8 @@ for w in cm.files:
                 z.dati.append(0)
 #@========================================================
 
-# 7️⃣ MERGE CU TOOLS 
+# MERGERE CON TOOLS
+# 7 MERGE CU TOOLS 
 
 # =======================================================
             trovato = next(
@@ -364,7 +392,7 @@ for w in cm.files:
                 z.dati.append(trovato.dati[4])    # "Required Version"
                 z.dati.append(trovato.dati[5])    # "Upgradeable"
                 z.dati.append(trovato.dati[6])    # "Upgrade Policy"
-            except:  # --> daca nu se gaseste --- se inscrie 0
+            except:  # --> daca nu se gaseste --- se inscrie 0 / --> se non trovato --- inserire 0
                 z.dati.append(0)
                 z.dati.append(0)
                 z.dati.append(0)
@@ -376,10 +404,10 @@ for w in cm.files:
 #
 
 # =============================================
-#   8️⃣ ELIMINARE DUPLICATE
+# 8 RIMOZIONE DEI DUPLICATI
+#   8️ ELIMINARE DUPLICATE
 #============================================
 
-# --> voi incerca sa utilizez doar dropduplicates
             trovato = 0
             n = len(VM)
             for x in range(0, n):
@@ -389,6 +417,7 @@ for w in cm.files:
             if trovato == 1:
                 continue    
 # =================================
+# SALVATAGGIO FINALE
 # SALVAREA FINALA
 # ==============================
             VM.append(z)

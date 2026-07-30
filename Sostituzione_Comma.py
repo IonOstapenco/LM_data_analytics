@@ -19,8 +19,9 @@ def inlocuire_comma(inputFile):
 
 
 # ==========================================================
-# 1) Detectăm automat cel mai nou folder RVTools
 #  1) Rileviamo automaticamente la cartella RVTools più recente
+# 1) Detectăm automat cel mai nou folder RVTools
+
 # ==========================================================
 def get_latest_rvtools_folder(base_dir):
     pattern = os.path.join(base_dir, "rvtools_*")
@@ -35,8 +36,9 @@ def get_latest_rvtools_folder(base_dir):
 
 
 # ==========================================================
-# 2) Generăm automat căile pentru RVTools (*.csv) pentru servere
 # 2) Generiamo automaticamente percorsi RVTools (*.csv) per i server
+# 2) Generăm automat căile pentru RVTools (*.csv) pentru servere
+
 # ==========================================================
 def build_rvtools_paths(servers):
     latest_folder, date_str = get_latest_rvtools_folder(start_path)
@@ -62,6 +64,7 @@ def build_rvtools_paths(servers):
 
 
 # ==========================================================
+#3) ESECUZIONE
 # 3) EXECUTIE
 # ==========================================================
 
@@ -78,4 +81,4 @@ for file in paths:
     if os.path.exists(file):
         inlocuire_comma(file)
     else:
-        print("!!! FIȘIER LIPSA -- NIENTE FILE:", file)
+        print("!!! FIȘIER LIPSA -- NIENTE FILE!:", file)

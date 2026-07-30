@@ -44,7 +44,6 @@ print("----------------------------------------------------------------\n")
 #
 # Ricavo la data di estrazione dei dati dal nome del file
 #
-
 d_estrazione = temp[0][-12:-4]
 a_estrazione = int(d_estrazione[:4])
 m_estrazione = int(d_estrazione[4:6])

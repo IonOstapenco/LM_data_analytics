@@ -41,9 +41,9 @@ for linea in Linee:
 
 # DEBUGGING: Afișăm grupurile încărcate
 # DEBUGGINGȘ Visualizziamo i gruppi caricati
-print("DEBUGGING: Afișăm grupurile încărcate")
-print("Grupuri STD:", GROUP_STD)
-print("Grupuri PRO:", GROUP_PRO)
+#print("DEBUGGING: Afișăm grupurile încărcate")
+#print("Grupuri STD:", GROUP_STD)
+#print("Grupuri PRO:", GROUP_PRO)
 
 #
 # Cerco tutti i file in base al pattern indicato in Parametri.json
@@ -108,7 +108,8 @@ for w in cm.files:
             i += 1
             continue  # Se lo User è un gruppo lo ignoriamo
         a = str(y[2]).strip().lower()  # GroupName
-        u = str(y[5]).strip().lower()  # SamAccountName
+        #u = str(y[5]).strip().lower()  # SamAccountName --> vechi
+        u = str(y[4]).strip()  # SamAccountName --> modificat in username
         # Debugging: Afisam valorile raw
         #print(f"Procesare: SamAccountName={u}, GroupName={a}")
         # Filtru pentru SamAccountName: excludem conturile care contin CR sau CRE
@@ -152,7 +153,7 @@ output_file = cm.dr.join(y)
 f = open(output_file, "w")
 f.write("sep=" + cm.cs + "\n")
 print("\n\nScrittura file " + output_file)
-riga = "SamAccountName" + cm.cs + "GroupName"
+riga = "UserName" + cm.cs + "GroupName" + cm.cs + "Nome server" # --> adaugat 16/07 + cm.cs + "Nome server"
 f.write(riga + "\n")
 
 for g in USER_GROUP_PRO:
@@ -168,7 +169,7 @@ output_file = cm.dr.join(y)
 f = open(output_file, "w")
 f.write("sep=" + cm.cs + "\n")
 print("\n\nScrittura file " + output_file)
-riga = "SamAccountName" + cm.cs + "GroupName"
+riga = "UserName" + cm.cs + "GroupName"
 f.write(riga + "\n")
 
 for g in USER_GROUP_STD:

@@ -200,11 +200,13 @@ Linee = f.readlines()
 del Linee[0]
 del Linee[0]
 # -------------------------------------------------------------------------------------
+# elabora ogni server CMDB
 # procesare fiecare server CMDB
 # --------------------------------------------------------------------------------------------
 for linea in Linee:
     a = str(linea).rstrip('\n')
     y = a.split(cm.cs)
+    # --- qui estraiamo i nomi -----
     # --- aici extragem nume ----- 
     nome = str(y[CMDB_field["Nome CI"]]).lower()
     l = cm.togli_dominio(nome)
@@ -216,14 +218,17 @@ for linea in Linee:
     else:
         dominio = l[1]
     z = c_CMDB(nome, y)
-
+    # ----- trova host corrispondente
     # ----- gaseste host corespunzator -----------------------------------------------------------
+    # una sorta di collegamento tra cmdb e host
     # un fel de join intre cmdb si host
+
     trovato = next(
         (o_g for o_g in HOST if o_g.nome == nome),
         None
     )
 
+    # ---------- Aggiornamento dei dati CMDB -------------------------------
     # ----------------  Actualizare date CMDB ------------------------------------------------
     try:
         z.dati[CMDB_field["Numero Socket"]] = trovato.dati[9]                   # # CPU

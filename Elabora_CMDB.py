@@ -2,9 +2,6 @@ import csv
 import Common as cm
 
 
-# Integrazione di tre procedure "Extract_columns" in una sola funzione
-#3 in one, s-a integrat procedurele Extract_columns in 1, cu functie
-
 # ----------------------------------------------------------
 # normalizzazione del testo (BOM + spazi) utilizzata in tutte le procedure Extract_columns_asset
 # normalizare   text (BOM + spatii) (este in toate Extract_columns _asset)  --: n
@@ -46,6 +43,8 @@ def process_asset(name_class, fieldnames, file_pattern, main_field, output_file)
     cm.list_files_scandir(cm.start_path, file_pattern, cm.pr["Extension_end"])
 
 # ===================================================================================================
+# -------------- Selezione del file più recente ------------------------------------------
+
 # -------------- Alegerea fisierului cel mai recent ------------------------------------------
 
 # ====================================================================================================
@@ -101,6 +100,7 @@ def process_asset(name_class, fieldnames, file_pattern, main_field, output_file)
         if not header_line:
             raise RuntimeError(f"Header {name_class} nu a fost gasit!")
         # ---------------------------------------------------------------------------------------
+        # -- Lettura del file CSV ------------------------
         # -- Citirea fișierului CSV ------------------------
         # ---------------------------------------------------------------------------------------
         # lettura CSV tramite DictReader
@@ -114,6 +114,16 @@ def process_asset(name_class, fieldnames, file_pattern, main_field, output_file)
         # stampa header per debug
         # este un oarecare debug
         print("Header detectat:", reader.fieldnames)
+
+# -----------------------------------------------------------------
+#       -- ELABORAZIONE RIGHE CSV
+        # ----------------------------------------------------------------------
+#• Normalizza le chiavi di riga.
+#• Estrae il campo principale (main_field) come chiave primaria (nome).
+#• Crea un oggetto c_generic per ogni riga e lo aggiunge all'elenco.
+#• Solo le righe elaborate per le colonne definite in fieldnames vengono incluse nella data.
+
+#===========================        
 
         # -----------------------------------------------------------------
         # -- PRELUCRAREA RANDURILOR  CSV
@@ -137,6 +147,9 @@ def process_asset(name_class, fieldnames, file_pattern, main_field, output_file)
 
             if not nome:
                 continue
+            if name_class in ["CMDB", "PDL"]:
+                if nome in dismessi_set:
+                    continue
 
             # salvare record nella lista
             # salvam recordul
@@ -178,26 +191,52 @@ CMDB_field = ["Nome CI","OS","DNS","Domain Name","Is Virtual","Numero CPU","Nume
               "Processore","Modello","VM_Cluster","VM_Virtualcenter","VM_Host",
               "VMWare_LastReportDate","Bigfix_LastReportDate","Applicazioni (lista)",
               "Ruolo","Category","Type","Ambiente","Responsabile (Server)",
-              "Used By","Contratto","server_iscloud","Ip_primary"] # --> din asset server (all)
+              "Used By","Contratto","server_iscloud","Ip_primary"] # --> from asset server (all)
 
-DISS_field = ["server","datadismissione"] # din asset server dismessi
+DISS_field = ["server","datadismissione"] # from asset server dismessi
 
-PDL_field = ["Nome CI","Category","Type","Domain Name","Used By"] # din asset client
+PDL_field = ["Nome CI","Category","Type","Domain Name","Used By"] # from asset client
 
 
 # -------------------------------------------------------------
 # elaborazione dati CMDB
 # prelucram pe toate
 # -----------------------------------------------------------------
-CMDB_data = process_asset("CMDB", CMDB_field, cm.pr["CMDB_Pattern"], "Nome CI", cm.pr["OUT_CMDB"])
-
-
+#CMDB_data = process_asset("CMDB", CMDB_field, cm.pr["CMDB_Pattern"], "Nome CI", cm.pr["OUT_CMDB"])
 
 # =================================================================================
+#       ELABORAZIONE DISS (da Asset Server Dismissed) E PDL (da Asset Client)
 
-# Generarea listei ESX --> OUT_CMDB_ESX  (AssetCMDB_Esx.csv)
+# ===============================================================================================
 
-# ==========================================================================
+# --PROCESAREA DISS(din Asset Server Dismessi) SI PDL (din Asset Client)
+
+# ================================================================================================
+
+# --------------------------------------------------------------------
+# elaborazione dati server dismessi
+# prelucrare servere dismise
+# --------------------------------------------------------------------
+DISS_data = process_asset("DISS", DISS_field, cm.pr["DISMESSI_Pattern"], "server", cm.pr["OUT_DISMESSI"])
+
+# #aggiunto il 21/05/2026
+#adaugat pe data de 21/05/2026
+dismessi_set = {obj.nome for obj in DISS_data}
+
+# per Debug
+#pentru debug
+print("Server dismessi trovati:", len(dismessi_set))
+
+# -------------------------------------------------------------
+# elaborazione dati CMDB
+# -------------------------------------------------------------
+CMDB_data = process_asset(
+    "CMDB",
+    CMDB_field,
+    cm.pr["CMDB_Pattern"],
+    "Nome CI",
+    cm.pr["OUT_CMDB"]
+)
 
 # -------------------------------------------------------------
 # generazione file OUT_CMDB_ESX (senza modificare OUT_CMDB)
@@ -259,22 +298,14 @@ with open(out_esx_path, "w", encoding="utf-8", newline="") as f:
 
 print("OUT_CMDB_ESX finalizat \n")
 
-
-# ===============================================================================================
-
-# ------------      PROCESAREA DISS(din Asset Server Dismessi) SI PDL (din Asset Client)
-
-# ================================================================================================
-
-# --------------------------------------------------------------------
-# elaborazione dati server dismessi
-# prelucrare servere dismise
-# --------------------------------------------------------------------
-DISS_data = process_asset("DISS", DISS_field, cm.pr["DISMESSI_Pattern"], "server", cm.pr["OUT_DISMESSI"])
-
-
 # --------------------------------------------------------------------
 # elaborazione dati PDL
 # prelucrare date PDL
 # --------------------------------------------------------------------
 PDL_data = process_asset("PDL", PDL_field, cm.pr["PDL_Pattern"], "Nome CI", cm.pr["OUT_PDL"])
+
+
+
+# un filtru pe coloana E (Stato )din fisierul Asset Server ALL, sa nu sa se inscrie 
+# if Stato == Dismesso, atunci continue, adica sa nu sa se inscrie Nome CI care Stato este Dismesso
+# de scos si duplicatele 

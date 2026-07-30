@@ -1,34 +1,32 @@
-#### asta doar cu CSV!!!! fara excel si numpy!!
-
-# ! terbuie de schimbat campurile!!!!
 import pandas as pd
 import json
 import os
 
 print("SE EXECUTA PIVOT ASSET MANCANZA")
 # ==========================================================
-# 0. Citire parametri.json pentru INPUT si OUTPUT
+# 0. Lettura del file parameters.json per INPUT e OUTPUT
 # ==========================================================
 
 with open("parametri.json", "r", encoding="utf-8") as f:
     parametri = json.load(f)
 
-# Director sursa principal
+# Directory principale dei sorgenti
 source_dir = parametri["Source_dir"]
 
-# Subfolder unde se afla fisierul CMDB
+# Sottocartella in cui si trova il file CMDB
 report_dir = parametri["Report_dir"]
 
-# Subfolder output
+# Sottocartella di output
 output_subdir = parametri["Output_dir"]
 
-# Pattern fisier CMDB
+# Modello di file CMDB
 cmdb_pattern = parametri["CMDB_Pattern"]
 
-# Extensie fisier
+#Estensione del file
 extensie = parametri["Extension_end"]
 
 # ==========================================================
+# CREA IL PERCORSO DI INPUT (Source_dir + Report_dir)
 # CONSTRUIRE CALE INPUT  (Source_dir + Report_dir)
 # ==========================================================
 
@@ -42,18 +40,20 @@ for fisier in os.listdir(input_dir):
         break
 
 if file_path is None:
-    raise FileNotFoundError("Nu a fost gasit fisierul CMDB in Report_dir conform patternului!")
+    raise FileNotFoundError("File CMDB non trovato nella directory Report_dir in base al pattern specificato!/Nu a fost gasit fisierul CMDB in Report_dir conform patternului!")
 
 # ==========================================================
+# CREA IL PERCORSO DI OUTPUT (Source_dir + Report_dir + Output_dir)
 # CONSTRUIRE CALE OUTPUT  (Source_dir + Report_dir + Output_dir)
 # ==========================================================
 
 output_dir_full = os.path.join(source_dir, report_dir, output_subdir)
 
+# crea la directory se non esiste
 # cream director daca nu exista
 os.makedirs(output_dir_full, exist_ok=True)
 
-output_path = os.path.join(output_dir_full, "pivot_results.txt")
+output_path = os.path.join(output_dir_full, "pivot_Asset_Mancanza_da_CMDB_results.txt")
 
 print("Fisier input detectat:", file_path)
 print("Fisier output:", output_path)

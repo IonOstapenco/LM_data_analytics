@@ -231,7 +231,17 @@ with open(oracle_file, encoding="utf-8") as f:
         # lettura dei campi principali Oracle
         for field in Oracle_Field:
             key = header_map.get(norm(field))
-            obj.data[field] = row.get(key, "").strip() if key else ""
+
+            if not key:
+                continue
+
+            value = row.get(key,"").strip()
+
+                #  fixare -- pastreaza prima valoare valida, nu o suprascrie pe urmatoarele randuri
+            if value and not obj.data.get(field):
+                obj.data[field] = value    
+
+            #obj.data[field] = row.get(key, "").strip() if key else ""
 
         # citire si normalizare feature Oracle
         # lettura e normalizzazione delle feature Oracle
@@ -239,8 +249,21 @@ with open(oracle_file, encoding="utf-8") as f:
         funzione_raw = row.get(key_funz, "") if key_funz else ""
         funzione = normalize_feature(funzione_raw)
 
-        if funzione in Funzioni:
-            obj.features.add(funzione)
+        edizione = obj.data.get("Edizione", "").lower()
+
+        if ("standard" not in edizione) and ("express" not in edizione):
+            if funzione in Funzioni:
+                obj.features.add(funzione)
+
+        if "enterprise" in edizione:
+            if funzione in Funzioni:
+                obj.features.add(funzione)
+
+        # DEBUG
+        #print("DEBUG cu NOME SI FUNZIONE!!")
+        #print(nome, funzione)
+        
+            
 
 print(f"\n>>> Record Oracle caricati: {len(Oracle)}")
 

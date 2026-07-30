@@ -23,6 +23,7 @@ GROUP_STD = set()
 GROUP_PRO = set()
 
 # ===============================
+# # Leggi l'elenco dei gruppi
 # Citire lista grupuri
 # ===============================
 GroupList = cm.start_path + cm.dr + "Lista gruppi Office_FLEXERA.txt"
@@ -44,6 +45,7 @@ print("Grupuri STD:", GROUP_STD)
 print("Grupuri PRO:", GROUP_PRO)
 
 # ===============================
+# Filtri Regex
 # Regex filtre
 # ===============================
 exclude_patterns_Gruppi = [
@@ -58,6 +60,7 @@ exclude_patterns_SamAccountName = [
 ]
 
 # ===============================
+# Ricerca file
 # Căutare fișiere
 # ===============================
 cm.list_files_scandir(cm.start_path, cm.pr["AD_User_Group_Pattern"], cm.pr["Extension_end"])
@@ -65,6 +68,7 @@ cm.list_files_scandir(cm.start_path, cm.pr["AD_User_Group_Pattern"], cm.pr["Exte
 mesg = "Elemento [{}/{}]"
 
 # ===============================
+# Elaborazione dei file
 # Procesare fișiere
 # ===============================
 for w in cm.files:
@@ -168,7 +172,7 @@ with open(output_file, "w") as f:
 print("Scris:", output_file)
 
 
-
+# # --- metodo per nomi univoci sam account name, secondo la regola java
 # --- metoda pentru univoci sam account name , dupa regula din java
 
 # ------------------------------------------
@@ -179,6 +183,7 @@ def extract_unique_users(input_file, output_file):
     with open(input_file, "r") as f:
         lines = f.readlines()
 
+    # # salta le prime 2 righe: sep= e header
     # sari peste primele 2 linii: sep= și header
     for line in lines[2:]:
         line = line.strip()
@@ -190,6 +195,7 @@ def extract_unique_users(input_file, output_file):
         unique_users.add(sam)
 
     # scriere output simplu
+    # scrivi un output semplice
     with open(output_file, "w") as f:
         f.write("sep=" + cm.cs + "\n")
         f.write("SamAccountName\n")

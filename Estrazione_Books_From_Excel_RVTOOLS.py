@@ -1,14 +1,17 @@
 import os
 import json
 
+# importa per rinominare
 # import pentru rinominare
 import re
 from datetime import datetime
 
+# Importa per estrarre i fogli in file CSV
 # import pentru extragere sheets in fisiere csv
 import pandas as pd
 
 # ======================================---------------------====================
+# # Leggi parameters.json
 # Citire parametri.json
 # ====================================================================--------
 with open("parametri.json", "r", encoding="utf-8") as f:
@@ -17,19 +20,18 @@ with open("parametri.json", "r", encoding="utf-8") as f:
 Source_dir = parametri["Source_dir"]
 Report_dir = parametri["Report_dir"]
 
-# folder de bază (ex: C:\License_Management\Report_202604)
+
 base_folder = os.path.join(Source_dir, Report_dir)
 
 print(f"\nScanare folder: {base_folder}\n")
 
 # =============================================---=============
+# procedere ricorsivamente ----- (sottocartelle incluse)
 # trecem cu recursie -----  (subfoldere incluse)
 # ==================================================================================================
 print("Afisare toate subfoldere")
 
 for root, dirs, files in os.walk(base_folder):
-    
-    #foldername -- denumirea mapei care ne intereseaza
 
     folder_name = os.path.basename(root)
 
@@ -41,7 +43,7 @@ for root, dirs, files in os.walk(base_folder):
     print(f"\n📁 Folder: {root}")
     
     if not files:
-        print("   (niciun fisier)")
+        print("  nessun cartella -  (niciun fisier)")
     
     # afisam fisierele din folder
     for file in files:
@@ -50,10 +52,10 @@ for root, dirs, files in os.walk(base_folder):
         print(f"      -> {full_path}")
 
 
-print("!!! afisare doar subfoldere la rvtools")
+print("!!! visualizza solo le sottocartelle in rvtools/ !!! afisare doar subfoldere la rvtools")
 
 for root, dirs, files in os.walk(base_folder):
-
+    # # verifica se esiste una cartella rvtools nel percorso
     # verificam daca in path exista un folder rvtools
     if "rvtools" not in root.lower():
         continue
@@ -73,6 +75,7 @@ for root, dirs, files in os.walk(base_folder):
 print(f"\nNormalizare foldere in: {base_folder}\n")
 
 # ====================================================-------======
+# Funzione di normalizzazione del nome della cartella
 # Functie normalizare nume folder
 # ==========================================================
 def normalize_folder_name(folder_name):
@@ -85,6 +88,7 @@ def normalize_folder_name(folder_name):
     name_part = match.group(1)
     date_part = match.group(2)
 
+    # se è un nome host con un dominio → lo accorciamo
     # daca e hostname cu domeniu → il scurtam
     name_part = name_part.split(".")[0]
 
@@ -98,6 +102,7 @@ def normalize_folder_name(folder_name):
 
 
 # =========================================
+# Raccogli tutte le cartelle (BOTTOM-UP!)
 # Colectam toate folderele (BOTTOM-UP!)
 # =========================================---------------===
 folders_to_rename = []
@@ -108,6 +113,7 @@ for root, dirs, files in os.walk(base_folder, topdown=False):
         folders_to_rename.append(full_path)
 
 # ============================================================
+# Rinominiamo
 # Facem rename
 # =========================================
 for old_path in folders_to_rename:
@@ -126,7 +132,7 @@ for old_path in folders_to_rename:
         continue
 
     if os.path.exists(new_path):
-        print(f"⚠️ Exista deja: {new_path}")
+        print(f"⚠️ Exista deja // Esiste già: {new_path}")
         continue
 
     try:
@@ -135,12 +141,12 @@ for old_path in folders_to_rename:
     except Exception as e:
         print(f"❌ Eroare la {folder_name}: {e}")
 
-print("\n✔ Rename complet (rvtools + subfoldere)\n")
+print("\n✔ Rename complet (rvtools + subfoldere) /// ✔ Rinominare completamente (rvtools + sottocartelle) \n")
 
 
 #####==========================----------------====================
 # extragere shets si salvare in csv
-
+# estrarre i fogli e salvarli in formato csv
 # ------=========================================================
 
 sheets_to_export = ["vCluster", "vCPU", "vHost", "vInfo", "vTools"]
@@ -160,12 +166,12 @@ def extract_sheets_from_excel(file_path):
     try:
         xls = pd.ExcelFile(file_path)
     except Exception as e:
-        print(f"❌ Nu pot deschide: {file_path} -> {e}")
+        print(f"❌ Nu pot deschide: -- Non riesco ad aprire  {file_path} -> {e}")
         return
 
     for sheet in sheets_to_export:
         if sheet not in xls.sheet_names:
-            print(f"⚠️ Sheet lipsa: {sheet}")
+            print(f"⚠️ Sheet lipsa:  -- Foglio mancante: {sheet}")
             continue
 
         try:
@@ -177,14 +183,14 @@ def extract_sheets_from_excel(file_path):
 
             df.to_csv(output_file, index=False, sep=';')
 
-            print(f"✅ Exportat: {output_file}")
+            print(f"✅ Exportat -- esportato : {output_file}")
 
         except Exception as e:
             print(f"❌ Eroare la {sheet}: {e}")
 
 
 
-print("\n🔍 Caut fisiere Excel RVTools...\n")
+print("\n🔍 Caut fisiere Excel RVTools/ Cerco file Excel RVTools ...\n")
 
 for root, dirs, files in os.walk(base_folder):
 
@@ -196,7 +202,7 @@ for root, dirs, files in os.walk(base_folder):
             
             full_path = os.path.join(root, file)
 
-            print(f"\n📊 Procesare: {full_path}")
+            print(f"\n📊 Procesare:/// Elaborazione:  {full_path}")
             extract_sheets_from_excel(full_path)
 
 

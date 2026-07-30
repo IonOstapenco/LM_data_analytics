@@ -18,7 +18,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 class FlexeraError(Exception):
     pass
 
-
+# descriere la clase
 class FlexeraClient:
     def __init__(
         self,

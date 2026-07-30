@@ -4,11 +4,8 @@
 import csv
 import Common as cm
 
-
-
-# s-a luat din elabora_HW mai nou, care elimina spatiile invizibile + schimbarea standadtrelor
-
 # ───────────────────────────────────────────────
+# Normalizzazione del testo (nessun BOM, spazi superflui)
 # Normalizare texte (fără BOM, spații inutile)
 # ───────────────────────────────────────────────
 def norm(s, lower=False):

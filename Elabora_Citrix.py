@@ -1,5 +1,11 @@
  # Python Classi dati server Citrix
 """
+Questa procedura elabora i file Citrix (.xlsx) ed estrae:
+• l'elenco dei server Citrix
+• l'elenco delle macchine virtuali Citrix
+• li filtra
+• crea 2 file CSV puliti
+
 Această procedură prelucrează fișiere Citrix (.xlsx) și extrage:
 •	lista de servere Citrix
 •	lista de VM-uri Citrix
@@ -36,6 +42,7 @@ class c_Vms:
 
 # -- 
 Vms = []
+# campi macchina virtuale
 # campuri masini virtuale
 Vms_field = [
             "name",           # colonna A 1               
@@ -52,12 +59,13 @@ Vms_field = [
 ExcludeSRV = ["passivo produzione",
            "sviluppo",
            "dr - bolla - wpr"
-           ] # ---> mediile pentru excludere 
-Exclude = ["Halted"] # ---> tipa lista de masini oprite 
+           ] # ---> mediile pentru excludere  / gli ambienti di esclusione
+Exclude = ["Halted"] # ---> tipa lista de masini oprite / elenco delle macchine fermate
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 cm.check_outdir(cm.out_path)
 # ===================================================================
+# SELEZIONE FILE
 # 3️⃣ SELECTAREA FIȘIERULUI
 # =======================================================================
 cm.list_files_scandir(cm.start_path, cm.pr["Citrix_files_Pattern"], cm.pr['XLS_end'])
@@ -70,6 +78,7 @@ print("Elaborazione file " + temp[0])
 
 
 # =============================================================================
+#  LEGGERE EXCEL (openpyxl) 
 # 4️⃣ CITIRE EXCEL (openpyxl) 
 # ============================================================================
 wb = xl.load_workbook(temp[0]) # --> citim fisierul excel
