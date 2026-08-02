@@ -67,7 +67,9 @@ def process_asset(name_class, fieldnames, file_pattern, main_field, output_file)
 
         # delimitatore default
         # delimiter implicit
-        delimiter = cm.cs  # --> Detectarea header-ului și separatorului
+
+        #delimiter = cm.cs  # --> Detectarea header-ului și separatorului
+        delimiter = ","
         header_line = None
 
         # ricerca dinamica dell'header nel file
@@ -103,6 +105,9 @@ def process_asset(name_class, fieldnames, file_pattern, main_field, output_file)
         # -- Lettura del file CSV ------------------------
         # -- Citirea fișierului CSV ------------------------
         # ---------------------------------------------------------------------------------------
+
+        #
+        print("Delimiter detectat:", repr(delimiter))
         # lettura CSV tramite DictReader
         # citire fisier CSV cu DictReader
         reader = csv.DictReader(f, delimiter=delimiter)
@@ -134,9 +139,16 @@ def process_asset(name_class, fieldnames, file_pattern, main_field, output_file)
         #•	În data ajunge doar rândul procesat pentru coloanele definite în fieldnames. 
 
         # -------------------------------------------------------------
+
+        dismessi_count = 0 # adaugat 02/08/2026
+        total_count = 0
+
+        seen = set()
+        duplicate_count = 0
+
         for row in reader:
 
-
+            total_count +=1
             # normalizziamo anche le chiavi delle righe
             # normalizam si cheile din rand
             row = {norm(k): v for k, v in row.items() if k is not None}
@@ -147,10 +159,18 @@ def process_asset(name_class, fieldnames, file_pattern, main_field, output_file)
 
             if not nome:
                 continue
-            if name_class in ["CMDB", "PDL"]:
-                if nome in dismessi_set:
+            if name_class == "CMDB":  
+                stato = row.get("Stato", "")
+                if stato == "Dismesso":
+                    #print("DISMESSO:", nome)
+                    dismessi_count +=1
                     continue
-
+                #if nome in dismessi_set:            # VECHI
+                #    continue                        # VECHI
+            if nome in seen:
+                duplicate_count +=1
+                continue
+            seen.add(nome)
             # salvare record nella lista
             # salvam recordul
             data.append(c_generic(
@@ -158,7 +178,14 @@ def process_asset(name_class, fieldnames, file_pattern, main_field, output_file)
                 [nome if field == main_field else row.get(field, "") for field in fieldnames]
             ))
 
-    print(f"Record {name_class} citite:", len(data))
+    #print(f"Record {name_class} citite:", len(data))
+
+    #afisare server dismessi esclusi
+    #print("server dismessi esclusi", dismessi_count)
+    print("Totale righe:", total_count)
+    print("Server dismessi esclusi:", dismessi_count)
+    print("Server mantenuti:", len(data))
+    
 
 
     # utilizziamo separatore configurato per output
@@ -193,7 +220,7 @@ CMDB_field = ["Nome CI","OS","DNS","Domain Name","Is Virtual","Numero CPU","Nume
               "Ruolo","Category","Type","Ambiente","Responsabile (Server)",
               "Used By","Contratto","server_iscloud","Ip_primary"] # --> from asset server (all)
 
-DISS_field = ["server","datadismissione"] # from asset server dismessi
+#DISS_field = ["server","datadismissione"] # from asset server dismessi
 
 PDL_field = ["Nome CI","Category","Type","Domain Name","Used By"] # from asset client
 
@@ -217,15 +244,15 @@ PDL_field = ["Nome CI","Category","Type","Domain Name","Used By"] # from asset c
 # elaborazione dati server dismessi
 # prelucrare servere dismise
 # --------------------------------------------------------------------
-DISS_data = process_asset("DISS", DISS_field, cm.pr["DISMESSI_Pattern"], "server", cm.pr["OUT_DISMESSI"])
+#DISS_data = process_asset("DISS", DISS_field, cm.pr["DISMESSI_Pattern"], "server", cm.pr["OUT_DISMESSI"]) # ---! VECHI, nu mai avem nevoie
 
 # #aggiunto il 21/05/2026
 #adaugat pe data de 21/05/2026
-dismessi_set = {obj.nome for obj in DISS_data}
+#dismessi_set = {obj.nome for obj in DISS_data} # vechi, nu mai avem nevoie 
 
 # per Debug
 #pentru debug
-print("Server dismessi trovati:", len(dismessi_set))
+#print("Server dismessi trovati:", len(dismessi_set))
 
 # -------------------------------------------------------------
 # elaborazione dati CMDB
