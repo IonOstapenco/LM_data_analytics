@@ -178,6 +178,19 @@ def process_asset(name_class, fieldnames, file_pattern, main_field, output_file)
                 [nome if field == main_field else row.get(field, "") for field in fieldnames]
             ))
 
+            #aggiunto 03/08/2026 used_by --> Used By
+            data.append(c_generic(
+                nome,
+                [
+                    nome if field == main_field
+                    else row.get("used_by","") if field == "Used By"
+                    else row.get(field,"")
+                    for field in fieldnames
+                ]
+            ))
+
+            
+
     #print(f"Record {name_class} citite:", len(data))
 
     #afisare server dismessi esclusi
@@ -218,7 +231,7 @@ CMDB_field = ["Nome CI","OS","DNS","Domain Name","Is Virtual","Numero CPU","Nume
               "Processore","Modello","VM_Cluster","VM_Virtualcenter","VM_Host",
               "VMWare_LastReportDate","Bigfix_LastReportDate","Applicazioni (lista)",
               "Ruolo","Category","Type","Ambiente","Responsabile (Server)",
-              "Used By","Contratto","server_iscloud","Ip_primary"] # --> from asset server (all)
+              "Used By","Contratto","server_iscloud","Ip_primary"] # --> dall asset server (all)
 
 #DISS_field = ["server","datadismissione"] # from asset server dismessi
 
