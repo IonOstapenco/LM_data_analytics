@@ -1,0 +1,33 @@
+query {
+  software {
+    name
+    editionName
+    versionName
+    productName
+    manufacturerName
+    product {
+      alias
+      familyName
+      name
+    }
+    device {
+      name
+      vmType
+      chassisType
+      numberOfLogicalCores
+      numberOfCores
+      numberOfProcessors
+      manufacturerName
+      evidenceManufacturerName
+      evidenceModelName
+      context {
+        id
+        ambiente
+        cliente
+        ruolo
+        sito
+        stato
+      }
+    }
+  }
+}
