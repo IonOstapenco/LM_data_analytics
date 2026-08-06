@@ -255,43 +255,6 @@ BGFX_field ={"Stato", # --> ICTG_HW nou
  "Core cluster"
 
 }
-"""
-BGFX_field = {"Stato": 0, # ---> ICTG-HW clasic
-              "Nome computer": 1,
-              "Sistema operativo": 2,
-              "Nome DNS": 3,
-              "AIX Full OS Level": 4,
-              "Technology Level": 5,
-              "NumeroCPU": 6,
-              "NumeroSocket": 7,
-              "License Type": 8,
-              "Computer Type": 9,
-              "Java Output": 10,
-              "JavaPath": 11,
-              "JavaVersion": 12,
-              "Tipo di computer": 13,
-              "Core partizione": 14,
-              "Core server": 15,
-              "Stringa marchio processore": 16,
-              "Vendor": 17,
-              "Marchio": 18,
-              "Tipo": 19,
-              "Modello": 20,
-              "PVU per core": 21,
-              "Valore PVU modificato": 22,
-              "Valore PVU predefinito": 23,
-              "Fattore core Oracle": 24,
-              "Socket attivi del server": 25,
-              "Domain": 26,
-              "Nome cluster": 27,
-              "Core cluster": 28,
-              "CPU": 29,
-              "Nome host padre": 30,
-              "Last Report Time": 31,
-              "Tipo di server": 32
-             }
-"""
-
 
 CMDB_Citrix = {} # ---> Server_CMDB_Citrix.csv
 CMDB_field = {  "Nome CI": "Nome CI" , 
@@ -406,10 +369,13 @@ VCenter_field = {"Nome": 0,
            "Dominio": 4
            }
 
+'''
 DISS = {}  # ---> ServerDismessi
 DISS_field = {"server": 0,
               "datadismissione": 2
            }
+'''
+
 
 PDL = {} # -----> AssetClient
 PDL_field = {"Nome CI": "Nome CI",
@@ -428,42 +394,6 @@ cm.check_outdir(cm.out_path)
 
 mesg = "Elemento [{}]"
 mes1 = "File in caricamento: [{}]"
-""""
-y = [cm.out_path, cm.pr["OUT_CLUSTER"]]
-input_file = cm.dr.join(y)
-
-cm.carica_dati(input_file, Cluster, 0)
-
-y = [cm.out_path, cm.pr["OUT_VM"]]
-input_file = cm.dr.join(y)
-cm.carica_dati(input_file, VM, 0)
-
-y = [cm.out_path, cm.pr["OUT_Host"]]
-input_file = cm.dr.join(y)
-cm.carica_dati(input_file, HOST, 0)
-
-y = [cm.out_path, cm.pr["OUT_BGFX"]]
-input_file = cm.dr.join(y)
-cm.carica_dati(input_file, BGFX, 1)
-
-y = [cm.out_path, cm.pr["OUT_CMDB_Citrix"]]
-input_file = cm.dr.join(y)
-cm.carica_dati(input_file, CMDB_Citrix, 0)
-
-y = [cm.out_path, cm.pr["OUT_VCENTER"]]
-input_file = cm.dr.join(y)
-cm.carica_dati(input_file, VCenter, 0)
-
-y = [cm.out_path, cm.pr["OUT_DISMESSI"]]
-input_file = cm.dr.join(y)
-cm.carica_dati(input_file, DISS, 0)
-
-y = [cm.out_path, cm.pr["OUT_PDL"]]
-input_file = cm.dr.join(y)
-cm.carica_dati(input_file, PDL, 0)
-
-
-"""
 
 
 cm.check_outdir(cm.out_path)
@@ -492,9 +422,12 @@ carica_dati_dict(input_file, CMDB_Citrix, "Nome CI")
 input_file = cm.dr.join([cm.out_path, cm.pr["OUT_VCENTER"]])
 carica_dati_dict(input_file, VCenter, "Nome")
 
+'''
 # DISMESSI
 input_file = cm.dr.join([cm.out_path, cm.pr["OUT_DISMESSI"]])
 carica_dati_dict(input_file, DISS, "server")
+'''
+
 
 # PDL
 input_file = cm.dr.join([cm.out_path, cm.pr["OUT_PDL"]])

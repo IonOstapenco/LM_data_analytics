@@ -1,9 +1,9 @@
 {"Source_dir": "C:\\License_Management",
- "Report_dir": "Report_202607",
+ "Report_dir": "Report_202608",
  "Output_dir": "OutPut",
  "Output_dir_FLEXERA":"OutPut_FLEXERA",
  "Exclude_dir": "key_nomi_2_excld",
- "Former_dir": "Report_202606",
+ "Former_dir": "Report_202607",
  "Separa_dir": "\\",
  "Separa_car": "|",
  "Extension_end": "csv",
@@ -76,6 +76,8 @@
   "AD_Base_Pattern": "Active Directory Results - SERVIZICED",
   "AD_Domain_Subfolder": "ServiziCed.local",
   "FLEXERA_SW_Pattern": "flexera_software_devices",
-  "FLEXERA_SOFTWARE": "flexera_software"
+  "FLEXERA_SOFTWARE": "flexera_software",
+  "FLEXERA_REFRESH_TOKEN":"UUWvtbxhrVaHaiUn2cHGgKJFjR79ggrJ1uXBSA20YeY",
+  "FLEXERA_SOFTWARE_CSV":"flexera_software_devices.csv"
   
 }

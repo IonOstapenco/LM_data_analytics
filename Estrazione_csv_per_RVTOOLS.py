@@ -52,7 +52,7 @@ data_de_intai = first_day_of_month.strftime("_%d%m%Y") # --> am pus format din r
 base_folder = os.path.join(Source_dir, Report_dir)
 
 
-
+# de modificat din PG si DG --- in med--vvc si med-pg
 
 # esempio preso dagli esercizi
 # exemplu luat din exercitii

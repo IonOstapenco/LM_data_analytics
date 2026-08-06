@@ -18,7 +18,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 class FlexeraError(Exception):
     pass
 
-# descriere la clase
+
 class FlexeraClient:
     def __init__(
         self,
@@ -33,7 +33,6 @@ class FlexeraClient:
         self.zone = zone.lower().strip()
         self.timeout = timeout
         self.verify_ssl = verify_ssl
-
         self.access_token: Optional[str] = None
         self.access_token_expiry: float = 0
 
@@ -284,12 +283,12 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument(
         "--graphql-url",
-        required=True,
+        default = "https://api.flexera.eu/graphql/v1/orgs/35880/graphql",
         help="URL completo dell'endpoint GraphQL Flexera",
     )
     parser.add_argument(
         "--query-file",
-        required=True,
+        default = "graphql.qry",
         help="Percorso del file .graphql/.qry/.txt contenente la query",
     )
     parser.add_argument(
@@ -342,6 +341,22 @@ def main() -> int:
     args = parse_args()
 
     if not args.refresh_token:
+        with open("Parametri.json", encoding="utf-8") as f:
+            p = json.load(f)
+        args.refresh_token = p["FLEXERA_REFRESH_TOKEN"]    
+
+
+    if not args.output_csv:
+        with open("Parametri.json", encoding="utf-8") as f:
+            p = json.load(f)
+        args.output_csv = os.path.join(
+            p["Source_dir"],
+            p["Report_dir"],
+            p["FLEXERA_SOFTWARE_CSV"]           
+        )    
+
+
+    if not args.refresh_token:
         print(
             "Errore: manca --refresh-token o FLEXERA_REFRESH_TOKEN",
             file=sys.stderr,
@@ -366,10 +381,15 @@ def main() -> int:
             operation_name=args.operation_name,
         )
 
+        
+        # debug --> arata continutul fisierulii generat
+        """
         if args.pretty:
             print(json.dumps(result, indent=2, ensure_ascii=False))
         else:
             print(json.dumps(result, ensure_ascii=False))
+        """
+        print(f"CSV generato: {args.output_csv}")
 
         if args.output_json:
             write_json(args.output_json, result, pretty=True)
