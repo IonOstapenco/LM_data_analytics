@@ -74,10 +74,11 @@
   "AD-usersAndGroupsResult": "AD-usersAndGroupsResult.csv",
   "AD_Users_Results_attivi": "AD_Users_Results_attivi.csv",
   "AD_Base_Pattern": "Active Directory Results - SERVIZICED",
+  "AD_CED_Pattern": "Active Directory Results - CED",
   "AD_Domain_Subfolder": "ServiziCed.local",
   "FLEXERA_SW_Pattern": "flexera_software_devices",
   "FLEXERA_SOFTWARE": "flexera_software",
   "FLEXERA_REFRESH_TOKEN":"UUWvtbxhrVaHaiUn2cHGgKJFjR79ggrJ1uXBSA20YeY",
-  "FLEXERA_SOFTWARE_CSV":"flexera_software_devices.csv"
+  "FLEXERA_SOFTWARE_CSV":"flexera_software_devices_TEST.csv"
   
 }
