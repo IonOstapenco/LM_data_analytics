@@ -179,15 +179,15 @@ def process_asset(name_class, fieldnames, file_pattern, main_field, output_file)
             ))
 
             #aggiunto 03/08/2026 used_by --> Used By
-            data.append(c_generic(
-                nome,
-                [
-                    nome if field == main_field
-                    else row.get("used_by","") if field == "Used By"
-                    else row.get(field,"")
-                    for field in fieldnames
-                ]
-            ))
+#            data.append(c_generic(
+#                nome,
+#                [
+#                    nome if field == main_field
+#                    else row.get("used_by","") if field == "Used By"
+#                    else row.get(field,"")
+#                    for field in fieldnames
+#                ]
+#            ))
 
             
 
