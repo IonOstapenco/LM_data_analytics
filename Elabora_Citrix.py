@@ -162,12 +162,7 @@ for w in range(1,n):
 # - Riprendiamo a scorrere la prima colonna e cerchiamo una cella con il valore "VMs" 
 # - Da qui in poi c'è l'elenco dei server virtuali.
 
-
-
-
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-
 #
 # Scrittura file intermedio: Server_list.csv
 #

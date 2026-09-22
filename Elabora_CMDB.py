@@ -245,7 +245,7 @@ PDL_field = ["Nome CI","Category","Type","Domain Name","Used By"] # from asset c
 #CMDB_data = process_asset("CMDB", CMDB_field, cm.pr["CMDB_Pattern"], "Nome CI", cm.pr["OUT_CMDB"])
 
 # =================================================================================
-#       ELABORAZIONE DISS (da Asset Server Dismissed) E PDL (da Asset Client)
+#  ELABORAZIONE DISS (da Asset Server Dismissed) E PDL (da Asset Client)
 
 # ===============================================================================================
 
