@@ -1,0 +1,663 @@
+# 🇮🇹 Descrizione generale – Procedura **Elabora_VM.py**
+
+## Scopo della procedura
+
+Questa procedura ha lo scopo di elaborare i dati relativi alle **macchine virtuali (VM)** provenienti da **RVTools** e di integrarli con le informazioni relative a **CPU** e **VMware Tools**.
+
+La procedura utilizza tre sorgenti RVTools:
+
+* **tabvInfo** – informazioni generali sulle macchine virtuali;
+* **tabvCPU** – informazioni relative a CPU, socket e core;
+* **tabvTools** – informazioni relative a VMware Tools.
+
+Durante l'elaborazione vengono:
+
+* individuate le sorgenti RVTools;
+* estratti i campi necessari;
+* normalizzati i nomi delle VM;
+* escluse le VM che contengono determinate parole chiave;
+* eseguiti i collegamenti tra `tabvInfo`, `tabvCPU` e `tabvTools`;
+* gestite le VM per le quali non sono disponibili dati CPU o VMware Tools;
+* eliminati i record duplicati;
+* generato il file finale **VM_list.csv**.
+
+Il risultato finale costituisce una base dati standardizzata delle macchine virtuali utilizzata dalle successive procedure di **License Management**.
+
+---
+
+## Passo 1 – Lettura della configurazione
+
+La procedura utilizza le informazioni presenti nel file **Parametri.json**, tramite il modulo comune `Common.py`.
+
+In particolare vengono utilizzati i parametri relativi a:
+
+* directory dei file sorgente;
+* directory di output;
+* pattern del file RVTools `tabvCPU`;
+* pattern del file RVTools `tabvTools`;
+* pattern del file RVTools `tabvInfo`;
+* estensione dei file;
+* nomi dei file di output.
+
+In questo modo i percorsi e i nomi dei file possono essere modificati tramite la configurazione senza modificare direttamente il codice della procedura.
+
+---
+
+## Passo 2 – Preparazione della directory di output
+
+All'inizio della procedura viene verificata la presenza della directory di output tramite:
+
+```python
+cm.check_outdir(cm.out_path)
+```
+
+La directory viene quindi preparata per la generazione dei file intermedi e del file finale.
+
+---
+
+# Elaborazione della sorgente **tabvCPU**
+
+## Passo 3 – Individuazione del file RVTools tabvCPU
+
+La procedura ricerca nella directory configurata il file relativo alla scheda **tabvCPU** di RVTools.
+
+La ricerca viene effettuata utilizzando:
+
+```text
+RvTools_CPU_Pattern
+Extension_end
+```
+
+Il file individuato contiene le informazioni relative alla configurazione CPU delle macchine virtuali.
+
+---
+
+## Passo 4 – Lettura e mapping delle colonne tabvCPU
+
+La procedura legge l'intestazione del file e determina automaticamente la posizione delle colonne necessarie.
+
+I campi utilizzati sono:
+
+* **VM**;
+* **CPUs**;
+* **Sockets**;
+* **Cores p/s**.
+
+Il dizionario `CPU_field` viene utilizzato per associare ogni campo alla relativa posizione nel file.
+
+In questo modo la procedura può individuare le informazioni necessarie senza dover dipendere rigidamente dalla posizione delle colonne nell'export RVTools.
+
+---
+
+## Passo 5 – Estrazione e normalizzazione dei dati CPU
+
+Per ogni VM presente in `tabvCPU` viene estratto il nome della macchina virtuale.
+
+Il nome viene convertito in lettere minuscole e utilizzato come identificativo della VM.
+
+Per ogni record vengono quindi raccolti:
+
+* nome della VM;
+* numero di CPU;
+* numero di socket;
+* numero di core per socket.
+
+I dati vengono memorizzati nella classe:
+
+```python
+c_CPU
+```
+
+e successivamente raccolti nella lista:
+
+```python
+CPU
+```
+
+La struttura può essere rappresentata come:
+
+```text
+RVTools – tabvCPU
+        │
+        ▼
+      c_CPU
+        │
+        ▼
+       CPU
+```
+
+---
+
+## Passo 6 – Generazione del file intermedio CPU
+
+Al termine dell'elaborazione di `tabvCPU`, i dati vengono scritti tramite:
+
+```python
+cm.scrivi_dati("OUT_CPU", CPU_field, CPU)
+```
+
+Viene quindi generato il file intermedio relativo ai dati CPU, indicato dalla configurazione tramite il parametro **OUT_CPU**.
+
+Questo file può essere utilizzato dalle procedure successive oppure come risultato intermedio dell'elaborazione.
+
+---
+
+# Elaborazione della sorgente **tabvTools**
+
+## Passo 7 – Individuazione del file RVTools tabvTools
+
+Successivamente la procedura passa alla seconda sorgente RVTools:
+
+```text
+tabvTools
+```
+
+Prima della ricerca la lista dei file viene azzerata:
+
+```python
+cm.files = []
+```
+
+La procedura ricerca quindi il file utilizzando il parametro:
+
+```text
+RvTools_Tools_Pattern
+```
+
+e l'estensione configurata.
+
+---
+
+## Passo 8 – Lettura delle informazioni VMware Tools
+
+Il file `tabvTools` viene letto utilizzando **DictReader**.
+
+Questo permette di accedere ai dati direttamente tramite il nome della colonna.
+
+Per ogni VM vengono estratti:
+
+* **VM**;
+* **VM Version**;
+* **Tools**;
+* **Tools Version**;
+* **Required Version**;
+* **Upgradeable**;
+* **Upgrade Policy**.
+
+Il nome della VM viene convertito in minuscolo per consentire successivamente il collegamento con i dati provenienti da `tabvInfo` e `tabvCPU`.
+
+---
+
+## Passo 9 – Creazione della lista TOOLS
+
+Per ogni record viene creato un oggetto della classe:
+
+```python
+c_TOOLS
+```
+
+contenente:
+
+* nome normalizzato della VM;
+* informazioni relative alla versione VM;
+* stato e versione di VMware Tools;
+* versione richiesta;
+* possibilità di aggiornamento;
+* policy di aggiornamento.
+
+Gli oggetti vengono raccolti nella lista:
+
+```python
+TOOLS
+```
+
+La struttura è quindi:
+
+```text
+RVTools – tabvTools
+        │
+        ▼
+     c_TOOLS
+        │
+        ▼
+      TOOLS
+```
+
+---
+
+## Passo 10 – Generazione del file intermedio Tools
+
+Al termine dell'elaborazione viene generato il file intermedio tramite:
+
+```python
+cm.scrivi_dati("OUT_TOOLS", TOOLS_field, TOOLS)
+```
+
+Il nome del file è determinato dal parametro **OUT_TOOLS** della configurazione.
+
+---
+
+# Elaborazione della sorgente **tabvInfo**
+
+## Passo 11 – Individuazione del file RVTools tabvInfo
+
+La terza sorgente utilizzata dalla procedura è:
+
+```text
+RVTools – tabvInfo
+```
+
+La lista dei file viene nuovamente azzerata e viene effettuata la ricerca tramite:
+
+```text
+RvTools_Info_Pattern
+```
+
+e l'estensione configurata.
+
+`tabvInfo` rappresenta la **sorgente principale** per la costruzione del record finale della VM.
+
+---
+
+## Passo 12 – Lettura delle informazioni principali della VM
+
+Il file viene letto tramite **DictReader**.
+
+Per ogni macchina virtuale vengono estratte le informazioni principali definite nel dizionario `VM_field`.
+
+Tra queste sono presenti:
+
+* **VM**;
+* **Powerstate**;
+* **Template**;
+* **SRM Placeholder**;
+* **DNS Name**;
+* **CPUs**;
+* **Memory**;
+* **Primary IP Address**;
+* **HW version**;
+* **Annotation**;
+* **Datacenter**;
+* **Cluster**;
+* **Host**;
+* **OS according to the configuration file**;
+* **OS according to the VMware Tools**;
+* **VM ID**;
+* **VI SDK Server type**;
+* **VI SDK API Version**;
+* **VI SDK Server**.
+
+Questi rappresentano i dati principali che costituiscono la struttura iniziale del record VM.
+
+---
+
+# Filtraggio delle VM
+
+## Passo 13 – Esclusione delle VM indesiderate
+
+Prima di creare il record finale, la procedura controlla il nome della VM.
+
+Sono definite alcune parole chiave che identificano VM da escludere:
+
+```text
+indismissione
+clone
+replica
+non_toccare
+test
+corrupt
+template
+issue_snap
+```
+
+Se una di queste parole compare nel nome della VM, il record viene scartato.
+
+Ad esempio, una VM denominata:
+
+```text
+server_test_01
+```
+
+viene esclusa perché contiene:
+
+```text
+test
+```
+
+Lo stesso vale per VM che contengono termini come:
+
+```text
+clone
+replica
+template
+```
+
+Questa fase serve a evitare che macchine temporanee, di test, clonate o non destinate alla gestione ordinaria vengano incluse nel dataset finale.
+
+---
+
+# Creazione del record VM
+
+## Passo 14 – Preparazione dei dati principali
+
+Per ogni VM che supera il filtro viene creata una lista contenente i dati provenienti da `tabvInfo`.
+
+La lista viene inizializzata con il nome normalizzato della VM:
+
+```text
+VM
+```
+
+Successivamente vengono aggiunti i campi principali provenienti da `tabvInfo`.
+
+La struttura iniziale contiene quindi i dati fino a:
+
+```text
+VI SDK Server
+```
+
+A questi dati verranno successivamente aggiunte le informazioni provenienti dalle altre due sorgenti RVTools.
+
+---
+
+# JOIN con tabvCPU
+
+## Passo 15 – Collegamento tra tabvInfo e tabvCPU
+
+Per ogni VM proveniente da `tabvInfo`, la procedura cerca una VM con lo stesso nome nella lista:
+
+```python
+CPU
+```
+
+Il collegamento viene effettuato utilizzando il nome normalizzato della VM.
+
+In pratica:
+
+```text
+tabvInfo
+   │
+   │ VM
+   ▼
+  JOIN
+   ▲
+   │ VM
+   │
+tabvCPU
+```
+
+Ad esempio:
+
+```text
+tabvInfo:
+APP01
+   │
+   ▼
+CPU:
+app01
+```
+
+Poiché entrambi i nomi sono convertiti in minuscolo, la procedura può effettuare il collegamento.
+
+---
+
+## Passo 16 – Integrazione dei dati CPU
+
+Quando viene trovata la VM corrispondente in `tabvCPU`, vengono integrati nel record finale:
+
+* numero di CPU;
+* numero di socket;
+* numero di core per socket.
+
+In particolare, il valore `CPUs` proveniente da `tabvCPU` aggiorna il campo:
+
+```text
+CPUs
+```
+
+del record principale.
+
+Successivamente vengono aggiunti:
+
+```text
+Sockets
+Cores p/s
+```
+
+al record VM.
+
+In questo modo le informazioni CPU presenti nella sorgente principale vengono integrate con i dati più specifici provenienti da `tabvCPU`.
+
+---
+
+## Passo 17 – Gestione delle VM senza dati CPU
+
+Se la VM presente in `tabvInfo` non viene trovata nella lista `CPU`, la procedura non interrompe l'elaborazione.
+
+In questo caso vengono inseriti valori di default:
+
+```text
+0
+0
+```
+
+per i campi aggiuntivi relativi a socket e core.
+
+Questo permette di mantenere la VM nel risultato finale anche quando non sono disponibili dati CPU corrispondenti.
+
+---
+
+# JOIN con tabvTools
+
+## Passo 18 – Collegamento tra tabvInfo e tabvTools
+
+Dopo l'integrazione dei dati CPU, la procedura esegue un secondo JOIN.
+
+Per ogni VM viene cercato il corrispondente record nella lista:
+
+```python
+TOOLS
+```
+
+Il collegamento viene nuovamente effettuato tramite il nome normalizzato della VM.
+
+La struttura complessiva diventa quindi:
+
+```text
+                 ┌──────────────┐
+                 │  tabvCPU     │
+                 └──────┬───────┘
+                        │
+                        │ JOIN VM
+                        ▼
+┌──────────────┐   ┌──────────────┐
+│  tabvInfo    │──►│   VM finale  │
+└──────────────┘   └──────┬───────┘
+                          ▲
+                          │ JOIN VM
+                   ┌──────┴───────┐
+                   │  tabvTools   │
+                   └──────────────┘
+```
+
+---
+
+## Passo 19 – Integrazione dei dati VMware Tools
+
+Quando viene trovata la VM corrispondente in `tabvTools`, vengono aggiunti al record finale:
+
+* **Tools**;
+* **Tools Version**;
+* **Required Version**;
+* **Upgradeable**;
+* **Upgrade Policy**.
+
+Questi campi permettono di conoscere lo stato e la configurazione di VMware Tools per ciascuna macchina virtuale.
+
+---
+
+## Passo 20 – Gestione delle VM senza dati VMware Tools
+
+Se la VM non viene trovata in `tabvTools`, la procedura non elimina il record.
+
+Vengono invece inseriti valori di default:
+
+```text
+0
+0
+0
+0
+0
+```
+
+per i cinque campi relativi a VMware Tools.
+
+In questo modo anche le VM prive di informazioni Tools rimangono presenti nel file finale.
+
+---
+
+# Gestione dei duplicati
+
+## Passo 21 – Controllo dei duplicati
+
+Prima di aggiungere definitivamente la VM alla lista finale, la procedura verifica se una VM con lo stesso nome è già stata elaborata.
+
+Il controllo viene effettuato sulla lista:
+
+```python
+VM
+```
+
+utilizzando il nome della VM come identificativo.
+
+Se viene trovata una VM con lo stesso nome:
+
+```text
+VM già presente
+       │
+       ▼
+   record ignorato
+```
+
+Se invece il nome non è ancora presente:
+
+```text
+VM non presente
+       │
+       ▼
+  record aggiunto
+```
+
+In questo modo il file finale contiene una sola occorrenza per ciascuna VM.
+
+---
+
+# Generazione del risultato finale
+
+## Passo 22 – Salvataggio delle VM
+
+Dopo aver superato:
+
+1. il filtro delle parole chiave;
+2. il JOIN con `tabvCPU`;
+3. il JOIN con `tabvTools`;
+4. il controllo dei duplicati;
+
+la VM viene aggiunta alla lista:
+
+```python
+VM
+```
+
+Questa lista rappresenta il dataset finale delle macchine virtuali elaborate.
+
+---
+
+## Passo 23 – Generazione del file VM_list.csv
+
+Al termine della procedura viene utilizzata la funzione:
+
+```python
+cm.scrivi_dati("OUT_VM", VM_field, VM)
+```
+
+per generare il file finale.
+
+Il nome del file è determinato dal parametro **OUT_VM** presente nella configurazione.
+
+Il risultato previsto è:
+
+```text
+VM_list.csv
+```
+
+---
+
+# Risultato finale
+
+Al termine dell'esecuzione viene prodotto un dataset standardizzato contenente le informazioni sulle macchine virtuali provenienti da **RVTools**.
+
+Il file finale combina dati provenienti da tre sorgenti:
+
+| Sorgente      | Informazioni principali          |
+| ------------- | -------------------------------- |
+| **tabvInfo**  | informazioni generali della VM   |
+| **tabvCPU**   | CPU, socket e core               |
+| **tabvTools** | VMware Tools e relative versioni |
+
+Le VM non desiderate vengono escluse in base alle parole chiave configurate e i record duplicati vengono eliminati.
+
+Gli obiettivi principali della procedura sono:
+
+* individuare automaticamente i file RVTools `tabvInfo`, `tabvCPU` e `tabvTools`;
+* estrarre i campi necessari dalle tre sorgenti;
+* normalizzare i nomi delle VM;
+* escludere VM di test, cloni, repliche, template e altre VM non desiderate;
+* creare la struttura principale delle VM a partire da `tabvInfo`;
+* integrare i dati CPU provenienti da `tabvCPU`;
+* integrare le informazioni VMware Tools provenienti da `tabvTools`;
+* gestire le VM per le quali mancano informazioni CPU o Tools;
+* eliminare i record duplicati;
+* generare il file finale **VM_list.csv**.
+
+---
+
+## Schema sintetico della procedura
+
+```text
+                    RVTools
+                       │
+        ┌──────────────┼──────────────┐
+        │              │              │
+        ▼              ▼              ▼
+     tabvInfo        tabvCPU       tabvTools
+        │              │              │
+        │              ▼              │
+        │         CPU_list.csv        │
+        │                             ▼
+        │                       TOOLS_list.csv
+        │
+        ▼
+  Normalizzazione
+        │
+        ▼
+ Filtraggio VM
+        │
+        │
+        ├──────── JOIN ──────── tabvCPU
+        │
+        ├──────── JOIN ──────── tabvTools
+        │
+        ▼
+ Controllo duplicati
+        │
+        ▼
+       VM
+        │
+        ▼
+    VM_list.csv
+```
+
+### 🔑 In una frase
+
+> **La procedura `Elabora_VM.py` costruisce il dataset finale delle macchine virtuali partendo da `RVTools_tabvInfo` e lo arricchisce tramite JOIN con `tabvCPU` e `tabvTools`, eliminando contemporaneamente le VM non desiderate e i duplicati, fino alla generazione di `VM_list.csv`.**

@@ -1,0 +1,251 @@
+Cu mare drag! 😊 Iată descrierea în același stil ca pentru celelalte proceduri, suficient de detaliată pentru documentația proiectului, fără a intra în explicații linie cu linie.
+
+---
+
+# 🇷🇴 Descriere generală – Procedura **Elabora_BigFix.py**
+
+## Scopul procedurii
+
+Această procedură are rolul de a prelucra fișierul exportat din **BigFix**, extrăgând numai informațiile necesare pentru procesul de **License Management**.
+
+În timpul procesării sunt normalizate denumirile coloanelor și ale serverelor, sunt eliminate înregistrările duplicate și este generat un fișier CSV standardizat utilizat de procedurile următoare.
+
+---
+
+## Pasul 1 – Citirea configurației
+
+Procedura utilizează informațiile din fișierul **Parametri.json**, din care preia:
+
+* locația fișierelor sursă;
+* directorul de ieșire;
+* modelul (pattern-ul) fișierului BigFix;
+* separatorul utilizat pentru fișierele de ieșire.
+
+Astfel, modificarea locațiilor sau a denumirilor fișierelor se realizează doar în configurație, fără modificarea codului.
+
+---
+
+## Pasul 2 – Identificarea fișierului BigFix
+
+Procedura caută automat fișierele BigFix folosind modelul configurat.
+
+Dacă sunt găsite mai multe versiuni ale aceluiași fișier, este selectată automat cea mai recentă.
+
+În acest mod sunt utilizate întotdeauna datele cele mai actuale.
+
+---
+
+## Pasul 3 – Detectarea separatorului și citirea fișierului
+
+Fișierul este deschis și analizat pentru identificarea automată a separatorului utilizat.
+
+Citirea datelor este realizată folosind **DictReader**, ceea ce permite accesarea coloanelor după numele lor și nu după poziție.
+
+Astfel procedura rămâne funcțională chiar dacă ordinea coloanelor se modifică.
+
+---
+
+## Pasul 4 – Normalizarea denumirilor
+
+Înainte de prelucrare sunt normalizate atât anteturile coloanelor, cât și numele serverelor.
+
+Procesul de normalizare include:
+
+* eliminarea caracterelor BOM;
+* eliminarea spațiilor inutile;
+* transformarea textului în litere mici;
+* eliminarea accentelor și diferențelor de codificare Unicode.
+
+Această etapă reduce riscul apariției erorilor cauzate de diferențele de formatare dintre exporturile BigFix.
+
+---
+
+## Pasul 5 – Validarea și eliminarea duplicatelor
+
+Pentru fiecare înregistrare este identificat câmpul **Nome computer**, utilizat ca identificator unic.
+
+În timpul procesării:
+
+* sunt ignorate înregistrările fără nume de server;
+* sunt eliminate serverele duplicate;
+* este păstrată doar prima apariție a fiecărui server.
+
+Această verificare asigură existența unei singure înregistrări pentru fiecare calculator.
+
+---
+
+## Pasul 6 – Selectarea câmpurilor necesare
+
+Din exportul BigFix sunt extrase numai coloanele utilizate în procesul de licențiere.
+
+Printre acestea se regăsesc informații precum:
+
+* starea serverului;
+* numele calculatorului;
+* sistemul de operare;
+* numele DNS;
+* tipul calculatorului;
+* informații despre procesoare și nuclee;
+* informații despre socket-uri;
+* valorile PVU;
+* factorul Oracle;
+* informații despre cluster.
+
+Toate valorile sunt salvate în ordinea standard definită de aplicație.
+
+---
+
+## Pasul 7 – Generarea fișierului de ieșire
+
+După finalizarea prelucrării este generat fișierul CSV standardizat:
+
+```text
+ICTG-HW.csv
+```
+
+(denumirea este preluată din parametrul **OUT_BGFX** din fișierul de configurare).
+
+Fișierul conține:
+
+* separatorul configurat;
+* antetul standardizat;
+* înregistrările validate și fără duplicate.
+
+---
+
+## Rezultatul final
+
+La sfârșitul execuției este obținut un fișier BigFix standardizat, utilizat de celelalte proceduri din proiectul **License Management**.
+
+Obiectivele principale ale procedurii sunt:
+
+* identificarea automată a celui mai recent export BigFix;
+* normalizarea anteturilor și a denumirilor serverelor;
+* eliminarea înregistrărilor duplicate;
+* extragerea câmpurilor relevante pentru licențiere;
+* generarea unui fișier CSV standardizat pentru procesările ulterioare.
+
+---
+
+# 🇮🇹 Descrizione generale – Procedura **Elabora_BigFix.py**
+
+## Scopo della procedura
+
+Questa procedura ha lo scopo di elaborare il file esportato da **BigFix**, estraendo solamente le informazioni necessarie per il processo di **License Management**.
+
+Durante l'elaborazione vengono normalizzati i nomi delle colonne e dei server, vengono eliminati i record duplicati e viene generato un file CSV standardizzato utilizzato dalle procedure successive.
+
+---
+
+## Passo 1 – Lettura della configurazione
+
+La procedura utilizza le informazioni presenti nel file **Parametri.json**, dal quale ricava:
+
+* il percorso dei file sorgente;
+* la cartella di output;
+* il pattern del file BigFix;
+* il separatore da utilizzare per i file di output.
+
+In questo modo eventuali modifiche ai percorsi possono essere gestite senza modificare il codice.
+
+---
+
+## Passo 2 – Individuazione del file BigFix
+
+La procedura ricerca automaticamente i file BigFix utilizzando il pattern configurato.
+
+Se sono presenti più versioni dello stesso file, viene selezionata automaticamente quella più recente.
+
+In questo modo vengono sempre elaborati i dati più aggiornati.
+
+---
+
+## Passo 3 – Rilevamento del separatore e lettura del file
+
+Il file viene aperto e analizzato per individuare automaticamente il separatore utilizzato.
+
+La lettura dei dati viene effettuata tramite **DictReader**, che consente di accedere alle colonne mediante il loro nome anziché la loro posizione.
+
+Questo rende la procedura più robusta anche in caso di variazione dell'ordine delle colonne.
+
+---
+
+## Passo 4 – Normalizzazione dei dati
+
+Prima dell'elaborazione vengono normalizzati sia gli header delle colonne sia i nomi dei server.
+
+La normalizzazione comprende:
+
+* rimozione del carattere BOM;
+* eliminazione degli spazi superflui;
+* conversione in lettere minuscole;
+* rimozione degli accenti e delle differenze di codifica Unicode.
+
+Questa fase riduce gli errori dovuti a differenze di formattazione tra i vari export BigFix.
+
+---
+
+## Passo 5 – Controllo dei duplicati
+
+Per ogni record viene identificato il campo **Nome computer**, utilizzato come identificativo univoco.
+
+Durante l'elaborazione:
+
+* vengono ignorati i record privi del nome del computer;
+* vengono eliminati i record duplicati;
+* viene mantenuta solamente la prima occorrenza di ogni server.
+
+Questo garantisce la presenza di un solo record per ciascun computer.
+
+---
+
+## Passo 6 – Estrazione dei campi necessari
+
+Dal file BigFix vengono estratte solamente le colonne utilizzate nel processo di gestione delle licenze.
+
+Tra queste sono comprese informazioni relative a:
+
+* stato del server;
+* nome del computer;
+* sistema operativo;
+* nome DNS;
+* tipo di computer;
+* processori e core;
+* socket;
+* valori PVU;
+* fattore Oracle;
+* informazioni sul cluster.
+
+Tutti i dati vengono salvati nell'ordine standard definito dall'applicazione.
+
+---
+
+## Passo 7 – Generazione del file di output
+
+Al termine dell'elaborazione viene creato il file CSV standardizzato:
+
+```text
+ICTG-HW.csv
+```
+
+(il nome del file è definito dal parametro **OUT_BGFX** nel file di configurazione).
+
+Il file contiene:
+
+* il separatore configurato;
+* l'intestazione standardizzata;
+* i record validati e privi di duplicati.
+
+---
+
+## Risultato finale
+
+Al termine dell'esecuzione viene prodotto un file BigFix standardizzato che costituisce uno degli input principali delle successive procedure del progetto **License Management**.
+
+Gli obiettivi principali della procedura sono:
+
+* individuare automaticamente il file BigFix più recente;
+* normalizzare gli header e i nomi dei server;
+* eliminare i record duplicati;
+* estrarre i campi necessari per il processo di licenza;
+* generare un file CSV standardizzato per le elaborazioni successive.

@@ -1,7 +1,3 @@
-Perfect 🙂
-Îți fac o **diagramă vizuală schematică (logic flow)** a procedurii *Elabora_HW* — structurată pe flux de proces și decizii.
-
----
 
 # 📊 DIAGRAMĂ VIZUALĂ – ELABORA_HW
 
@@ -238,23 +234,3 @@ Scrie Tabella_HW.csv
 ```
 
 ---
-
-# 🎯 CONCEPT CHEIE
-
-Elabora_HW este:
-
-> 🔹 un motor de consolidare multi-sursă
-> 🔹 cu prioritate configurabilă pe câmp
-> 🔹 sensibil la tipul mașinii (fizic / virtual)
-> 🔹 care produce tabela finală de inventar hardware
-
----
-
-Dacă vrei, pot să îți fac și:
-
-* 🧩 diagramă UML
-* 🧠 diagramă BPMN (proces business)
-* 📊 diagramă profesională pentru documentație (stil PowerPoint)
-* 🛠️ versiune optimizată a algoritmului
-
-Spune-mi pentru ce tip de documentație ai nevoie 🙂

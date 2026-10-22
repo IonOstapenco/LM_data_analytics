@@ -1,0 +1,93 @@
+==== Elabora_CMDB ====
+
+SCHEMA VISIVO – CAMPI INPUT / OUTPUT (Elabora CMDB)
+
+1. FILE DI INPUT → CAMPI UTILIZZATI
+
+┌──────────────────────────────────────────────┐
+│ 1. Asset Server (ALL)*.csv   → CMDB          │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CAMPI UTILIZZATI (CMDB_field):
+   - Nome CI
+   - Stato
+   - OS
+   - DNS
+   - Domain Name
+   - Is Virtual
+   - Numero CPU
+   - Numero Socket
+   - Processore
+   - Modello
+   - VM_Cluster
+   - VM_Virtualcenter
+   - VM_Host
+   - VMWare_LastReportDate
+   - Bigfix_LastReportDate
+   - Applicazioni (lista)
+   - Ruolo
+   - Category
+   - Type
+   - Ambiente
+   - Responsabile (Server)
+   - Used By
+   - Contratto
+   - server_iscloud
+   - Ip_primary
+
+   FILTRI APPLICATI AUTOMATICAMENTE:
+   • Stato = "Dismesso" → escluso
+   • Nome CI duplicato → viene mantenuta solo la prima occorrenza
+
+
+┌──────────────────────────────────────────────┐
+│ 2. Asset Client (ALL)*.csv   → PDL           │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CAMPI UTILIZZATI (PDL_field):
+   - Nome CI
+   - Category
+   - Type
+   - Domain Name
+   - Used By
+   (indice rilevato automaticamente dall'header)
+
+
+
+2. FILE DI OUTPUT → CAMPI CONTENUTI
+
+┌──────────────────────────────────────────────┐
+│ OUT_CMDB → AssetServer_CMDB.csv              │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CONTIENE ESATTAMENTE CMDB_field (24 campi)
+
+   Include soltanto:
+   • i server attivi
+   • senza duplicati sul campo Nome CI
+
+
+┌──────────────────────────────────────────────┐
+│ OUT_CMDB_ESX → AssetCMDB_Esx.csv             │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CONTIENE ESATTAMENTE CMDB_field (24 campi)
+
+   Include soltanto:
+   • i server con Ruolo = "esx*"
+   • i campi Numero CPU e Numero Socket
+     vengono adattati per l'esportazione ESX
+
+
+┌──────────────────────────────────────────────┐
+│ OUT_PDL → AssetClient.csv                    │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CONTIENE ESATTAMENTE PDL_field (5 campi)
+   (ordine rilevato automaticamente dall'header)
+```

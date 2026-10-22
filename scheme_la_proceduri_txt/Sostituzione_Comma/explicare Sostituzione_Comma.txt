@@ -1,0 +1,264 @@
+🇷🇴 Descriere generală – Procedura Elabora_RVTools_CSV.py
+
+Scopul procedurii
+
+Această procedură are rolul de a prelucra automat fișierele generate de RVTools, 
+convertind separatorul de câmp din virgulă (,) în punct și virgulă (;).
+
+
+În plus, procedura identifică automat cel mai recent export RVTools disponibil și construiește lista completă a fișierelor ce trebuie procesate pentru fiecare server configurat.
+
+Pasul 1 – Identificarea celui mai recent export RVTools
+Procedura caută automat toate directoarele care respectă convenția:
+
+rvtools_*
+
+Din lista găsită este selectat automat cel mai recent director disponibil.
+Acest mecanism permite utilizarea automată a ultimului export RVTools 
+fără modificarea codului sau a parametrilor de configurare.
+
+Pasul 2 – Construirea listelor de fișiere RVTools
+
+
+Pentru fiecare server definit în configurație este construită lista fișierelor RVTools ce urmează să fie prelucrate.
+
+Sunt generate automat căile complete către fișierele:
+
+RVTools Host;
+RVTools Cluster;
+RVTools CPU;
+RVTools Info;
+RVTools Tools.
+
+
+Denumirile fișierelor sunt preluate din configurația aplicației și sunt concatenate cu directorul RVTools identificat la pasul anterior.
+
+
+Pasul 3 – Verificarea existenței fișierelor
+
+Înainte de prelucrare, procedura verifică existența fiecărui fișier.
+
+Pentru fiecare fișier:
+
+este afișată calea completă procesată;
+se verifică existența fizică a fișierului;
+sunt semnalate eventualele fișiere lipsă.
+
+
+
+Această verificare permite identificarea rapidă 
+a problemelor legate de exporturile RVTools sau de structura directoarelor.
+
+
+
+
+
+Pasul 4 – Înlocuirea separatorului CSV
+
+
+
+Pentru fiecare fișier existent, procedura deschide conținutul complet al fișierului 
+și efectuează o conversie simplă a separatorului.
+
+
+
+
+Procesul constă în:
+
+citirea conținutului fișierului;
+înlocuirea tuturor caracterelor virgulă (,) cu punct și virgulă (;);
+rescrierea fișierului cu noul separator.
+
+
+În acest mod toate fișierele RVTools sunt aliniate la formatul CSV 
+utilizat de procesul de License Management.
+
+Pasul 5 – Actualizarea fișierelor
+
+După efectuarea conversiei, fișierul original este suprascris 
+cu versiunea actualizată.
+
+
+
+
+Nu sunt generate fișiere suplimentare, 
+iar structura directoarelor rămâne neschimbată.
+
+
+
+
+Această abordare simplifică procesele ulterioare care utilizează fișierele RVTools.
+
+
+
+
+
+Rezultatul final
+
+
+
+La finalul execuției toate fișierele RVTools identificate conțin separatorul standard 
+utilizat în cadrul proiectului.
+
+
+
+
+Principalele obiective ale procedurii sunt:
+
+identificarea automată a celui mai recent export RVTools;
+construirea automată a căilor pentru toate serverele configurate;
+verificarea existenței fișierelor necesare;
+conversia separatorului CSV din virgulă în punct și virgulă;
+pregătirea fișierelor pentru procesările ulterioare din cadrul proiectului
+ License Management.
+
+
+################################################################################
+
+🇮🇹 Descrizione generale – Procedura Elabora_RVTools_CSV.py
+
+
+Scopo della procedura
+
+
+
+Questa procedura ha lo scopo di elaborare automaticamente i file generati da RVTools, 
+convertendo il separatore dei campi da virgola (,) a punto e virgola (;).
+
+
+
+
+Inoltre, la procedura individua automaticamente l'export RVTools più recente e costruisce 
+l'elenco completo dei file da elaborare per ciascun server configurato.
+
+
+
+
+
+Passo 1 – Individuazione dell'export RVTools più recente
+
+
+
+La procedura ricerca automaticamente tutte le directory che rispettano la convenzione:
+
+rvtools_*
+
+
+
+
+Tra le cartelle trovate viene selezionata automaticamente quella più recente.
+
+
+
+
+Questo meccanismo consente di utilizzare sempre l'ultimo export RVTools disponibile 
+senza modificare il codice o i parametri di configurazione.
+
+
+
+
+
+Passo 2 – Generazione dei percorsi dei file RVTools
+
+
+
+Per ogni server definito nella configurazione viene generato l'elenco dei file RVTools 
+da elaborare.
+
+
+
+
+Vengono costruiti automaticamente i percorsi completi dei seguenti file:
+
+RVTools Host;
+RVTools Cluster;
+RVTools CPU;
+RVTools Info;
+RVTools Tools.
+
+
+
+I nomi dei file vengono recuperati dalla configurazione dell'applicazione 
+e combinati con la directory RVTools individuata nel passo precedente.
+
+
+
+
+
+Passo 3 – Verifica dell'esistenza dei file
+
+
+
+Prima dell'elaborazione la procedura verifica l'esistenza di ciascun file.
+
+
+
+
+Per ogni file:
+
+viene visualizzato il percorso completo elaborato;
+viene verificata la presenza fisica del file;
+vengono segnalati eventuali file mancanti.
+
+
+
+Questa fase permette di individuare rapidamente eventuali problemi relativi agli 
+export RVTools o alla struttura delle directory.
+
+
+
+
+
+Passo 4 – Conversione del separatore CSV
+
+
+
+Per ogni file esistente la procedura apre l'intero contenuto ed esegue una 
+semplice conversione del separatore.
+
+
+
+
+L'operazione consiste in:
+
+lettura del contenuto del file;
+sostituzione di tutte le virgole (,) con punti e virgola (;);
+riscrittura del file con il nuovo separatore.
+
+
+
+In questo modo tutti i file RVTools vengono uniformati al formato CSV utilizzato 
+nel processo di License Management.
+
+
+
+
+
+Passo 5 – Aggiornamento dei file
+
+
+
+Dopo la conversione, il file originale viene sovrascritto con la versione aggiornata.
+
+Non vengono creati file aggiuntivi e la struttura delle cartelle rimane invariata.
+
+
+Questa scelta semplifica le elaborazioni successive che utilizzano i dati esportati da RVTools.
+
+
+Risultato finale
+
+
+Al termine dell'esecuzione tutti i file RVTools individuati utilizzano il separatore 
+standard previsto dal progetto.
+
+
+
+
+Gli obiettivi principali della procedura sono:
+
+individuare automaticamente l'export RVTools più recente;
+generare automaticamente i percorsi dei file per tutti i server configurati;
+verificare la presenza dei file necessari;
+convertire il separatore CSV da virgola a punto e virgola;
+preparare i file per le elaborazioni successive del progetto License Management.

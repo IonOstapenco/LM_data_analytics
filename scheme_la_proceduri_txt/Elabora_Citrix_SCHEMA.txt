@@ -1,0 +1,159 @@
+ ==== Elabora_CITRIX ====
+
+# 📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora Citrix)**
+
+---
+
+# **1. INPUT FILES → CÂMPURI FOLOSITE**
+
+Procedura folosește **un singur fișier Excel Citrix**, cu pattern:
+
+```
+Citrix_files_Pattern = "Report_all_POOLS_e_VM_farm_Citrix"
+XLS_end = ".xlsx"
+```
+
+Fișierul conține mai multe sheet‑uri:
+
+- **Riepilogo** → pentru maparea pool‑urilor  
+- **Sheet‑urile individuale ale farm‑urilor Citrix** → conțin secțiuni "Servers" și "VMs"
+
+---
+
+## 🔵 **1.1. INPUT – Sheet‑urile Citrix → Server_list**
+
+```text
+┌──────────────────────────────────────────────┐
+│ Citrix Excel file → Section “Servers”        │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (Server_field):
+   - name                (col A)
+   - address             (col K)
+   - cpus                (col O → parsed)
+   - description         (col AO)
+   - funzione            (din sheet Riepilogo → pool mapping)
+   - pool                (numele sheet‑ului)
+```
+
+### Filtrări:
+- Serverele cu `funzione` în:
+  - "passivo produzione"
+  - "sviluppo"
+  - "dr - bolla - wpr"
+  
+sunt **eliminate**.
+
+---
+
+## 🟣 **1.2. INPUT – Sheet‑urile Citrix → Vms_list**
+
+```text
+┌──────────────────────────────────────────────┐
+│ Citrix Excel file → Section “VMs”            │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (Vms_field):
+   - name                (col A)
+   - address             (col G)
+   - cpus                (col AF → parsed)
+   - funzione            (din sheet Riepilogo → pool mapping)
+   - operating_system    (col U)
+   - pool                (numele sheet‑ului)
+   - power_state         (col B)
+   - running_on          (col D)
+```
+
+### Filtrări:
+- VM‑urile cu `funzione` în ExcludeSRV  
+- VM‑urile cu `power_state = "Halted"`  
+
+sunt **eliminate**.
+
+---
+
+# **2. OUTPUT FILES → CE CÂMPURI CONȚIN**
+
+Procedura generează **două fișiere de output**:
+
+---
+
+## **2.1. OUT_Server_Citrix → Server_Citrix_list.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_Server_Citrix → Server_Citrix_list.csv   │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE EXACT Server_field (6 câmpuri):
+- name
+- address
+- cpus
+- description
+- funzione
+- pool
+```
+
+---
+
+## **2.2. OUT_Vms_Citrix → Vms_Citrix_list.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_Vms_Citrix → Vms_Citrix_list.csv         │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE EXACT Vms_field (8 câmpuri):
+- name
+- address
+- cpus
+- funzione
+- operating_system
+- pool
+- power_state
+- running_on
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE**
+
+```text
+                 ┌────────────────────────────────────┐
+                 │ Citrix Excel file (*.xlsx)         │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                   Sheet “Riepilogo” → pool mapping
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Sheet “Servers”                                      │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+                     Server_field (6 câmpuri)
+                               │
+                     - filtrare ExcludeSRV
+                               │
+                               ▼
+        OUT_Server_Citrix → Server_Citrix_list.csv
+
+
+        ┌──────────────────────────────────────────────────────┐
+        │ Sheet “VMs”                                          │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+                       Vms_field (8 câmpuri)
+                               │
+                     - filtrare ExcludeSRV
+                     - filtrare power_state = Halted
+                               │
+                               ▼
+        OUT_Vms_Citrix → Vms_Citrix_list.csv
+```

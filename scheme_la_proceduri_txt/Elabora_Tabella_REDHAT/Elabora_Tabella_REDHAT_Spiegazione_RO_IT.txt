@@ -1,0 +1,935 @@
+Sigur. Am verificat logica efectivă a codului, inclusiv partea modificată pentru `cluster_cores` și `cluster_numhosts`. Mai jos ai două versiuni: **RO** și **IT**, suficient de detaliate pentru documentația procedurii.
+
+---
+
+# 🇷🇴 Descriere detaliată – Procedura `Elabora_Tabella_REDHAT.py`
+
+## 🎯 Scopul procedurii
+
+Procedura `Elabora_Tabella_REDHAT.py` are rolul de a crea fișierul:
+
+```text
+Tabella_REDHAT.csv
+```
+
+Acesta conține informațiile despre serverele pe care este identificat sistemul de operare **Red Hat Enterprise Linux / Red Hat Enterprise** și integrează:
+
+* informații hardware;
+* informații despre virtualizare;
+* informații despre cluster;
+* informații despre client și mediu;
+* versiunea componentei Red Hat identificată în `Tabella_SW.csv`.
+
+Procedura **nu calculează numărul de licențe Red Hat**. Ea pregătește informațiile necesare pentru eventualele calcule ulterioare de licensing.
+
+---
+
+## 1. 📥 Fișierele de INPUT
+
+Procedura utilizează două fișiere deja elaborate:
+
+```text
+Tabella_HW.csv
+Tabella_SW.csv
+```
+
+### `Tabella_HW.csv`
+
+Conține informațiile hardware și infrastructurale ale serverelor.
+
+Din această tabelă sunt preluate, printre altele:
+
+* `nome`
+* `operating_system`
+* `powerstate`
+* `virtuale`
+* `tipo`
+* `n_socket`
+* `n_core`
+* `cluster_name`
+* `cluster_cores`
+* `cluster_numhosts`
+* `cliente`
+* `ambiente`
+* `destinazione`
+
+### `Tabella_SW.csv`
+
+Este utilizată pentru identificarea componentei Red Hat și pentru recuperarea:
+
+```text
+versione_componente
+```
+
+---
+
+# 2. 🔧 Încărcarea informațiilor Hardware
+
+Procedura construiește dicționarul:
+
+```python
+Hardware = {}
+```
+
+și încarcă în acesta fișierul:
+
+```text
+OUT_Hardware_TAB
+        ↓
+Tabella_HW.csv
+```
+
+Numele serverului este utilizat ca identificator.
+
+Conceptual:
+
+```text
+Hardware
+│
+├── SERVER01 → informații HW
+├── SERVER02 → informații HW
+├── SERVER03 → informații HW
+└── ...
+```
+
+Astfel, pentru fiecare server poate fi recuperat setul de informații hardware și infrastructurale.
+
+---
+
+# 3. 🔎 Analizarea `Tabella_SW.csv`
+
+Procedura identifică fișierul software configurat prin:
+
+```python
+cm.pr["OUT_Software_TAB"]
+```
+
+Primele două linii ale fișierului sunt eliminate:
+
+```text
+sep=|
+header
+```
+
+După aceea, fiecare linie este împărțită utilizând separatorul:
+
+```python
+cm.cs
+```
+
+În proiect acesta este `|`.
+
+---
+
+# 4. 🟥 Identificarea Red Hat
+
+Pentru fiecare software din `Tabella_SW.csv`, procedura analizează câmpul:
+
+```text
+nome componente
+```
+
+Acesta este identificat prin:
+
+```python
+SW_field["nome componente"] = 41
+```
+
+Procedura caută textul:
+
+```text
+red hat enterprise
+```
+
+Dacă acesta este găsit, serverul este considerat asociat cu Red Hat Enterprise.
+
+Logica este:
+
+```text
+Tabella_SW.csv
+      │
+      ▼
+nome componente
+      │
+      ▼
+Conține "red hat enterprise"?
+      │
+   ┌──┴──┐
+  DA     NU
+  │       │
+  ▼       └──► record succesivo
+Red Hat
+```
+
+---
+
+# 5. 🏷️ Recuperarea versiunii Red Hat
+
+Atunci când este găsit un component Red Hat Enterprise, procedura preia valoarea:
+
+```text
+versione_componente
+```
+
+Acest câmp se află la indexul:
+
+```text
+42
+```
+
+Valoarea este memorată în:
+
+```python
+Software
+```
+
+folosind numele serverului ca și cheie.
+
+De exemplu:
+
+```text
+SERVER01 → 8.8
+SERVER02 → 7.9
+SERVER03 → 9.2
+```
+
+Prin urmare, `Software` funcționează ca o asociere:
+
+```text
+Nume server → Versiune Red Hat
+```
+
+---
+
+# 6. 🖥️ Identificarea serverelor Red Hat din `Tabella_HW.csv`
+
+După analiza software, procedura parcurge toate serverele din:
+
+```text
+Tabella_HW.csv
+```
+
+Pentru fiecare server citește:
+
+```text
+operating_system
+```
+
+și îl transformă în lowercase:
+
+```python
+sysop = Hardware[k][HW_field["operating_system"]].lower()
+```
+
+Serverul este inclus în `Tabella_REDHAT.csv` dacă sistemul de operare conține:
+
+```text
+red hat enterprise
+```
+
+Astfel:
+
+```text
+Tabella_HW.csv
+      │
+      ▼
+operating_system
+      │
+      ▼
+Conține "red hat enterprise"?
+      │
+   ┌──┴──┐
+  DA     NU
+  │       │
+  ▼       └──► serverul nu este inclus
+REDHAT
+```
+
+---
+
+# 7. 📋 Construirea recordului REDHAT
+
+Pentru fiecare server identificat ca Red Hat se creează:
+
+```python
+REDHAT[k] = []
+```
+
+În această listă sunt copiate câmpurile definite în:
+
+```python
+REDHAT_Field
+```
+
+Structura finală este:
+
+| Câmp                  | Sursă            |
+| --------------------- | ---------------- |
+| `nome`                | `Tabella_HW.csv` |
+| `powerstate`          | `Tabella_HW.csv` |
+| `operating_system`    | `Tabella_HW.csv` |
+| `virtuale`            | `Tabella_HW.csv` |
+| `tipo`                | `Tabella_HW.csv` |
+| `n_socket`            | `Tabella_HW.csv` |
+| `n_core`              | `Tabella_HW.csv` |
+| `cluster_name`        | `Tabella_HW.csv` |
+| `cluster_cores`       | `Tabella_HW.csv` |
+| `cluster_numhosts`    | `Tabella_HW.csv` |
+| `cliente`             | `Tabella_HW.csv` |
+| `ambiente`            | `Tabella_HW.csv` |
+| `destinazione`        | `Tabella_HW.csv` |
+| `versione_componente` | `Tabella_SW.csv` |
+
+Deci, în total, sunt **14 câmpuri** în `Tabella_REDHAT.csv`.
+
+---
+
+# 8. 🧩 Gestionarea `cluster_cores`
+
+Procedura are o logică specială pentru:
+
+```text
+cluster_cores
+```
+
+Scopul este să nu repete numărul total de core-uri ale clusterului pentru fiecare server din același cluster.
+
+Pentru aceasta este utilizat:
+
+```python
+ClusterCores = {}
+```
+
+### Primul server din cluster
+
+Dacă avem:
+
+```text
+SERVER01
+Cluster = CLUSTER_A
+cluster_cores = 64
+```
+
+și clusterul nu a fost încă procesat:
+
+```text
+SERVER01 → cluster_cores = 64
+```
+
+și se memorează:
+
+```text
+ClusterCores["CLUSTER_A"] = 64
+```
+
+### Următorul server din același cluster
+
+Pentru:
+
+```text
+SERVER02
+Cluster = CLUSTER_A
+cluster_cores = 64
+```
+
+procedura verifică dacă:
+
+```text
+CLUSTER_A
+```
+
+există deja în `ClusterCores`.
+
+Deoarece există, pentru acest server se scrie:
+
+```text
+cluster_cores = 0
+```
+
+Rezultatul:
+
+```text
+CLUSTER_A
+│
+├── SERVER01 → 64
+├── SERVER02 → 0
+├── SERVER03 → 0
+└── SERVER04 → 0
+```
+
+Astfel, cele 64 de core-uri ale clusterului sunt reprezentate **o singură dată**.
+
+---
+
+# 9. 🖥️ Gestionarea `cluster_numhosts`
+
+În versiunea actuală a procedurii există o logică similară și pentru:
+
+```text
+cluster_numhosts
+```
+
+Este utilizat dicționarul:
+
+```python
+ClusterNumHosts = {}
+```
+
+Pentru primul server dintr-un cluster:
+
+```text
+cluster_numhosts = valoarea reală
+```
+
+Pentru serverele următoare din același cluster:
+
+```text
+cluster_numhosts = 0
+```
+
+Exemplu:
+
+```text
+CLUSTER_A
+│
+├── SERVER01 → cluster_numhosts = 4
+├── SERVER02 → cluster_numhosts = 0
+├── SERVER03 → cluster_numhosts = 0
+└── SERVER04 → cluster_numhosts = 0
+```
+
+Prin urmare, și numărul de host-uri este raportat **o singură dată pentru fiecare cluster**.
+
+---
+
+# 10. 🔗 Asocierea serverului cu versiunea Red Hat
+
+După construirea informațiilor Hardware, procedura verifică dacă numele serverului există în:
+
+```python
+Software
+```
+
+### Dacă versiunea este găsită
+
+Se adaugă:
+
+```text
+versione_componente
+```
+
+din `Tabella_SW.csv`.
+
+De exemplu:
+
+```text
+SERVER01 → Red Hat 8.8
+```
+
+### Dacă versiunea nu este găsită
+
+Procedura introduce:
+
+```text
+-
+```
+
+Deci:
+
+```text
+Server Red Hat
+      │
+      ▼
+Versiune găsită în Tabella_SW?
+      │
+   ┌──┴──┐
+  DA     NU
+  │       │
+  ▼       ▼
+versiune   "-"
+```
+
+---
+
+# 11. 📤 Crearea fișierului OUTPUT
+
+La final este construit fișierul:
+
+```text
+OUT_REDHAT_TAB
+       ↓
+Tabella_REDHAT.csv
+```
+
+Fișierul este scris cu separatorul:
+
+```text
+|
+```
+
+Prima linie este:
+
+```text
+sep=|
+```
+
+urmată de header-ul:
+
+```text
+nome
+powerstate
+operating_system
+virtuale
+tipo
+n_socket
+n_core
+cluster_name
+cluster_cores
+cluster_numhosts
+cliente
+ambiente
+destinazione
+versione_componente
+```
+
+---
+
+# 📘 DIAGRAMĂ FINALĂ – PROCEDURA RED HAT
+
+```text
+                 ┌──────────────────────┐
+                 │    Tabella_HW.csv    │
+                 └──────────┬───────────┘
+                            │
+                            ▼
+                 ┌──────────────────────┐
+                 │ Caricamento dati HW  │
+                 └──────────┬───────────┘
+                            │
+                            │
+                 ┌──────────▼───────────┐
+                 │ operating_system     │
+                 │ contiene             │
+                 │ "red hat enterprise"?│
+                 └──────────┬───────────┘
+                            │
+                           DA
+                            │
+                            ▼
+                 ┌──────────────────────┐
+                 │ Server identificato  │
+                 │ come RED HAT         │
+                 └──────────┬───────────┘
+                            │
+                            │
+        ┌───────────────────┴────────────────────┐
+        │                                        │
+        ▼                                        ▼
+┌──────────────────────┐              ┌──────────────────────┐
+│    Tabella_SW.csv    │              │    Tabella_HW.csv    │
+│                      │              │                      │
+│ Cerca "red hat      │              │ Recupera dati HW     │
+│ enterprise"          │              │ e infrastrutturali   │
+└──────────┬───────────┘              └──────────┬───────────┘
+           │                                     │
+           ▼                                     │
+┌──────────────────────┐                         │
+│ versione_componente  │                         │
+│                      │                         │
+│ es. 7.9 / 8.8 / 9.2 │                         │
+└──────────┬───────────┘                         │
+           │                                     │
+           └────────────────┬────────────────────┘
+                            ▼
+                 ┌──────────────────────┐
+                 │ Gestione Cluster     │
+                 │                      │
+                 │ cluster_cores        │
+                 │ cluster_numhosts     │
+                 │                      │
+                 │ Prima riga → valore  │
+                 │ successive → 0       │
+                 └──────────┬───────────┘
+                            │
+                            ▼
+                 ┌──────────────────────┐
+                 │ Creazione record     │
+                 │ REDHAT               │
+                 └──────────┬───────────┘
+                            │
+                            ▼
+                 ┌──────────────────────┐
+                 │ OUT_REDHAT_TAB       │
+                 │          ↓           │
+                 │ Tabella_REDHAT.csv   │
+                 └──────────────────────┘
+```
+
+---
+
+# 🇮🇹 Descrizione dettagliata – Procedura `Elabora_Tabella_REDHAT.py`
+
+## 🎯 **Scopo della procedura**
+
+La procedura `Elabora_Tabella_REDHAT.py` ha lo scopo di creare il file:
+
+```text
+Tabella_REDHAT.csv
+```
+
+contenente i server sui quali viene identificato **Red Hat Enterprise**.
+
+La procedura integra le informazioni provenienti da:
+
+```text
+Tabella_HW.csv
+```
+
+e:
+
+```text
+Tabella_SW.csv
+```
+
+per costruire una tabella specifica per i sistemi Red Hat.
+
+`Tabella_HW.csv` fornisce le informazioni hardware, virtuali e infrastrutturali, mentre `Tabella_SW.csv` viene utilizzata per individuare il componente **Red Hat Enterprise** e recuperare la relativa `versione_componente`.
+
+La procedura **non esegue il calcolo delle licenze Red Hat**: prepara invece i dati necessari alle eventuali elaborazioni successive di licensing.
+
+---
+
+## 1. 📥 **File di INPUT**
+
+Gli input principali sono:
+
+```text
+Tabella_HW.csv
+Tabella_SW.csv
+```
+
+Da `Tabella_HW.csv` vengono recuperati i dati relativi a:
+
+* nome server;
+* sistema operativo;
+* stato della macchina;
+* virtuale/fisico;
+* tipo;
+* socket;
+* core;
+* cluster;
+* core del cluster;
+* numero di host del cluster;
+* cliente;
+* ambiente;
+* destinazione.
+
+Da `Tabella_SW.csv` viene recuperata principalmente:
+
+```text
+versione_componente
+```
+
+relativa al componente Red Hat Enterprise.
+
+---
+
+## 2. 🔧 **Caricamento della tabella Hardware**
+
+La procedura carica:
+
+```text
+OUT_Hardware_TAB
+        ↓
+Tabella_HW.csv
+```
+
+nel dizionario:
+
+```python
+Hardware = {}
+```
+
+Il nome del server viene utilizzato come identificativo del record.
+
+---
+
+## 3. 🔎 **Analisi della tabella Software**
+
+La procedura individua il file configurato tramite:
+
+```python
+cm.pr["OUT_Software_TAB"]
+```
+
+e rimuove le prime due righe del file.
+
+Successivamente ogni riga viene suddivisa utilizzando `cm.cs`.
+
+La procedura analizza il campo:
+
+```text
+nome componente
+```
+
+che corrisponde all'indice `41`.
+
+---
+
+## 4. 🟥 **Identificazione di Red Hat Enterprise**
+
+Per ogni componente software viene verificata la presenza della stringa:
+
+```text
+red hat enterprise
+```
+
+Se la stringa viene trovata, il server viene registrato nel dizionario `Software`.
+
+La chiave utilizzata è il nome del server:
+
+```text
+Nome server → versione Red Hat
+```
+
+Ad esempio:
+
+```text
+SERVER01 → 8.8
+SERVER02 → 8.7
+SERVER03 → 9.2
+```
+
+---
+
+## 5. 🖥️ **Identificazione dei server Red Hat**
+
+La procedura analizza successivamente tutti i server presenti in `Tabella_HW.csv`.
+
+Per ogni server viene verificato il campo:
+
+```text
+operating_system
+```
+
+Se il valore contiene:
+
+```text
+red hat enterprise
+```
+
+il server viene inserito nella struttura:
+
+```python
+REDHAT
+```
+
+Questa verifica rappresenta il criterio principale per determinare quali server devono essere presenti in `Tabella_REDHAT.csv`.
+
+---
+
+## 6. 📋 **Campi della tabella REDHAT**
+
+Per ogni server identificato vengono recuperati i seguenti campi:
+
+```text
+nome
+powerstate
+operating_system
+virtuale
+tipo
+n_socket
+n_core
+cluster_name
+cluster_cores
+cluster_numhosts
+cliente
+ambiente
+destinazione
+versione_componente
+```
+
+I primi 13 campi provengono da `Tabella_HW.csv`, mentre:
+
+```text
+versione_componente
+```
+
+proviene da `Tabella_SW.csv`.
+
+---
+
+## 7. 🧩 **Gestione dei core del cluster**
+
+La procedura utilizza:
+
+```python
+ClusterCores = {}
+```
+
+per evitare di riportare più volte lo stesso numero di `cluster_cores`.
+
+Per il primo server appartenente a un cluster:
+
+```text
+cluster_cores = valore reale
+```
+
+per i server successivi dello stesso cluster:
+
+```text
+cluster_cores = 0
+```
+
+Esempio:
+
+```text
+CLUSTER_A
+
+SERVER01 → 64
+SERVER02 → 0
+SERVER03 → 0
+```
+
+In questo modo i core complessivi del cluster vengono conteggiati una sola volta.
+
+---
+
+## 8. 🏢 **Gestione del numero di host del cluster**
+
+La stessa logica viene applicata al campo:
+
+```text
+cluster_numhosts
+```
+
+tramite:
+
+```python
+ClusterNumHosts = {}
+```
+
+Per il primo server del cluster viene riportato il valore effettivo:
+
+```text
+cluster_numhosts = 4
+```
+
+mentre per gli altri server:
+
+```text
+cluster_numhosts = 0
+```
+
+Esempio:
+
+```text
+CLUSTER_A
+
+SERVER01 → 4
+SERVER02 → 0
+SERVER03 → 0
+SERVER04 → 0
+```
+
+Questo permette di evitare la duplicazione del numero di host durante le successive elaborazioni.
+
+---
+
+## 9. 🏷️ **Associazione della versione Red Hat**
+
+Dopo aver costruito il record hardware, la procedura verifica se il server è presente nel dizionario `Software`.
+
+Se presente:
+
+```text
+versione_componente = valore trovato in Tabella_SW.csv
+```
+
+Se non presente:
+
+```text
+versione_componente = "-"
+```
+
+Quindi la procedura può produrre, ad esempio:
+
+```text
+SERVER01 → Red Hat Enterprise → 8.8
+SERVER02 → Red Hat Enterprise → 8.7
+SERVER03 → Red Hat Enterprise → -
+```
+
+---
+
+## 10. 📤 **File di OUTPUT**
+
+Il risultato finale viene scritto nel percorso configurato:
+
+```text
+OUT_REDHAT_TAB
+```
+
+ottenendo:
+
+```text
+Tabella_REDHAT.csv
+```
+
+Il file utilizza `|` come separatore.
+
+La struttura finale è:
+
+```text
+Tabella_REDHAT.csv
+│
+├── nome
+├── powerstate
+├── operating_system
+├── virtuale
+├── tipo
+├── n_socket
+├── n_core
+├── cluster_name
+├── cluster_cores
+├── cluster_numhosts
+├── cliente
+├── ambiente
+├── destinazione
+└── versione_componente
+```
+
+---
+
+## 🎯 **In sintesi**
+
+La procedura può essere riassunta nel seguente flusso:
+
+```text
+Tabella_HW.csv
+      +
+Tabella_SW.csv
+      │
+      ▼
+Identificazione "Red Hat Enterprise"
+      │
+      ▼
+Selezione dei server Red Hat
+      │
+      ▼
+Recupero dati Hardware
+      │
+      ▼
+Recupero versione Red Hat
+      │
+      ▼
+Gestione Cluster
+      │
+      ├── cluster_cores
+      └── cluster_numhosts
+      │
+      ▼
+Tabella_REDHAT.csv
+```
+
+**In pratica, `Elabora_Tabella_REDHAT.py` costruisce un inventario consolidato dei server Red Hat, collegando sistema operativo, versione software, caratteristiche hardware e informazioni di cluster, in modo che il risultato possa essere utilizzato nelle successive attività di analisi e licensing Red Hat.**

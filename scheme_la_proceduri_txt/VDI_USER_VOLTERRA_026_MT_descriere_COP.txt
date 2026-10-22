@@ -1,0 +1,270 @@
+📘 ====== VDI_USER_VOLTERRA_026_MT ======
+DIAGRAMĂ VIZUALĂ – INPUT / PROCESARE / OUTPUT
+🟦 1. INPUT – Fișiere și surse utilizate
+┌──────────────────────────────────────────────────────────────┐
+│ AD-usersAndGroupsResult.csv                                  │
+│ Conține:                                                     │
+│   GroupName                                                  │
+│   UserName                                                   │
+│   SamAccountName                                             │
+└──────────────────────────────────────────────────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────────────────────────────────┐
+│ AD_Users_Results_attivi.csv                                  │
+│ Conține:                                                     │
+│   CN_00                                                      │
+│   Principal Name                                             │
+│   OU_01                                                      │
+└──────────────────────────────────────────────────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────────────────────────────────┐
+│ Grup AD căutat                                               │
+│ VDI_USER_VOLTERRA_026_MT                                     │
+└──────────────────────────────────────────────────────────────┘
+
+🟩 2. PRELUCRARE – LOGICA PROCEDURII
+A. Identificare foldere Active Directory
+Report_YYYYMM
+     │
+     ▼
+Căutare foldere cu pattern:
+
+- Active Directory Results - CED*
+- Active Directory Results - SERVIZICED*
+
+B. Căutare fișiere AD-usersAndGroupsResult.csv
+Pentru fiecare folder găsit
+         │
+         ▼
+Căutare recursivă:
+
+AD-usersAndGroupsResult.csv
+
+C. Citire și filtrare utilizatori
+AD-usersAndGroupsResult.csv
+         │
+         ▼
+Citire fiecare rând
+         │
+         ▼
+Verificare GroupName
+         │
+         ├─ diferit de
+         │  VDI_USER_VOLTERRA_026_MT
+         │
+         └─► IGNORĂ
+         │
+         ▼
+GroupName =
+VDI_USER_VOLTERRA_026_MT
+         │
+         ▼
+Extrage:
+   • UserName
+   • SamAccountName
+
+D. Eliminare duplicate
+(UserName, SamAccountName)
+         │
+         ▼
+Există deja?
+         │
+         ├─ DA  → IGNORĂ
+         │
+         └─ NU  → SALVEAZĂ
+
+
+Rezultat:
+
+Lista utilizatorilor membri ai grupului
+VDI_USER_VOLTERRA_026_MT
+
+E. Citire utilizatori activi
+AD_Users_Results_attivi.csv
+         │
+         ▼
+Citire:
+   • CN_00
+   • Principal Name
+   • OU_01
+         │
+         ▼
+Construire dicționar:
+
+CN_00
+   │
+   └──► Principal Name
+   └──► OU_01
+
+
+Exemplu:
+
+MARIO.ROSSI
+      │
+      ├─ mario.rossi@company.com
+      └─ BANCA_A
+
+F. INNER JOIN
+Sheet1.UserName
+        =
+AD_Users_Results_attivi.CN_00
+
+
+echivalent SQL:
+
+SELECT *
+FROM GroupUsers G
+INNER JOIN AD_Users_Results_attivi A
+ON G.UserName = A.CN_00
+
+G. Construire rezultat JOIN
+Utilizator găsit în ambele fișiere
+               │
+               ▼
+Extrage:
+
+CN_00
+Principal Name
+OU_01
+
+OU_01
+   │
+   ▼
+Banche
+
+🟧 3. OUTPUT – CE SE GENEREAZĂ
+A. Sheet1
+┌──────────────────────────────────────────────┐
+│ Sheet1                                        │
+└──────────────────────────────────────────────┘
+
+
+Conține:
+
+UserName
+SamAccountName
+
+
+Exemplu:
+
+MARIO.ROSSI      | MROSSI
+LUCA.BIANCHI     | LBIANCHI
+
+B. Sheet2
+┌──────────────────────────────────────────────┐
+│ Sheet2                                        │
+└──────────────────────────────────────────────┘
+
+
+Conține:
+
+CN_00
+Principal Name
+Banche
+
+
+Exemplu:
+
+MARIO.ROSSI
+mario.rossi@company.com
+BANCA_A
+
+C. Sheet3
+┌──────────────────────────────────────────────┐
+│ Sheet3                                        │
+└──────────────────────────────────────────────┘
+
+
+Conține:
+
+InnerJoin
+Principal Name
+Banche
+
+
+Exemplu:
+
+MARIO.ROSSI
+mario.rossi@company.com
+BANCA_A
+
+
+Observație:
+
+Sheet3 este o reprezentare alternativă
+a rezultatului INNER JOIN.
+
+🟥 DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE
+             ┌─────────────────────────────────────┐
+             │ AD-usersAndGroupsResult.csv         │
+             └─────────────────────────────────────┘
+                               │
+                               ▼
+             [Filtrare GroupName]
+                               │
+                               ▼
+             VDI_USER_VOLTERRA_026_MT
+                               │
+                               ▼
+          Extrage UserName + SamAccountName
+                               │
+                               ▼
+                    Eliminare duplicate
+                               │
+                               ▼
+                         SHEET1 DATA
+                               │
+                               ▼
+             ┌─────────────────────────────────────┐
+             │ AD_Users_Results_attivi.csv         │
+             └─────────────────────────────────────┘
+                               │
+                               ▼
+       CN_00 → Principal Name → OU_01 (Banche)
+                               │
+                               ▼
+                        INNER JOIN
+                               │
+                UserName = CN_00
+                               │
+                               ▼
+      ┌────────────────────┬────────────────────┐
+      │                    │                    │
+      ▼                    ▼                    ▼
+┌───────────────┐   ┌───────────────┐   ┌───────────────┐
+│ Sheet1        │   │ Sheet2        │   │ Sheet3        │
+├───────────────┤   ├───────────────┤   ├───────────────┤
+│ UserName      │   │ CN_00         │   │ InnerJoin     │
+│ SamAccount    │   │ Principal Name│   │ Principal Name│
+└───────────────┘   │ Banche        │   │ Banche        │
+                    └───────────────┘   └───────────────┘
+                               │
+                               ▼
+            VDI_USEER_VOLTERRA_026_MT.xlsx
+
+📋 Rezumat business
+Procedura identifică toți utilizatorii membri ai
+grupului Active Directory:
+
+    VDI_USER_VOLTERRA_026_MT
+
+extrăgând informațiile din toate fișierele
+AD-usersAndGroupsResult.csv disponibile în raportul
+lunar.
+
+Lista obținută este corelată cu baza utilizatorilor
+activi (AD_Users_Results_attivi.csv) prin relația:
+
+    UserName = CN_00
+
+iar rezultatul este exportat într-un fișier Excel
+care conține atât membrii grupului, cât și
+informațiile asociate:
+
+    • Principal Name
+    • Banche (OU_01)
+
+
+Aceasta este forma pe care aș pune-o într-o documentație operațională sau într-un manual de proceduri.

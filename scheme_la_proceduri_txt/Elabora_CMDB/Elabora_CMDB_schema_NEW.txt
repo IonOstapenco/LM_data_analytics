@@ -1,0 +1,92 @@
+==== Elabora_CMDB ====
+
+DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora CMDB)
+
+1. INPUT FILES → CÂMPURI FOLOSITE
+
+┌──────────────────────────────────────────────┐
+│ 1. Asset Server (ALL)*.csv   → CMDB          │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (CMDB_field):
+   - Nome CI
+   - Stato
+   - OS
+   - DNS
+   - Domain Name
+   - Is Virtual
+   - Numero CPU
+   - Numero Socket
+   - Processore
+   - Modello
+   - VM_Cluster
+   - VM_Virtualcenter
+   - VM_Host
+   - VMWare_LastReportDate
+   - Bigfix_LastReportDate
+   - Applicazioni (lista)
+   - Ruolo
+   - Category
+   - Type
+   - Ambiente
+   - Responsabile (Server)
+   - Used By
+   - Contratto
+   - server_iscloud
+   - Ip_primary
+
+   FILTRARE AUTOMATĂ:
+   • Stato = "Dismesso"  → exclus
+   • Nome CI duplicat    → păstrată prima apariție
+
+
+┌──────────────────────────────────────────────┐
+│ 2. Asset Client (ALL)*.csv   → PDL           │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (PDL_field):
+   - Nome CI
+   - Category
+   - Type
+   - Domain Name
+   - Used By
+   (index detectat automat din header)
+
+
+
+2. OUTPUT FILES → CÂMPURI FOLOSITE - ce câmpuri conțin
+
+┌──────────────────────────────────────────────┐
+│ OUT_CMDB → AssetServer_CMDB.csv             │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CONȚINE EXACT CMDB_field (24 câmpuri)
+
+   Include doar:
+   • serverele active
+   • fără duplicate după Nome CI
+
+
+┌──────────────────────────────────────────────┐
+│ OUT_CMDB_ESX → AssetCMDB_Esx.csv            │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CONȚINE EXACT CMDB_field (24 câmpuri)
+
+   Include doar:
+   • serverele cu Ruolo = "esx*"
+   • câmpurile Numero CPU și Numero Socket
+     sunt adaptate pentru exportul ESX
+
+
+┌──────────────────────────────────────────────┐
+│ OUT_PDL → AssetClient.csv                   │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CONȚINE EXACT PDL_field (5 câmpuri)
+   (ordine detectată automat din header)

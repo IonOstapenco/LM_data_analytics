@@ -1,0 +1,141 @@
+# 🇮🇹 Spiegazione generale – Elabora_User_Group_AD_FLEXERA
+
+## Cosa fa questa procedura?
+
+La procedura controlla **quali utenti di Active Directory appartengono ai gruppi Office definiti in Flexera** e crea due liste finali:
+
+* utenti con licenze **Office Standard**;
+
+* utenti con licenze **Office Professional**.
+
+In pratica risponde alla domanda:
+
+**“Chi utilizza Office Standard e chi utilizza Office Professional?”**
+
+---
+
+## Quali dati utilizza?
+
+La procedura legge due tipi di file:
+
+1. **Lista dei gruppi Office da Flexera** – indica quali gruppi sono Standard e quali Professional.
+
+2. **File di Active Directory** – contengono gli utenti e i gruppi a cui appartengono.
+
+---
+
+## Come funziona, in modo semplice?
+
+### 1. Legge la lista dei gruppi Office
+
+Esempio:
+
+* `CTX_001_PRD → Standard`
+
+* `CTX_020_PRD → Professional`
+
+I gruppi vengono divisi in due liste: **STD** e **PRO**.
+
+---
+
+### 2. Analizza i file di Active Directory
+
+Per ogni utente verifica a quali gruppi appartiene.
+
+Esempio:
+
+* Mario Rossi → `CTX_001_PRD`
+
+* Luca Bianchi → `CTX_020_PRD`
+
+---
+
+### 3. Elimina i dati non necessari
+
+Vengono esclusi:
+
+* account tecnici;
+
+* gruppi esclusi;
+
+* righe non valide o duplicate.
+
+L'obiettivo è mantenere solo gli utenti reali utili per la gestione delle licenze.
+
+---
+
+### 4. Classifica gli utenti
+
+* se il gruppo è **STD**, l'utente va nella lista Standard;
+
+* se il gruppo è **PRO**, l'utente va nella lista Professional.
+
+---
+
+### 5. Elimina i duplicati
+
+Se lo stesso utente compare più volte nello stesso gruppo, viene mantenuta una sola registrazione.
+
+---
+
+## Quali risultati produce?
+
+Alla fine vengono generati due file:
+
+### Office Professional
+
+`FLEXERA_User_list_pro.csv`
+
+Contiene gli utenti appartenenti ai gruppi Office Professional.
+
+### Office Standard
+
+`FLEXERA_User_list_std.csv`
+
+Contiene gli utenti appartenenti ai gruppi Office Standard.
+
+---
+
+## A cosa serve nel progetto?
+
+Queste liste vengono utilizzate nelle fasi successive del processo di **License Management** per:
+
+* contare gli utenti licenziati;
+
+* verificare le licenze Office;
+
+* confrontare le licenze acquistate con l'utilizzo reale;
+
+* generare report per audit e conformità.
+
+---
+
+## Schema semplice del flusso
+
+```
+Flexera (lista gruppi Office)
+                │
+                ▼
+      Separazione gruppi STD / PRO
+                │
+                ▼
+Active Directory (utenti + gruppi)
+                │
+                ▼
+Pulizia e filtraggio dei dati
+                │
+                ▼
+Classificazione utenti
+      ┌──────────────┴──────────────┐
+      ▼                             ▼
+Office Standard               Office Professional
+      ▼                             ▼
+FLEXERA_User_list_std.csv    FLEXERA_User_list_pro.csv
+```
+
+---
+
+## Spiegazione in una frase
+
+**La procedura prende i gruppi Office definiti in Flexera, cerca gli utenti che appartengono a questi gruppi in Active Directory, 
+elimina i dati inutili e produce liste pulite degli utenti Office Standard e Office Professional.**

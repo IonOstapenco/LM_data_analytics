@@ -1,0 +1,260 @@
+==== Elabora_Tabella-SQL.py ==============
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-SQL)**  
+*(modelul tău clasic, complet desfășurat și clar)*
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două fișiere CSV**:
+
+```text
+OUT_Hardware_TAB   → Tabella_HW.csv
+OUT_Software_TAB   → Tabella_SW.csv
+```
+
+Acestea sunt încărcate în dicționare Python:
+
+- `Hardware` → toate serverele + câmpuri HW (socket, core, destinazione, cliente etc.)
+- `Software` → ediția SQL Server detectată din software
+- `SQL` → structura finală pentru Tabella_SQL
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSA**
+
+## 🔵 **2.1. Tabella_SW → detectarea ediției SQL Server**
+
+Din fiecare linie SW se extrage:
+
+- `nome componente` (index 41)
+
+Dacă conține:
+
+- **sql server enterprise** → ediție = enterprise  
+- **sql server standard** → ediție = standard  
+- **sql server developer** → ediție = developer  
+
+Rezultatul:
+
+```
+Software[nome_server] = "enterprise" | "standard" | "developer"
+```
+
+---
+
+## 🟣 **2.2. Tabella_HW → baza hardware pentru SQL**
+
+Pentru fiecare server:
+
+- se verifică OS:
+  - conține "sql"
+  - sau serverul apare în Software (are SQL instalat)
+
+Câmpuri folosite din Hardware:
+
+- nome  
+- virtuale  
+- tipo  
+- n_socket  
+- n_core  
+- cluster_name  
+- cluster_cores  
+- cluster_n_vms_sql  
+- cliente  
+- ambiente  
+- destinazione  
+- contratto  
+
+Acestea sunt mapate în `SQL_Field`.
+
+---
+
+# **3. STRUCTURA SQL (OUTPUT)**
+
+SQL_Field definește câmpurile finale:
+
+- nome  
+- virtuale  
+- tipo  
+- n_socket  
+- n_core  
+- cluster_name  
+- cluster_cores  
+- cluster_n_vms_sql  
+- cliente  
+- ambiente  
+- destinazione  
+- edizione (din Software)  
+- tipo_licenza (calculat)  
+- licenze_calcolate (calculat)  
+- contrattualizzato (din Hardware)  
+
+Total câmpuri SQL: **15**
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI SQL**
+
+## 🟢 **4.1. Identificarea serverelor SQL**
+
+Un server intră în Tabella_SQL dacă:
+
+```
+OS conține "sql"
+sau
+serverul apare în Software (are SQL instalat)
+```
+
+---
+
+## 🟢 **4.2. Construirea fiecărui rând SQL**
+
+Pentru fiecare server SQL:
+
+1. Se creează `row = {}`  
+2. Se extrag câmpurile definite în `SQL_Field`  
+3. Se adaugă ediția SQL:
+   ```
+   row["edizione"] = Software.get(k, "-")
+   ```
+4. Se convertesc numeric:
+   - `n_core`
+   - `n_socket`
+
+---
+
+# **5. CALCUL LICENȚE SQL SERVER**
+
+Regulile sunt:
+
+---
+
+## 🔵 **5.1. Excludere Linux**
+
+Dacă `destinazione` conține "linux" → serverul este ignorat.
+
+---
+
+## 🔵 **5.2. Servere virtuale (virtuale = SI)**
+
+Licențiere **Enterprise**:
+
+```
+tipo_licenza = "enterprise"
+licenze_calcolate = n_core / 2
+```
+
+---
+
+## 🔵 **5.3. Servere fizice (virtuale = NO)**
+
+Licențiere **Standard**:
+
+```
+tipo_licenza = "standard"
+```
+
+Formula:
+
+- dacă `n_core / n_socket <= 4` → licențe = `2 * n_socket`
+- altfel → licențe = `n_core / 2`
+
+---
+
+## 🔵 **5.4. Contrattualizzato**
+
+Din Hardware:
+
+```
+contrattualizzato = int(Hardware[k][contratto])
+```
+
+Dacă nu este numeric → se pune 0.
+
+---
+
+# **6. OUTPUT FILES → CE CONȚIN**
+
+Procedura generează **două fișiere finale**:
+
+---
+
+## **6.1. OUT_SQL_TAB → Tabella_SQL.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_SQL_TAB → Tabella_SQL.csv               │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE câmpurile SQL_Field + câmpurile calculate:
+- 11 câmpuri HW
+- 1 câmp ediție SQL
+- 1 câmp tip licență
+- 1 câmp licențe calculate
+- 1 câmp contrattualizzato
+```
+
+---
+
+## **6.2. Tabella_SQL_Pivot.csv**
+
+Pivotul conține:
+
+- SQL Server Enterprise:
+  - total licenze_calcolate
+  - total contrattualizzato
+
+- SQL Server Standard:
+  - total licenze_calcolate
+  - total contrattualizzato
+
+Structură:
+
+```
+Licenza | Necessario | Contrattualizzato
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stilul tău preferat)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Tabella_SW.csv      → Software (ediție SQL)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Detectare ediție SQL Server din Tabella_SW           │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare server din Hardware:
+        - dacă OS conține "sql" sau apare în Software:
+            → extrage câmpurile SQL_Field
+            → adaugă edizione
+            → calculează licenze SQL
+            → adaugă contrattualizzato
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_SQL_TAB → Tabella_SQL.csv                        │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Creare pivot SQL (Enterprise / Standard)             │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Tabella_SQL_Pivot.csv
+```
+
+---

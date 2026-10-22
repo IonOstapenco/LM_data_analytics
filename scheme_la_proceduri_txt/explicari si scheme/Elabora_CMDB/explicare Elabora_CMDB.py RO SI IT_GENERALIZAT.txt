@@ -1,0 +1,256 @@
+# 🇷🇴 Descriere generală – Procedura **Elabora_CMDB.py**
+
+## Scopul procedurii
+
+Această procedură are rolul de a prelucra fișierele **Asset Server** și **Asset Client**, extrăgând doar informațiile necesare pentru procesul de **License Management**.
+
+În timpul prelucrării sunt eliminate serverele scoase din uz (**Dismesso**)
+ și eventualele înregistrări duplicate, iar la final sunt generate fișiere CSV standardizate,
+ utilizate de procedurile următoare.
+
+---
+
+## Pasul 1 – Citirea configurației
+
+Procedura citește informațiile din fișierul **Parametri.json**, din care preia:
+
+* locația fișierelor sursă;
+* directorul de lucru;
+* extensia fișierelor;
+* locația unde vor fi salvate rezultatele.
+
+Astfel, modificarea căilor de lucru se face doar în fișierul de configurare, 
+fără a modifica scriptul.
+
+---
+
+## Pasul 2 – Căutarea fișierelor de intrare
+
+Procedura caută automat fișierele necesare folosind modelele definite în configurație.
+
+Dacă există mai multe versiuni ale aceluiași fișier, este selectat automat cel mai recent.
+
+În acest mod se evită procesarea unor fișiere vechi.
+
+---
+
+## Pasul 3 – Detectarea structurii fișierului CSV
+
+Înainte de citirea datelor, procedura identifică automat:
+
+* separatorul utilizat în fișier (de exemplu **,**, **;** sau **|**);
+* linia care conține antetul (header-ul).
+
+De asemenea, sunt eliminate caracterele speciale (BOM) și spațiile inutile 
+pentru a uniformiza denumirile coloanelor.
+
+---
+
+## Pasul 4 – Citirea și prelucrarea datelor
+
+Fișierele sunt citite folosind **DictReader**, ceea ce permite accesarea coloanelor 
+după nume și nu după poziție.
+
+Pentru fiecare înregistrare sunt extrase doar coloanele necesare și
+sunt memorate într-o structură internă.
+
+---
+
+## Pasul 5 – Filtrarea și validarea datelor
+
+În timpul procesării sunt efectuate mai multe verificări:
+
+* sunt eliminate înregistrările fără identificator (Nome CI);
+* pentru fișierul **CMDB**, sunt excluse serverele al căror câmp **Stato** este **Dismesso**;
+* sunt eliminate înregistrările duplicate pe baza câmpului **Nome CI**.
+
+La final sunt afișate și statistici privind:
+
+* numărul total de înregistrări citite;
+* numărul serverelor eliminate deoarece sunt **Dismesso**;
+* numărul înregistrărilor duplicate eliminate;
+* numărul final de servere păstrate.
+
+---
+
+## Pasul 6 – Generarea fișierului CMDB
+
+După filtrare este creat fișierul:
+
+```
+AssetServer_CMDB.csv
+```
+
+Acesta conține numai câmpurile necesare proceselor ulterioare 
+și folosește separatorul configurat în aplicație.
+
+---
+
+## Pasul 7 – Generarea fișierului CMDB pentru ESX
+
+Pornind de la datele deja prelucrate, procedura generează un al doilea fișier 
+dedicat serverelor VMware ESX.
+
+Sunt păstrate numai serverele al căror rol începe cu **ESX**, 
+iar anumite informații referitoare la procesoare și socket-uri sunt reorganizate pentru a corespunde regulilor de calcul ale licențelor VMware.
+
+Rezultatul este salvat în fișierul:
+
+```
+AssetCMDB_Esx.csv
+```
+
+---
+
+## Pasul 8 – Generarea fișierului Asset Client
+
+În aceeași manieră este procesat și fișierul **Asset Client**.
+
+Sunt extrase numai câmpurile necesare, iar rezultatul este salvat în:
+
+```
+AssetClient.csv
+```
+
+Acest fișier va fi utilizat ulterior de celelalte proceduri din proiect.
+
+---
+
+## Rezultatul final
+
+La sfârșitul execuției sunt generate fișiere CSV standardizate, 
+utilizate de întregul proces de **License Management**.
+
+Obiectivele principale ale procedurii sunt:
+
+* identificarea și preluarea informațiilor relevante din CMDB și Asset Client;
+* eliminarea serverelor scoase din uz (**Dismesso**);
+* eliminarea înregistrărilor duplicate;
+* standardizarea structurii fișierelor de ieșire;
+* pregătirea datelor pentru procedurile următoare din aplicație.
+
+---
+
+# 🇮🇹 Descrizione generale – Procedura **Elabora_CMDB.py**
+
+## Scopo della procedura
+
+Questa procedura ha lo scopo di elaborare i file **Asset Server** e **Asset Client**, 
+estraendo solamente le informazioni necessarie per il processo di **License Management**.
+
+Durante l'elaborazione vengono esclusi i server dismessi (**Dismesso**) 
+e gli eventuali record duplicati. Al termine vengono generati file CSV standardizzati 
+utilizzati dalle procedure successive.
+
+---
+
+## Passo 1 – Lettura della configurazione
+
+La procedura legge il file **Parametri.json**, dal quale ricava:
+
+* il percorso dei file sorgente;
+* la cartella di lavoro;
+* l'estensione dei file;
+* la cartella in cui salvare i risultati.
+
+In questo modo non è necessario modificare il codice quando cambiano i percorsi.
+
+---
+
+## Passo 2 – Ricerca dei file di input
+
+La procedura cerca automaticamente i file richiesti utilizzando i pattern definiti nella configurazione.
+
+Se sono presenti più versioni dello stesso file, viene selezionata automaticamente quella più recente.
+
+In questo modo si evita di elaborare file non aggiornati.
+
+---
+
+## Passo 3 – Riconoscimento della struttura del file CSV
+
+Prima della lettura dei dati, la procedura individua automaticamente:
+
+* il separatore utilizzato nel file (ad esempio **,**, **;** oppure **|**);
+* la riga contenente l'intestazione (header).
+
+Inoltre vengono rimossi eventuali caratteri BOM e gli spazi superflui per uniformare i nomi delle colonne.
+
+---
+
+## Passo 4 – Lettura ed elaborazione dei dati
+
+I file vengono letti tramite **DictReader**, che consente di accedere ai dati utilizzando il nome delle colonne anziché la loro posizione.
+
+Per ogni record vengono estratti solamente i campi necessari e memorizzati in una struttura interna.
+
+---
+
+## Passo 5 – Filtraggio e validazione dei dati
+
+Durante l'elaborazione vengono eseguiti diversi controlli:
+
+* eliminazione dei record privi di identificativo (**Nome CI**);
+* esclusione dei server il cui campo **Stato** è **Dismesso** (solo per il file CMDB);
+* eliminazione dei record duplicati in base al campo **Nome CI**.
+
+Al termine vengono inoltre visualizzate alcune statistiche, tra cui:
+
+* numero totale dei record letti;
+* numero dei server dismessi esclusi;
+* numero dei duplicati eliminati;
+* numero finale dei server mantenuti.
+
+---
+
+## Passo 6 – Generazione del file CMDB
+
+Dopo il filtraggio viene creato il file:
+
+```
+AssetServer_CMDB.csv
+```
+
+Il file contiene esclusivamente i campi necessari alle elaborazioni successive e utilizza il separatore configurato nell'applicazione.
+
+---
+
+## Passo 7 – Generazione del file CMDB ESX
+
+Partendo dai dati già elaborati, la procedura genera un secondo file dedicato ai server VMware ESX.
+
+Vengono mantenuti soltanto i server il cui ruolo inizia con **ESX**, mentre alcune informazioni relative a CPU e socket vengono riorganizzate per adattarsi alle regole di calcolo delle licenze VMware.
+
+Il risultato viene salvato nel file:
+
+```
+AssetCMDB_Esx.csv
+```
+
+---
+
+## Passo 8 – Generazione del file Asset Client
+
+Con la stessa logica viene elaborato anche il file **Asset Client**.
+
+Vengono estratti solamente i campi necessari e il risultato viene salvato nel file:
+
+```
+AssetClient.csv
+```
+
+Questo file sarà utilizzato dalle successive procedure del progetto.
+
+---
+
+## Risultato finale
+
+Al termine dell'esecuzione vengono prodotti file CSV standardizzati che costituiscono la base dati utilizzata dall'intero processo di **License Management**.
+
+Gli obiettivi principali della procedura sono:
+
+* estrarre le informazioni rilevanti dai file CMDB e Asset Client;
+* escludere automaticamente i server dismessi;
+* eliminare i record duplicati;
+* uniformare la struttura dei file di output;
+* preparare i dati per le successive elaborazioni del progetto.

@@ -1,0 +1,1760 @@
+Salut! 👋 Sigur. Procedura aceasta este, practic, o **procedură de prelucrare a datelor RVTools `tabvHost`**, care apoi face o **legătură între informațiile despre ESXi Host-uri și datele existente în CMDB**, iar la final produce `AssetCMDB_Esx.csv`.
+
+Îți explic mai jos **pas cu pas, inclusiv ce reprezintă fiecare listă, clasă, câmp și legătură dintre fișiere**.
+
+---
+
+# 1. Scopul general al procedurii
+
+Fluxul este:
+
+```text
+RVTools_tabvHost*.csv
+        │
+        ▼
+   citire Host-uri
+        │
+        ▼
+    HOST = [...]
+        │
+        ▼
+   OUT_Host / Host_list.csv
+        │
+        │
+        ├──────────────┐
+        │              │
+        ▼              ▼
+   date RVTools    date CMDB ESX
+                       │
+                       ▼
+             OUT_CMDB_ESX
+                       │
+                       ▼
+              AssetCMDB_Esx.csv
+```
+
+Mai concret:
+
+1. caută fișierele RVTools `tabvHost`;
+2. citește Host-urile ESXi;
+3. extrage doar câmpurile care interesează;
+4. construiește o listă de obiecte `HOST`;
+5. scrie un fișier intermediar;
+6. citește fișierul CMDB ESX existent;
+7. caută pentru fiecare server CMDB Host-ul corespunzător;
+8. copiază anumite informații RVTools în CMDB;
+9. scrie rezultatul final `AssetCMDB_Esx.csv`.
+
+---
+
+# 2. Importul `Common`
+
+```python
+import Common as cm
+```
+
+Procedura depinde foarte mult de `Common.py`.
+
+De acolo sunt folosite, printre altele:
+
+```python
+cm.start_path
+cm.pr
+cm.files
+cm.cs
+cm.out_path
+cm.dr
+```
+
+și funcții precum:
+
+```python
+cm.list_files_scandir(...)
+cm.trova_separa(...)
+cm.togli_apici(...)
+cm.togli_dominio(...)
+cm.scrivi_dati(...)
+```
+
+Deci această procedură **nu este independentă**.
+
+Ea folosește configurația și funcțiile comune definite în `Common.py`.
+
+---
+
+# 3. Clasa `c_HOST`
+
+```python
+class c_HOST:
+    def __init__(self, nome, attributo):
+        self.nome = nome
+        self.dati = attributo
+```
+
+Este o clasă foarte simplă.
+
+Fiecare obiect `c_HOST` conține două lucruri:
+
+```text
+nome
+dati
+```
+
+### `nome`
+
+Este numele Host-ului.
+
+De exemplu:
+
+```text
+esxserver01
+```
+
+### `dati`
+
+Este lista cu toate informațiile extrase din RVTools pentru acel Host.
+
+De exemplu, conceptual:
+
+```text
+[
+    "esxserver01",
+    "DC01",
+    "Cluster01",
+    "connected",
+    "false",
+    ...
+]
+```
+
+---
+
+# 4. Lista `HOST`
+
+```python
+HOST = []
+```
+
+Aceasta este lista principală în care se acumulează toate Host-urile găsite în RVTools.
+
+După procesare poate arăta conceptual:
+
+```text
+HOST
+ ├── c_HOST(esx01, [...])
+ ├── c_HOST(esx02, [...])
+ ├── c_HOST(esx03, [...])
+ └── c_HOST(esx04, [...])
+```
+
+Deci:
+
+```python
+HOST
+```
+
+nu conține direct dicționare sau liste, ci **obiecte `c_HOST`**.
+
+---
+
+# 5. `HOST_field`
+
+Aici este una dintre cele mai importante părți:
+
+```python
+HOST_field = {
+    "Host": 0,
+    "Datacenter": 0,
+    "Cluster": 0,
+    ...
+}
+```
+
+Dicționarul spune:
+
+> „Acestea sunt coloanele RVTools care mă interesează.”
+
+Inițial toate au valoarea `0`.
+
+De ce?
+
+Pentru că poziția reală a coloanei **nu este presupusă**.
+
+Procedura o descoperă din header-ul fișierului.
+
+De exemplu, dacă RVTools are:
+
+```text
+Host,Datacenter,Cluster,Config status,...
+```
+
+atunci:
+
+```text
+Host           → 0
+Datacenter     → 1
+Cluster        → 2
+Config status  → 3
+```
+
+Dar dacă într-un alt export ordinea este:
+
+```text
+Datacenter,Host,Cluster,Config status,...
+```
+
+procedura va identifica:
+
+```text
+Datacenter → 0
+Host       → 1
+```
+
+Aceasta este ideea din:
+
+```python
+if (c in HOST_field):
+    HOST_field[c] = i
+```
+
+---
+
+# 6. Ce câmpuri extrage din RVTools
+
+Sunt 24 de câmpuri, numerotate `0–23`.
+
+| Index | Câmp                    | Semnificație                     |
+| ----: | ----------------------- | -------------------------------- |
+|     0 | Host                    | numele ESXi Host                 |
+|     1 | Datacenter              | datacenter-ul                    |
+|     2 | Cluster                 | cluster-ul                       |
+|     3 | Config status           | starea configurației             |
+|     4 | in Maintenance Mode     | dacă Host-ul este în maintenance |
+|     5 | in Quarantine Mode      | dacă este în quarantine          |
+|     6 | CPU Model               | model CPU                        |
+|     7 | HT Available            | Hyper-Threading disponibil       |
+|     8 | HT Active               | Hyper-Threading activ            |
+|     9 | # CPU                   | număr CPU/socket-uri             |
+|    10 | Cores per CPU           | nuclee per CPU                   |
+|    11 | # Cores                 | total cores                      |
+|    12 | # VMs total             | total VM-uri                     |
+|    13 | # VMs                   | VM-uri                           |
+|    14 | VMs per Core            | VM-uri/core                      |
+|    15 | # vCPUs                 | număr vCPU                       |
+|    16 | vCPUs per Core          | vCPU/core                        |
+|    17 | VMotion support         | suport vMotion                   |
+|    18 | Storage VMotion support | suport Storage vMotion           |
+|    19 | ESX Version             | versiunea ESXi                   |
+|    20 | Vendor                  | producător                       |
+|    21 | Model                   | model server                     |
+|    22 | VI SDK Server           | server vCenter/VI SDK            |
+|    23 | Dominio_ESX             | domeniul ESX                     |
+
+Observație importantă:
+
+```python
+n_HOST = 23
+```
+
+dar există câmpuri până la indexul `23`.
+
+Asta se leagă de modul în care este construit `t`:
+
+```python
+t = [nome]
+
+for c in range(1, n_HOST):
+    t.append(...)
+
+t.append(dominio)
+```
+
+Vom vedea imediat de ce.
+
+---
+
+# 7. Clasa `c_CMDB`
+
+```python
+class c_CMDB:
+    def __init__(self, nome, attributo):
+        self.nome = nome
+        self.dati = attributo
+```
+
+Este aproape identică cu `c_HOST`.
+
+Obiectul reprezintă un server din CMDB:
+
+```text
+c_CMDB
+ ├── nome
+ └── dati
+```
+
+---
+
+# 8. Lista `CMDB_esx`
+
+```python
+CMDB_esx = []
+```
+
+Aici vor fi puse rezultatele finale.
+
+Adică:
+
+```text
+CMDB_esx
+ ├── c_CMDB(...)
+ ├── c_CMDB(...)
+ ├── c_CMDB(...)
+ └── ...
+```
+
+---
+
+# 9. `CMDB_field`
+
+Acest dicționar spune poziția coloanelor din fișierul CMDB.
+
+De exemplu:
+
+```python
+"Nome CI": 0
+```
+
+înseamnă:
+
+```text
+y[0] = Nome CI
+```
+
+iar:
+
+```python
+"DNS": 2
+```
+
+înseamnă:
+
+```text
+y[2] = DNS
+```
+
+Lista completă:
+
+| Index | Câmp CMDB             |
+| ----: | --------------------- |
+|     0 | Nome CI               |
+|     1 | OS                    |
+|     2 | DNS                   |
+|     3 | Domain Name           |
+|     4 | Is Virtual            |
+|     5 | Numero CPU            |
+|     6 | Numero Socket         |
+|     7 | Processore            |
+|     8 | Modello               |
+|     9 | VM_Cluster            |
+|    10 | VM_Virtualcenter      |
+|    11 | VM_Host               |
+|    12 | VMWare_LastReportDate |
+|    13 | Bigfix_LastReportDate |
+|    14 | Applicazione (lista)  |
+|    15 | Ruolo                 |
+|    16 | Category              |
+|    17 | Type                  |
+|    18 | Ambiente              |
+|    19 | Responsabile          |
+|    20 | Used By               |
+|    21 | Contratto             |
+|    22 | server_iscloud        |
+|    23 | ESX Version           |
+
+---
+
+# 10. Mesajul de început
+
+```python
+print("Procedura per la elaborazione dei dati da RVTools - tabvHost.")
+```
+
+Doar informează utilizatorul că începe procesarea:
+
+```text
+Procedura per la elaborazione dei dati da RVTools - tabvHost.
+```
+
+---
+
+# 11. Caută fișierul RVTools
+
+```python
+cm.list_files_scandir(
+    cm.start_path,
+    cm.pr["RvTools_Host_Pattern"],
+    cm.pr["Extension_end"]
+)
+```
+
+Aici procedura caută fișierele care corespund configurației din `Parametri.json`.
+
+De exemplu, dacă:
+
+```json
+"RvTools_Host_Pattern": "RVTools_tabvHost",
+"Extension_end": "csv"
+```
+
+atunci caută ceva de genul:
+
+```text
+RVTools_tabvHost*.csv
+```
+
+Rezultatele sunt puse în:
+
+```python
+cm.files
+```
+
+---
+
+# 12. Pentru fiecare fișier găsit
+
+```python
+for w in cm.files:
+```
+
+Dacă au fost găsite:
+
+```text
+RVTools_tabvHost_01.csv
+RVTools_tabvHost_02.csv
+```
+
+procedura le procesează unul câte unul.
+
+---
+
+# 13. Deschide fișierul
+
+```python
+fc = open(w, "r")
+Linee = fc.readlines()
+```
+
+Fișierul este citit integral în memorie.
+
+De exemplu:
+
+```text
+Linee[0] = header
+Linee[1] = primul Host
+Linee[2] = al doilea Host
+...
+```
+
+---
+
+# 14. Detectează separatorul
+
+```python
+separa = cm.trova_separa(Linee[0])
+```
+
+Procedura verifică prima linie pentru a determina separatorul.
+
+De exemplu:
+
+```text
+Host;Datacenter;Cluster
+```
+
+→ separator `;`
+
+sau:
+
+```text
+Host,Datacenter,Cluster
+```
+
+→ separator `,`
+
+---
+
+# 15. Prelucrează header-ul
+
+```python
+tmp = cm.togli_apici(Linee[0], separa)
+```
+
+Probabil elimină ghilimelele din header.
+
+De exemplu:
+
+```text
+"Host";"Datacenter";"Cluster"
+```
+
+devine:
+
+```text
+Host;Datacenter;Cluster
+```
+
+Apoi:
+
+```python
+y = tmp.split(cm.cs)
+```
+
+separă header-ul în câmpuri.
+
+Rezultatul:
+
+```python
+[
+    "Host",
+    "Datacenter",
+    "Cluster",
+    ...
+]
+```
+
+---
+
+# 16. Determină poziția fiecărei coloane
+
+```python
+n = len(y)
+i = 0
+
+for c in y:
+    if (c in HOST_field):
+        HOST_field[c] = i
+    i += 1
+```
+
+Aici se întâmplă ceva foarte important.
+
+Să presupunem că header-ul real este:
+
+```text
+Datacenter,Host,Cluster,Vendor
+```
+
+Atunci:
+
+```text
+i = 0 → Datacenter
+i = 1 → Host
+i = 2 → Cluster
+i = 3 → Vendor
+```
+
+și dicționarul devine:
+
+```python
+HOST_field["Datacenter"] = 0
+HOST_field["Host"] = 1
+HOST_field["Cluster"] = 2
+HOST_field["Vendor"] = 3
+```
+
+Astfel codul ulterior poate spune:
+
+```python
+y[HOST_field["Host"]]
+```
+
+fără să presupună că `Host` este mereu coloana 0.
+
+---
+
+# 17. Șterge header-ul din listă
+
+```python
+del Linee[0]
+```
+
+Header-ul a fost deja procesat.
+
+De acum:
+
+```python
+Linee
+```
+
+conține numai datele Host-urilor.
+
+---
+
+# 18. Începe procesarea Host-urilor
+
+```python
+for linea in Linee:
+```
+
+Se ia fiecare Host pe rând.
+
+---
+
+# 19. Curăță linia
+
+```python
+tmp = cm.togli_apici(linea, separa)
+```
+
+Din nou sunt eliminate ghilimelele.
+
+Apoi:
+
+```python
+y = tmp.split(cm.cs)
+```
+
+transformă linia într-o listă de valori.
+
+De exemplu:
+
+```text
+esx01;DC01;Cluster01;connected;false;...
+```
+
+devine:
+
+```python
+y = [
+    "esx01",
+    "DC01",
+    "Cluster01",
+    "connected",
+    "false",
+    ...
+]
+```
+
+---
+
+# 20. Extrage numele Host-ului
+
+```python
+nome = str(y[HOST_field["Host"]]).lower()
+```
+
+Se ia valoarea din coloana `Host`.
+
+Și se transformă în lowercase.
+
+De exemplu:
+
+```text
+ESX01.DOMAIN.LOCAL
+```
+
+devine:
+
+```text
+esx01.domain.local
+```
+
+---
+
+# 21. Elimină domeniul
+
+```python
+l = cm.togli_dominio(nome)
+```
+
+Presupunând:
+
+```text
+esx01.domain.local
+```
+
+funcția poate returna conceptual:
+
+```python
+[
+    "esx01",
+    "domain.local"
+]
+```
+
+Apoi:
+
+```python
+nome = l[0]
+```
+
+devine:
+
+```text
+esx01
+```
+
+---
+
+# 22. Determină domeniul
+
+```python
+if (l[1] == ''):
+    dominio = '-'
+else:
+    dominio = l[1]
+```
+
+Dacă Host-ul nu are domeniu:
+
+```text
+esx01
+```
+
+atunci:
+
+```text
+dominio = "-"
+```
+
+Dacă are:
+
+```text
+esx01.domain.local
+```
+
+atunci:
+
+```text
+dominio = "domain.local"
+```
+
+---
+
+# 23. Construiește lista de date `t`
+
+Aici este partea centrală:
+
+```python
+l = list(HOST_field.keys())
+t = [nome]
+```
+
+`l` devine lista numelor câmpurilor:
+
+```text
+Host
+Datacenter
+Cluster
+Config status
+...
+```
+
+Iar `t` începe cu:
+
+```text
+[nome]
+```
+
+adică:
+
+```text
+["esx01"]
+```
+
+---
+
+# 24. Adaugă restul câmpurilor
+
+```python
+for c in range(1, n_HOST):
+    t.append(y[HOST_field[l[c]]])
+```
+
+Pentru fiecare câmp interesant, ia valoarea din fișierul RVTools și o adaugă în `t`.
+
+Practic:
+
+```text
+RVTools
+   │
+   ├── Host
+   ├── Datacenter
+   ├── Cluster
+   ├── Config status
+   ├── ...
+   └── ESX Version
+          │
+          ▼
+         t
+```
+
+---
+
+# 25. Adaugă domeniul
+
+```python
+t.append(dominio)
+```
+
+Acesta devine ultimul element.
+
+Astfel lista `t` conține informațiile selectate despre Host.
+
+Conceptual:
+
+```text
+t =
+[
+  Host,
+  Datacenter,
+  Cluster,
+  Config status,
+  Maintenance,
+  Quarantine,
+  CPU Model,
+  HT Available,
+  HT Active,
+  # CPU,
+  Cores per CPU,
+  # Cores,
+  # VMs total,
+  # VMs,
+  VMs per Core,
+  # vCPUs,
+  vCPUs per Core,
+  VMotion support,
+  Storage VMotion support,
+  ESX Version,
+  Vendor,
+  Model,
+  VI SDK Server,
+  Dominio_ESX
+]
+```
+
+---
+
+# 26. Creează obiectul Host
+
+```python
+z = c_HOST(nome, t)
+```
+
+De exemplu:
+
+```python
+z = c_HOST(
+    "esx01",
+    [...]
+)
+```
+
+Acum avem:
+
+```text
+z
+├── nome = "esx01"
+└── dati = [...]
+```
+
+---
+
+# 27. Pune Host-ul în lista `HOST`
+
+```python
+HOST.append(z)
+```
+
+Deci la fiecare linie:
+
+```text
+RVTools row
+     ↓
+c_HOST
+     ↓
+HOST.append()
+```
+
+La final:
+
+```python
+HOST
+```
+
+conține toate Host-urile.
+
+---
+
+# 28. Scrie fișierul intermediar
+
+```python
+cm.scrivi_dati("OUT_Host", HOST_field, HOST)
+```
+
+Aici datele din:
+
+```python
+HOST
+```
+
+sunt scrise într-un fișier intermediar.
+
+Numele exact este probabil controlat prin `Common.py` / `Parametri.json`.
+
+Comentariul spune:
+
+```text
+Host_list.csv
+```
+
+Deci avem:
+
+```text
+RVTools tabvHost
+       ↓
+    HOST
+       ↓
+Host_list.csv
+```
+
+---
+
+# 29. Construiește calea către CMDB ESX
+
+```python
+y = [cm.out_path, cm.pr["OUT_CMDB_ESX"]]
+
+s_file = cm.dr.join(y)
+```
+
+Aici se combină:
+
+```text
+cm.out_path
++
+numele fișierului CMDB
+```
+
+de exemplu conceptual:
+
+```text
+C:\License_Management\Report_202609\OutPut
++
+AssetCMDB_Esx.csv
+```
+
+rezultând:
+
+```text
+C:\License_Management\Report_202609\OutPut\AssetCMDB_Esx.csv
+```
+
+**Atenție:** numele exact depinde de valoarea `OUT_CMDB_ESX` din `Parametri.json`.
+
+---
+
+# 30. Citește CMDB ESX
+
+```python
+f = open(s_file, "r")
+Linee = f.readlines()
+```
+
+Acum procedura trece de la RVTools la **CMDB**.
+
+---
+
+# 31. Șterge primele două linii
+
+```python
+del Linee[0]
+del Linee[0]
+```
+
+Asta înseamnă că fișierul CMDB este așteptat să aibă **două linii înaintea datelor reale**.
+
+De exemplu:
+
+```text
+linia 0 → ceva
+linia 1 → header / informație
+linia 2 → primul server
+```
+
+După cele două `del`:
+
+```text
+Linee
+   ↓
+primul server
+al doilea server
+...
+```
+
+Aici trebuie avut grijă: procedura presupune foarte clar structura fișierului.
+
+---
+
+# 32. Procesează fiecare server CMDB
+
+```python
+for linea in Linee:
+```
+
+Pentru fiecare server:
+
+```python
+a = str(linea).rstrip('\n')
+y = a.split(cm.cs)
+```
+
+Se elimină newline-ul și se separă câmpurile.
+
+---
+
+# 33. Extrage `Nome CI`
+
+```python
+nome = str(y[CMDB_field["Nome CI"]]).lower()
+```
+
+Deoarece:
+
+```python
+CMDB_field["Nome CI"] = 0
+```
+
+se ia:
+
+```python
+y[0]
+```
+
+și se transformă în lowercase.
+
+---
+
+# 34. Elimină domeniul din `Nome CI`
+
+```python
+l = cm.togli_dominio(nome)
+nome = l[0]
+```
+
+Dacă:
+
+```text
+esx01.domain.local
+```
+
+devine:
+
+```text
+esx01
+```
+
+Acest lucru este foarte important pentru **matching-ul cu RVTools**.
+
+---
+
+# 35. Extrage DNS
+
+```python
+dnsname = str(y[CMDB_field["DNS"]]).lower()
+```
+
+`DNS` este indexul:
+
+```python
+2
+```
+
+deci:
+
+```python
+y[2]
+```
+
+---
+
+# 36. Extrage domeniul din DNS
+
+```python
+l = cm.togli_dominio(dnsname)
+```
+
+Dacă DNS este:
+
+```text
+esx01.domain.local
+```
+
+atunci:
+
+```text
+l[0] = esx01
+l[1] = domain.local
+```
+
+Apoi:
+
+```python
+if (l[1] == ''):
+    dominio = '-'
+else:
+    dominio = l[1]
+```
+
+Rezultă:
+
+```text
+dominio = domain.local
+```
+
+---
+
+# 37. Creează obiectul CMDB
+
+```python
+z = c_CMDB(nome, y)
+```
+
+Avem acum:
+
+```text
+z
+├── nome = esx01
+└── dati = toate câmpurile CMDB
+```
+
+---
+
+# 38. AICI SE FACE LEGĂTURA RVTools ↔ CMDB
+
+Aceasta este probabil cea mai importantă linie din toată procedura:
+
+```python
+trovato = next(
+    (o_g for o_g in HOST if o_g.nome == nome),
+    None
+)
+```
+
+Practic spune:
+
+> Caută în lista `HOST` primul obiect al cărui `nome` este egal cu `nome` din CMDB.
+
+Exemplu:
+
+CMDB:
+
+```text
+Nome CI = esx01
+```
+
+RVTools:
+
+```text
+Host = esx01
+```
+
+Atunci:
+
+```python
+trovato
+```
+
+va fi:
+
+```text
+c_HOST(esx01, [...])
+```
+
+---
+
+# 39. De ce `next()`?
+
+Expresia:
+
+```python
+next(
+    (...),
+    None
+)
+```
+
+returnează:
+
+* primul Host găsit;
+* `None` dacă nu găsește nimic.
+
+Deci:
+
+```text
+CMDB esx01
+     │
+     ▼
+caută în HOST
+     │
+     ├── găsit → trovato = Host
+     │
+     └── negăsit → trovato = None
+```
+
+---
+
+# 40. Actualizarea CMDB
+
+Urmează:
+
+```python
+try:
+```
+
+Procedura încearcă să completeze/modifice câteva câmpuri CMDB.
+
+### Număr Socket
+
+```python
+z.dati[CMDB_field["Numero Socket"]] = trovato.dati[9]
+```
+
+În CMDB:
+
+```text
+Numero Socket
+```
+
+este index:
+
+```text
+6
+```
+
+iar din Host:
+
+```python
+trovato.dati[9]
+```
+
+este:
+
+```text
+# CPU
+```
+
+Deci:
+
+```text
+RVTools # CPU
+       ↓
+CMDB Numero Socket
+```
+
+---
+
+# 41. Număr CPU
+
+```python
+z.dati[CMDB_field["Numero CPU"]] = trovato.dati[11]
+```
+
+`Numero CPU` în CMDB este index `5`.
+
+Iar:
+
+```python
+trovato.dati[11]
+```
+
+este:
+
+```text
+# Cores
+```
+
+Deci:
+
+```text
+RVTools # Cores
+       ↓
+CMDB Numero CPU
+```
+
+---
+
+# 42. VM Virtualcenter
+
+```python
+z.dati[CMDB_field["VM_Virtualcenter"]] = trovato.dati[22]
+```
+
+În RVTools:
+
+```text
+dati[22] = VI SDK Server
+```
+
+În CMDB:
+
+```text
+VM_Virtualcenter = index 10
+```
+
+Deci:
+
+```text
+RVTools VI SDK Server
+          ↓
+CMDB VM_Virtualcenter
+```
+
+---
+
+# 43. ESX Version
+
+```python
+z.dati.append(trovato.dati[19])
+```
+
+Din Host:
+
+```python
+trovato.dati[19]
+```
+
+este:
+
+```text
+ESX Version
+```
+
+Acesta este adăugat la sfârșitul listei CMDB.
+
+Deci:
+
+```text
+RVTools ESX Version
+        ↓
+CMDB ESX Version
+```
+
+---
+
+# 44. Ce se întâmplă dacă Host-ul nu este găsit?
+
+Codul are:
+
+```python
+except:
+    z.dati.append(0)
+```
+
+Dacă apare o eroare, de exemplu:
+
+```python
+trovato = None
+```
+
+și codul încearcă:
+
+```python
+trovato.dati[9]
+```
+
+va apărea o eroare.
+
+`except` o capturează și face:
+
+```python
+z.dati.append(0)
+```
+
+Deci pentru Host-ul respectiv nu mai sunt actualizate câmpurile individuale și se adaugă `0` la sfârșit.
+
+**Aici există însă o particularitate importantă:** `except:` este foarte general. El nu diferențiază între „Host negăsit” și alte probleme, cum ar fi un index greșit sau o linie CMDB cu structură incorectă.
+
+---
+
+# 45. `finally`
+
+```python
+finally:
+    z.dati[CMDB_field["Domain Name"]] = dominio
+    CMDB_esx.append(z)
+```
+
+`finally` se execută **indiferent dacă a fost sau nu eroare**.
+
+Asta garantează două lucruri:
+
+### 1. Completează Domain Name
+
+```python
+z.dati[3] = dominio
+```
+
+adică:
+
+```text
+CMDB Domain Name
+        ↑
+        │
+    DNS domain
+```
+
+### 2. Adaugă obiectul în rezultatul final
+
+```python
+CMDB_esx.append(z)
+```
+
+---
+
+# 46. Rezultatul final
+
+După terminarea buclei:
+
+```python
+CMDB_esx
+```
+
+conține toate serverele CMDB procesate și, unde a fost găsit Host-ul corespunzător, completate cu informații RVTools.
+
+---
+
+# 47. Scrierea rezultatului final
+
+```python
+cm.scrivi_dati(
+    "OUT_CMDB_ESX",
+    CMDB_field,
+    CMDB_esx
+)
+```
+
+Aici se scrie rezultatul final.
+
+Comentariul indică:
+
+```text
+AssetCMDB_Esx.csv
+```
+
+Deci fluxul complet este:
+
+```text
+RVTools tabvHost
+       │
+       ▼
+   HOST objects
+       │
+       ▼
+ OUT_Host / Host_list
+       │
+       │
+       │         CMDB ESX
+       │             │
+       └──────┬──────┘
+              ▼
+       MATCH după nume
+              │
+              ▼
+        CMDB_esx objects
+              │
+              ▼
+       AssetCMDB_Esx.csv
+```
+
+---
+
+# 48. Ce informații RVTools ajung efectiv în CMDB?
+
+Foarte important: **nu toate cele 24 de câmpuri RVTools sunt transferate în CMDB.**
+
+Procedura transferă explicit:
+
+| RVTools `tabvHost` | CMDB               | Acțiune              |
+| ------------------ | ------------------ | -------------------- |
+| `# CPU`            | `Numero Socket`    | înlocuiește valoarea |
+| `# Cores`          | `Numero CPU`       | înlocuiește valoarea |
+| `VI SDK Server`    | `VM_Virtualcenter` | înlocuiește valoarea |
+| `ESX Version`      | `ESX Version`      | adaugă valoarea      |
+| domeniul Host-ului | `Domain Name`      | înlocuiește valoarea |
+
+Deci acestea sunt **cele 5 informații importante transferate din RVTools către CMDB**.
+
+---
+
+# 49. Un exemplu concret
+
+Să presupunem că RVTools are:
+
+```text
+Host:             esx01.domain.local
+# CPU:            2
+# Cores:          32
+VI SDK Server:    vcenter01
+ESX Version:      8.0
+```
+
+Procedura normalizează numele:
+
+```text
+esx01.domain.local
+       ↓
+esx01
+```
+
+și păstrează:
+
+```text
+dominio = domain.local
+```
+
+În CMDB avem:
+
+```text
+Nome CI = esx01.domain.local
+DNS     = esx01.domain.local
+```
+
+și după normalizare:
+
+```text
+CMDB nome = esx01
+```
+
+Match:
+
+```text
+esx01 == esx01
+```
+
+Se găsește Host-ul.
+
+Apoi CMDB devine conceptual:
+
+```text
+Numero Socket       = 2
+Numero CPU          = 32
+VM_Virtualcenter    = vcenter01
+Domain Name         = domain.local
+ESX Version         = 8.0
+```
+
+---
+
+# 50. Cele două niveluri de date
+
+Este util să vezi procedura ca având **două lumi**:
+
+### Lumea 1 — RVTools
+
+```python
+HOST
+```
+
+conține informațiile tehnice despre ESXi:
+
+```text
+Host
+Datacenter
+Cluster
+CPU
+Cores
+VMs
+vCPUs
+ESX Version
+Vendor
+Model
+vCenter
+...
+```
+
+### Lumea 2 — CMDB
+
+```python
+CMDB_esx
+```
+
+conține informațiile de inventar/management:
+
+```text
+Nome CI
+OS
+DNS
+Domain
+Is Virtual
+Numero CPU
+Numero Socket
+Processore
+Modello
+VM_Cluster
+VM_Virtualcenter
+...
+Responsabile
+Contratto
+server_iscloud
+ESX Version
+```
+
+### Legătura dintre ele
+
+```text
+RVTools.Host
+      =
+CMDB.Nome CI
+```
+
+după eliminarea domeniului și transformarea în lowercase.
+
+---
+
+# 51. Rolul `togli_dominio()` este foarte important
+
+Fără această normalizare, următoarele două valori ar fi considerate diferite:
+
+```text
+ESX01
+```
+
+și:
+
+```text
+ESX01.domain.local
+```
+
+Procedura le transformă în:
+
+```text
+esx01
+```
+
+și:
+
+```text
+esx01
+```
+
+și astfel poate face:
+
+```python
+o_g.nome == nome
+```
+
+---
+
+# 52. Observații tehnice importante despre cod
+
+Aș marca **4 puncte importante** dacă intenționezi ulterior să modernizezi procedura.
+
+### 1. `HOST_field` este modificat global
+
+```python
+HOST_field[c] = i
+```
+
+Dacă procesezi mai multe fișiere cu structuri diferite, pozițiile rămân cele din ultimul header procesat.
+
+---
+
+### 2. Folosește `split()` în loc de `csv.DictReader`
+
+```python
+y = tmp.split(cm.cs)
+```
+
+Asta poate fi problematic dacă o valoare din CSV conține separatorul în interiorul unui câmp.
+
+De exemplu:
+
+```text
+"Server Milano; Production";...
+```
+
+Un `csv.DictReader` ar trata corect câmpul dacă CSV-ul este valid și delimitarea este configurată corect.
+
+---
+
+### 3. `except:` este prea general
+
+```python
+except:
+```
+
+Ascunde orice eroare.
+
+De exemplu, dacă:
+
+```python
+trovato.dati[22]
+```
+
+are o problemă, procedura o tratează la fel ca pe cazul în care Host-ul nu există.
+
+Pentru debugging este mult mai greu.
+
+---
+
+### 4. Căutarea Host-ului este liniară
+
+```python
+next(
+    (o_g for o_g in HOST if o_g.nome == nome),
+    None
+)
+```
+
+Pentru fiecare server CMDB, Python caută prin lista `HOST`.
+
+Dacă avem:
+
+```text
+10.000 HOST-uri
+10.000 CMDB servers
+```
+
+pot apărea foarte multe comparații.
+
+Un dicționar de tip:
+
+```text
+HOST_BY_NAME
+```
+
+ar permite o căutare mult mai rapidă.
+
+---
+
+# 53. Rezumat foarte scurt al procedurii
+
+Dacă trebuie să explici procedura unui coleg, eu aș formula-o astfel:
+
+> **La procedura `Elabora Host`, vengono elaborati i dati provenienti dal file RVTools `tabvHost`. Per ogni ESXi Host vengono estratti i principali attributi tecnici, come numero di CPU, core, versione ESXi e VI SDK Server. I dati vengono memorizzati nella lista `HOST` e viene generato un file intermedio. Successivamente viene letto il file CMDB ESX e, per ogni CI, viene cercato il corrispondente Host RVTools tramite il nome del server, normalizzato eliminando il dominio e convertendolo in minuscolo. Quando viene trovato il corrispondente Host, alcuni dati RVTools vengono riportati nella CMDB, in particolare `Numero Socket`, `Numero CPU`, `VM_Virtualcenter` ed `ESX Version`. Infine viene aggiornato il `Domain Name` e viene generato il file finale `AssetCMDB_Esx.csv`.**
+
+În esență, **procedura este un JOIN între RVTools `tabvHost` și CMDB**, făcut în Python după numele Host-ului:
+
+```text
+              JOIN
+RVTools tabvHost ─────────── CMDB ESX
+       │                         │
+       │ Host                    │ Nome CI
+       │                         │
+       └─────── NORMALIZARE ─────┘
+                  │
+              lowercase
+            remove domain
+                  │
+                  ▼
+             nume identic
+                  │
+                  ▼
+          actualizare CMDB
+                  │
+                  ▼
+          AssetCMDB_Esx.csv
+```
+
+Aceasta este, de fapt, **ideea centrală a întregii proceduri**.

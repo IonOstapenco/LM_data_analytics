@@ -1,0 +1,82 @@
+Procedura per la generazione del file 
+
+        AssetServer_CMDB.csv
+        
+    Definire la struttura dati (CMDB_field) che risulterà essere il tracciato record del file di output                          CMDB_field = ["Nome CI", 
+                                                                                                                                               "OS", 
+Caricamento in memoria dei seguenti report scaricati da Grafana.                                                                               "DNS", 
+Da CMDB => Asset Server (ALL)-              ==>> CMDB -+                                                                                       "Domain Name", 
+Da CMDB => Asset Client (ALL)-              ==>> PDL   +---> tutti questi dati sono usati per scrivere ReportAsset_CMDB.csv                    "Is Virtual", 
+                                                                                                                                               "server_numerocore", 
+Per ogni server presente in Asset Server (ALL)                                                                                                 "Numero CPU",   
+    -> Leggere una riga del file nella variabile di tipo lista con nome Riga.                                                                  "Numero Socket", 
+                                                                                                                                               "Processore", 
+    -> Normalizzare il nome:                                                                                                                   "Modello", 
+        eliminare, se presente, il dominio                                                                                                     "VM_Cluster", 
+        tutte le lettere in minuscolo                                                                                                          "VM_Virtualcenter", 
+                                                                                                                                               "VM_Host",
+    -> Inizializzare il record che servirà per la scrittura su file di output.                                                                 "VMWare_LastReportDate", 
+                                                                                                                                               "Bigfix_LastReportDate", 
+    -> Memorizzare nella struttura CMDB i soli campi presenti in CMDB_field.                                                                   "Applicazione (lista)",
+                                                                                                                                               "Ruolo",
+        if cmp in CMDB_field:                                                                                                                  "Category",
+            if Riga[cmp] is defined:                                                                                                           "Type",
+                CMDB[nome_server][cmp] = Riga[cmp]                                                                                                          "Ambiente",
+                                                                                                                                               "Responsabile",
+    passo alla riga successiva                                                                                                                 "Used By",
+                                                                                                                                               "Contratto",
+Per ogni client presente in Asset Client (ALL)                                                                                                 "server_iscloud"
+    -> Leggere una riga del file nella variabile di tipo lista con nome Riga.                                                                 ] 
+                                                                                                                                              
+    -> Normalizzare il nome:                                                                                                                  
+        eliminare, se presente, il dominio                                                                                        PDL_field = ["Nome CI",
+        tutte le lettere in minuscolo                                                                                                          "Category",            
+                                                                                                                                               "Type",
+    -> Inizializzare il record che servirà per la scrittura sul file di output                                                                 "OS",
+                                                                                                                                               "Domain Name",
+    -> Memorizzare in CMDB i soli campi presenti in PDL_field.                                                                                 "Is Virtual",
+                                                                                                                                               "DNS",
+        if cmp in PDL_Field:                                                                                                                   "Used By"
+            if Riga[cmp] is defined:                                                                                                          ]
+                CMDB[nome_server][cmp] = Riga[cmp]
+    
+    passo alla riga successiva
+
+Controllare che la directory di destinazione sia presente e in caso contrario, crearla.
+Scrivere il file "AssetServer_CMDB".
+
+fine procedura.
+
+
+
+
+
+
+
+
+
+
+
+
+]
+
+
+
+
+
+
+
+
+
+
+               
+    
+
+
+
+
+
+
+
+
+

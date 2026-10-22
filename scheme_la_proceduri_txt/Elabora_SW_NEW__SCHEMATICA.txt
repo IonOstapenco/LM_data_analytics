@@ -1,0 +1,206 @@
+==== Elabora SW ========================
+==== Elabora SW – versiunea nouă ==============
+📘 DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_SW.py – nou)
+
+1. INPUT FILES → SURSE DE DATE
+Procedura folosește:
+OUT_Hardware_TAB   → Tabella_HW.csv        (HW consolidat)
+BGFXSW input       → fișier BigFix SW     (pattern: BFGX_SW_Pattern)
+CMDBSW input       → fișier CMDB SW       (pattern: CMDB_SW_Pattern)
+Liste excludere    → *.csv din exc_path   (IBM, Microsoft, Oracle, RedHat, VMware)
+
+
+Toate sunt încărcate în structuri Python:
+- Hardware   → servere + câmpuri HW (40 câmpuri)
+- BGFXSW     → software per server din BigFix
+- CMDBSW     → software per server din CMDB
+- liste de excludere:
+- ibm_kywrd_2_xcld, ibm_nomi_2_xcld
+- mcrsft_kywrd_2_xcld, mcrsft_nomi_2_xcld
+- orcl_nomi_2_xcld
+- rdht_nomi_2_xcld
+- vmwr_kywrd_2_xcld, vmwr_nomi_2_xcld
+
+2. STRUCTURI ȘI CÂMPURI
+🔵 2.1. Structuri de date
+- AssetSW
+→ conține datisw (lista celor 10 câmpuri SW)
+- c_TABSW
+→ nome (server)
+→ datihw (lista celor ~40 câmpuri HW)
+→ sw (listă de AssetSW)
+- c_BGFXSW, c_CMDBSW
+→ nome (server)
+→ sw (listă de AssetSW)
+
+🟣 2.2. Structura completă SW_field (OUTPUT)
+Lista finală de câmpuri (50 total):
+- 40 câmpuri HW (din Tabella_HW):
+- nome, operating_system, dominio, dns_name, virtuale, tipo,
+cluster_name, cluster_ambiente, cluster_cliente, cluster_destinazione,
+cluster_cores, cluster_numhosts, cluster_n_vms_total, cluster_n_vms,
+cluster_n_vms_win, hyperthreadactive, ha_enabled, drs_enabled, host,
+vm_hw_version, n_cpu, n_core, pvu_per_core, valore_pvu_modificato,
+valore_pvu_predefinito, fattore_core_oracle, powerstate, vcenter,
+vcenter_cores, vcenter_hosts, vcenter_dominio, vcenter_cluster,
+cpu_model, applicazione, ruolo, ambiente, responsabile, cliente,
+contratto, sito
+- 10 câmpuri SW (per fiecare software instalat):
+- nome publisher
+- nome componente
+- versione_componente
+- versione dettagliata componente
+- percorso_di_installazione
+- nome prodotto
+- versione_prodotto
+- metrica
+- nome_edizione
+- versione_edizione
+
+3. INPUT → CUM SUNT FOLOSITE SURSELE
+🟢 3.1. OUT_Hardware_TAB → baza HW
+Folosit pentru:
+- lista completă de servere (chei în Hardware)
+- toate câmpurile HW (40 câmpuri) care vor fi prefixate în output
+
+🟡 3.2. BigFix SW (BGFXSW)
+Pentru fiecare linie din fișierul BigFix:
+- normalizează linia (separator, ghilimele)
+- extrage:
+- Nome computer
+- Nome publisher
+- Nome componente
+- versione_componente
+- Versione dettagliata componente
+- percorso_di_installazione
+- Nome prodotto
+- versione_prodotto
+- metrica
+- verifică:
+- dacă Nome publisher este în lista Vendor
+- dacă produsul trebuie exclus (listele de excludere per vendor)
+- dacă trece filtrele:
+- construiește lista SW (10 câmpuri)
+- salvează în BGFXSW[nome_computer].sw
+
+🟠 3.3. CMDB SW (CMDBSW)
+Pentru fiecare linie din fișierul CMDB:
+- sare peste primele 2 linii (header)
+- normalizează linia
+- extrage:
+- server
+- software
+- manufacturer_name_
+- version_number
+- verifică:
+- vendor valid
+- liste de excludere (aceleași reguli ca la BigFix)
+- dacă trece filtrele:
+- construiește lista SW (10 câmpuri):
+- publisher, software, version_number, '-', '-', software, version_number, '-', '-', '-'
+- salvează în CMDBSW[nome_server].sw
+
+4. LOGICA DE CALCUL – EDIZIONI
+Funcția calcola_edizione(dati_sw):
+- primește lista SW (10 câmpuri)
+- analizează nome componente:
+- dacă conține sql server + edition → extrage ediția și versiunea (inclusiv caz R2)
+- dacă conține office:
+- detectează 365 / ProPlus / 2003 / alte versiuni
+- returnează:
+- nome_edizione
+- versione_edizione
+Aceste valori sunt apoi scrise în pozițiile 8 și 9 din lista SW.
+
+5. COMBINARE HW + SW
+🧩 5.1. Construirea structurii Software
+Pentru fiecare nome din Hardware:
+- se creează Software[nome] = c_TABSW(nome, Hardware[nome])
+Astfel:
+- Software[nome].datihw = lista celor 40 câmpuri HW
+- Software[nome].sw = listă de software (inițial goală)
+
+🧩 5.2. Adăugare SW din BGFXSW
+Pentru fiecare server nome:
+- dacă nome este în BGFXSW:
+- pentru fiecare sw_data din BGFXSW[nome].sw:
+- se calculează ediția: calcola_edizione(sw_data.datisw)
+- se scriu nome_edizione și versione_edizione în câmpurile 8 și 9
+- se adaugă copia listei în Software[nome].sw
+
+🧩 5.3. Adăugare SW din CMDBSW
+Analog:
+- dacă nome este în CMDBSW:
+- pentru fiecare sw_data:
+- se calculează ediția
+- se completează câmpurile 8 și 9
+- se adaugă în Software[nome].sw
+
+6. OUTPUT FILE → CE CONȚINE
+Procedura generează un singur fișier final:
+6.1. OUT_Software_TAB → Tabella_SW.csv
+┌──────────────────────────────────────────────┐
+│ OUT_Software_TAB → Tabella_SW.csv           │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE, pentru FIECARE SOFTWARE instalat pe FIECARE server:
+- toate cele 40 câmpuri HW (din Tabella_HW)
+- cele 10 câmpuri SW (din BigFix sau CMDB, cu ediție calculată)
+
+
+Structura unei linii:
+[40 câmpuri HW] | [10 câmpuri SW]  → total 50 câmpuri
+
+
+
+🎯 DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stil identic)
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     BigFix SW file      → BGFXSW
+     CMDB SW file        → CMDBSW
+     Liste excludere     → IBM / MS / Oracle / RedHat / VMware
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Construiește structuri SW per server                 │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare linie BigFix:
+        - normalizează
+        - verifică vendor
+        - verifică excluderi
+        - construiește 10 câmpuri SW
+        - adaugă în BGFXSW[server]
+
+        Pentru fiecare linie CMDB:
+        - normalizează
+        - verifică vendor
+        - verifică excluderi
+        - construiește 10 câmpuri SW
+        - adaugă în CMDBSW[server]
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Combină HW + SW                                      │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare server din Hardware:
+        - creează Software[server] cu datihw (40 câmpuri)
+        - dacă are BGFXSW → adaugă SW (cu ediție calculată)
+        - dacă are CMDBSW → adaugă SW (cu ediție calculată)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_Software_TAB → Tabella_SW.csv                    │
+        └──────────────────────────────────────────────────────┘
+        Conține:
+        - 40 câmpuri HW
+        - 10 câmpuri SW
+        pentru fiecare software instalat pe fiecare server

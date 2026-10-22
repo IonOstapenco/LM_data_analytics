@@ -1,0 +1,298 @@
+# 🇷🇴 Descriere generală – Procedura **PowerShell_Script_STD_Gruppi.py**
+
+## Scopul procedurii
+
+Această procedură are rolul de a identifica utilizatorii care fac parte din 
+grupurile **Office Standard (STD)**, folosind informații provenite din **Flexera** 
+și **Active Directory**.
+
+La final, procedura generează un fișier Excel 
+care conține liste curate și organizate ale utilizatorilor și grupurilor Office.
+
+---
+
+## Pasul 1 – Citirea configurației
+
+Procedura citește fișierul **Parametri.json**, din care află:
+
+* unde se află fișierele sursă;
+* în ce raport trebuie să lucreze;
+* unde vor fi salvate rezultatele.
+
+Astfel, nu este nevoie ca toate căile să fie scrise direct în cod.
+
+---
+
+## Pasul 2 – Citirea grupurilor Office din Flexera
+
+Din fișierul
+
+```
+FLEXERA_Lista gruppi Office.txt
+```
+
+sunt citite toate grupurile Office.
+
+Procedura păstrează doar grupurile de tip **STD (Standard)** 
+și elimină eventualele înregistrări duplicate.
+
+De asemenea, normalizează unele denumiri pentru ca toate grupurile să respecte același format.
+
+---
+
+## Pasul 3 – Selectarea grupurilor valide
+
+Unele grupuri există în mai multe variante:
+
+* PRD
+* ADS
+* COL
+
+Procedura analizează aceste variante și stabilește care grupuri trebuie folosite pentru procesare.
+
+Există și câteva excepții speciale definite în cod, care sunt păstrate indiferent 
+de regulile generale.
+
+---
+
+## Pasul 4 – Citirea utilizatorilor Active Directory
+
+Procedura citește fișierul:
+
+```
+AD_Users_Results_attivi.csv
+```
+
+Din acest fișier sunt preluate informații precum:
+
+* utilizatorul (login);
+* numele persoanei;
+* banca (OU_01).
+
+Aceste informații vor fi folosite ulterior pentru completarea rezultatelor.
+
+---
+
+## Pasul 5 – Căutarea utilizatorilor în grupurile Office
+
+Procedura caută toate fișierele:
+
+```
+AD-usersAndGroupsResult.csv
+```
+
+Pentru fiecare grup Office identificat anterior, sunt căutați utilizatorii care fac parte 
+din acel grup.
+
+Pentru fiecare utilizator găsit se rețin informații precum:
+
+* grupul Office;
+* numele utilizatorului;
+* login-ul (SamAccountName);
+* fișierul din care provin datele.
+
+---
+
+## Pasul 6 – Curățarea datelor
+
+Înainte de generarea rezultatului, procedura efectuează mai multe verificări:
+
+* elimină utilizatorii de test;
+* elimină duplicatele;
+* normalizează numele persoanelor;
+* completează automat banca (Banche) folosind informațiile din Active Directory.
+
+Scopul este ca rezultatele finale să fie cât mai curate și corecte.
+
+---
+
+## Pasul 7 – Trimiterea datelor către Python
+
+După ce toate informațiile au fost procesate în PowerShell, rezultatele sunt trimise către Python.
+
+Nu mai este nevoie să fie create fișiere intermediare.
+
+Python primește direct toate datele și continuă procesarea.
+
+---
+
+## Pasul 8 – Generarea fișierului Excel
+
+Python organizează informațiile în mai multe tabele și creează fișierul:
+
+```
+Licenze_Office_STD_AD_RESULTS_ATTIVI E UNIQUE NAMES e Match AD.xlsx
+```
+
+Acesta conține mai multe foi de lucru, printre care:
+
+* **Dettaglio** – lista completă a utilizatorilor și grupurilor;
+* **Unique Names** – lista numelor unice;
+* **Unique SAM** – lista login-urilor unice;
+* **Names Banche** – utilizatori împreună cu banca din care fac parte;
+* **Match AD** – verificarea corespondenței dintre utilizatori și Active Directory.
+
+---
+
+## Rezultatul final
+
+La sfârșitul execuției, procedura produce un fișier Excel centralizat, 
+care conține toate informațiile necesare pentru analiza licențelor Office Standard.
+
+Scopul principal este:
+
+* identificarea utilizatorilor care folosesc licențe Office Standard;
+* eliminarea datelor incorecte sau duplicate;
+* asocierea fiecărui utilizator cu banca din Active Directory;
+* obținerea unui raport final ușor de analizat.
+
+---
+
+# 🇮🇹 Descrizione generale – Procedura **PowerShell_Script_STD_Gruppi.py**
+
+## Scopo della procedura
+
+Questa procedura serve a identificare gli utenti che appartengono ai gruppi **Office Standard (STD)*
+* utilizzando i dati provenienti da **Flexera** e **Active Directory**.
+
+Al termine viene generato un file Excel contenente elenchi ordinati e puliti degli utenti
+ e dei gruppi Office.
+
+---
+
+## Passo 1 – Lettura della configurazione
+
+La procedura legge il file **Parametri.json**, dal quale ricava:
+
+* il percorso dei file sorgente;
+* la cartella del report da elaborare;
+* la cartella in cui salvare i risultati.
+
+In questo modo i percorsi non sono scritti direttamente nel codice.
+
+---
+
+## Passo 2 – Lettura dei gruppi Office da Flexera
+
+Dal file
+
+```
+FLEXERA_Lista gruppi Office.txt
+```
+
+vengono letti tutti i gruppi Office.
+
+La procedura mantiene solamente i gruppi di tipo **STD (Standard)** ed elimina eventuali duplicati.
+
+Inoltre normalizza alcuni nomi per renderli uniformi.
+
+---
+
+## Passo 3 – Selezione dei gruppi validi
+
+Alcuni gruppi possono esistere in più varianti:
+
+* PRD
+* ADS
+* COL
+
+La procedura analizza queste varianti e decide quali gruppi devono essere 
+utilizzati durante l'elaborazione.
+
+Sono previste anche alcune eccezioni specifiche che vengono mantenute indipendentemente 
+dalle regole generali.
+
+---
+
+## Passo 4 – Lettura degli utenti Active Directory
+
+La procedura legge il file
+
+```
+AD_Users_Results_attivi.csv
+```
+
+e utilizza informazioni quali:
+
+* login dell'utente;
+* nome della persona;
+* banca (OU_01).
+
+Questi dati saranno utilizzati nelle fasi successive.
+
+---
+
+## Passo 5 – Ricerca degli utenti nei gruppi Office
+
+La procedura cerca tutti i file
+
+```
+AD-usersAndGroupsResult.csv
+```
+
+Per ogni gruppo Office individuato in precedenza vengono cercati gli utenti 
+che appartengono a quel gruppo.
+
+Per ogni utente trovato vengono memorizzate informazioni come:
+
+* gruppo Office;
+* nome;
+* login (SamAccountName);
+* file di origine.
+
+---
+
+## Passo 6 – Pulizia dei dati
+
+Prima di generare il risultato finale vengono eseguite diverse operazioni di pulizia:
+
+* eliminazione degli utenti di test;
+* rimozione dei duplicati;
+* normalizzazione dei nomi;
+* associazione automatica della banca (Banche) tramite i dati di Active Directory.
+
+L'obiettivo è ottenere dati affidabili e consistenti.
+
+---
+
+## Passo 7 – Invio dei dati a Python
+
+Dopo l'elaborazione in PowerShell, tutti i risultati vengono inviati direttamente a Python.
+
+Non è più necessario creare file intermedi.
+
+Python riceve direttamente i dati già elaborati e prosegue con la fase finale.
+
+---
+
+## Passo 8 – Generazione del file Excel
+
+Python organizza le informazioni e crea il file Excel:
+
+```
+Licenze_Office_STD_AD_RESULTS_ATTIVI E UNIQUE NAMES e Match AD.xlsx
+```
+
+Il file contiene diversi fogli di lavoro, tra cui:
+
+* **Dettaglio** – elenco completo di utenti e gruppi;
+* **Unique Names** – elenco dei nomi univoci;
+* **Unique SAM** – elenco dei login univoci;
+* **Names Banche** – utenti con la banca associata;
+* **Match AD** – confronto tra gli utenti e Active Directory.
+
+---
+
+## Risultato finale
+
+Al termine dell'esecuzione viene prodotto un unico file Excel 
+contenente tutte le informazioni necessarie per l'analisi delle licenze Office Standard.
+
+L'obiettivo principale della procedura è:
+
+* identificare gli utenti che utilizzano licenze Office Standard;
+* eliminare dati errati o duplicati;
+* associare ogni utente alla propria banca tramite Active Directory;
+* produrre un report finale semplice da consultare.
+
+---

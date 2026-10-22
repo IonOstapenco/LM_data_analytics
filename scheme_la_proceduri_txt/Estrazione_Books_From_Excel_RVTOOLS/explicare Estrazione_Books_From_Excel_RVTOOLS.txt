@@ -1,0 +1,554 @@
+# 🇷🇴 Descriere generală – Procedura **Estrazione_Books_From_Excel_RVTOOLS.py**
+
+## Scopul procedurii
+
+Această procedură are rolul de a procesa fișierele generate de **RVTools**, utilizate pentru analiza infrastructurii VMware.
+
+Procedura efectuează următoarele operații principale:
+
+* citește configurația din **Parametri.json**;
+* identifică automat directoarele și fișierele RVTools;
+* normalizează numele folderelor generate de exporturile RVTools;
+* extrage foile importante din fișierele Excel RVTools;
+* salvează informațiile necesare în fișiere CSV standardizate pentru utilizarea ulterioară în procesul de **License Management**.
+
+---
+
+# Pasul 1 – Citirea configurației
+
+Procedura citește fișierul:
+
+```
+Parametri.json
+```
+
+din care preia:
+
+* directorul principal:
+
+```
+Source_dir
+```
+
+* directorul raportului curent:
+
+```
+Report_dir
+```
+
+Pe baza acestor valori este construit directorul de lucru:
+
+```
+Source_dir\Report_dir
+```
+
+Exemplu:
+
+```
+C:\License_Management\Report_202607
+```
+
+Toate fișierele RVTools sunt căutate în această structură.
+
+---
+
+# Pasul 2 – Scanarea structurii directoarelor
+
+Procedura parcurge recursiv toate directoarele folosind:
+
+```python
+os.walk()
+```
+
+Sunt afișate:
+
+* folderele existente;
+* subfolderele;
+* fișierele găsite.
+
+Această etapă permite verificarea structurii exporturilor RVTools și identificarea locațiilor unde sunt salvate fișierele Excel.
+
+---
+
+# Pasul 3 – Identificarea folderelor RVTools
+
+Procedura filtrează directoarele care conțin:
+
+```
+rvtools
+```
+
+în numele căii.
+
+Sunt analizate numai locațiile care aparțin exporturilor RVTools.
+
+Exemplu:
+
+```
+Report_202607
+ └── RVTools
+      └── server.domain.com_20260731_153020
+            └── RVTools_export.xlsx
+```
+
+---
+
+# Pasul 4 – Normalizarea numelor folderelor
+
+Funcția:
+
+```python
+normalize_folder_name()
+```
+
+are rolul de a transforma numele folderelor RVTools într-un format standard.
+
+Format inițial:
+
+```
+hostname.domain.com_YYYYMMDD_HHMMSS
+```
+
+devine:
+
+```
+hostname_DDMMYYYY
+```
+
+Exemplu:
+
+Înainte:
+
+```
+srv001.company.local_20260731_153020
+```
+
+După:
+
+```
+srv001_31072026
+```
+
+---
+
+## Reguli aplicate pentru normalizare
+
+Procedura:
+
+* elimină domeniul din hostname:
+
+```
+srv001.company.local
+```
+
+devine:
+
+```
+srv001
+```
+
+* transformă data din format:
+
+```
+YYYYMMDD
+```
+
+în:
+
+```
+DDMMYYYY
+```
+
+* elimină partea de timp:
+
+```
+HHMMSS
+```
+
+---
+
+# Pasul 5 – Redenumirea folderelor
+
+Pentru evitarea problemelor de structură, folderele sunt redenumite folosind procesarea:
+
+```python
+os.walk(..., topdown=False)
+```
+
+Procesarea este făcută **bottom-up**, astfel încât redenumirea subfolderelor să nu afecteze căile părinte.
+
+Înainte:
+
+```
+RVTools
+ └── server01.domain.com_20260731_120000
+```
+
+După:
+
+```
+RVTools
+ └── server01_31072026
+```
+
+Dacă noul nume există deja, redenumirea nu este executată.
+
+---
+
+# Pasul 6 – Identificarea fișierelor Excel RVTools
+
+Procedura caută în directoarele RVTools fișiere:
+
+```
+.xlsx
+```
+
+care conțin în nume:
+
+```
+RVTools
+```
+
+Exemplu:
+
+```
+RVTools_export.xlsx
+```
+
+Fiecare fișier găsit este procesat individual.
+
+---
+
+# Pasul 7 – Extragerea foilor Excel
+
+Din fișierele Excel RVTools sunt extrase doar foile necesare:
+
+```
+vCluster
+vCPU
+vHost
+vInfo
+vTools
+```
+
+Citirea este realizată folosind:
+
+```python
+pandas.ExcelFile()
+```
+
+și:
+
+```python
+pandas.read_excel()
+```
+
+---
+
+# Pasul 8 – Conversia foilor în CSV
+
+Fiecare sheet este exportat într-un fișier CSV separat.
+
+Maparea utilizată este:
+
+| Sheet RVTools | Fișier CSV generat      |
+| ------------- | ----------------------- |
+| vCluster      | RVTools_tabvCluster.csv |
+| vCPU          | RVTools_tabvCPU.csv     |
+| vHost         | RVTools_tabvHost.csv    |
+| vInfo         | RVTools_tabvInfo.csv    |
+| vTools        | RVTools_tabvTools.csv   |
+
+Fișierele sunt salvate în același director unde se află Excel-ul sursă.
+
+Separatorul utilizat este:
+
+```
+;
+```
+
+---
+
+# Pasul 9 – Tratarea erorilor
+
+Procedura verifică mai multe situații:
+
+* fișier Excel care nu poate fi deschis;
+* sheet lipsă în fișierul RVTools;
+* eroare la exportul CSV;
+* folder deja existent la redenumire.
+
+Erorile sunt afișate în consolă fără oprirea completă a procesării celorlalte fișiere.
+
+---
+
+# Rezultatul final
+
+La finalul execuției sunt disponibile fișiere CSV standardizate:
+
+```
+RVTools_tabvCluster.csv
+RVTools_tabvCPU.csv
+RVTools_tabvHost.csv
+RVTools_tabvInfo.csv
+RVTools_tabvTools.csv
+```
+
+Aceste fișiere sunt utilizate ulterior pentru:
+
+* analiza infrastructurii VMware;
+* identificarea clusterelor și hosturilor ESX;
+* calculul parametrilor necesari pentru licențiere;
+* integrarea cu celelalte proceduri din procesul License Management.
+
+---
+
+<br>
+
+# 🇮🇹 Descrizione generale – Procedura **Estrazione_Books_From_Excel_RVTOOLS.py**
+
+## Scopo della procedura
+
+Questa procedura ha lo scopo di elaborare i file generati da **RVTools**, utilizzati per l’analisi dell’infrastruttura VMware.
+
+La procedura esegue principalmente:
+
+* lettura della configurazione da **Parametri.json**;
+* ricerca automatica delle cartelle e dei file RVTools;
+* normalizzazione dei nomi delle cartelle generate dagli export RVTools;
+* estrazione dei fogli Excel necessari;
+* conversione dei dati in file CSV standardizzati utilizzati nel processo di **License Management**.
+
+---
+
+# Passo 1 – Lettura della configurazione
+
+La procedura legge il file:
+
+```
+Parametri.json
+```
+
+dal quale recupera:
+
+* directory principale:
+
+```
+Source_dir
+```
+
+* directory del report:
+
+```
+Report_dir
+```
+
+Viene quindi costruito il percorso di lavoro:
+
+```
+Source_dir\Report_dir
+```
+
+Esempio:
+
+```
+C:\License_Management\Report_202607
+```
+
+---
+
+# Passo 2 – Scansione della struttura delle cartelle
+
+La procedura utilizza:
+
+```python
+os.walk()
+```
+
+per analizzare ricorsivamente la struttura delle directory.
+
+Vengono visualizzati:
+
+* cartelle presenti;
+* sottocartelle;
+* file disponibili.
+
+Questa fase permette di identificare la posizione degli export RVTools.
+
+---
+
+# Passo 3 – Individuazione delle cartelle RVTools
+
+Vengono considerate solamente le directory che contengono:
+
+```
+rvtools
+```
+
+nel percorso.
+
+Esempio:
+
+```
+RVTools
+ └── server.domain.com_20260731_153020
+       └── RVTools_export.xlsx
+```
+
+---
+
+# Passo 4 – Normalizzazione dei nomi delle cartelle
+
+La funzione:
+
+```python
+normalize_folder_name()
+```
+
+normalizza i nomi delle cartelle RVTools.
+
+Formato originale:
+
+```
+hostname.domain.com_YYYYMMDD_HHMMSS
+```
+
+diventa:
+
+```
+hostname_DDMMYYYY
+```
+
+Esempio:
+
+Prima:
+
+```
+srv001.company.local_20260731_153020
+```
+
+Dopo:
+
+```
+srv001_31072026
+```
+
+---
+
+# Passo 5 – Rinomina delle cartelle
+
+La procedura rinomina le directory utilizzando una scansione:
+
+```python
+os.walk(topdown=False)
+```
+
+La modalità bottom-up permette di modificare prima le sottocartelle evitando problemi nei percorsi.
+
+Se il nuovo nome esiste già, la rinomina viene evitata.
+
+---
+
+# Passo 6 – Ricerca dei file Excel RVTools
+
+La procedura cerca tutti i file:
+
+```
+.xlsx
+```
+
+contenenti:
+
+```
+RVTools
+```
+
+nel nome.
+
+Ogni file trovato viene elaborato singolarmente.
+
+---
+
+# Passo 7 – Estrazione dei fogli Excel
+
+Dai file Excel RVTools vengono estratti solamente i fogli necessari:
+
+```
+vCluster
+vCPU
+vHost
+vInfo
+vTools
+```
+
+La lettura viene effettuata tramite:
+
+```python
+pandas.ExcelFile()
+```
+
+e:
+
+```python
+pandas.read_excel()
+```
+
+---
+
+# Passo 8 – Conversione dei fogli in CSV
+
+Ogni foglio viene salvato come file CSV separato.
+
+Mapping utilizzato:
+
+| Foglio RVTools | File CSV generato       |
+| -------------- | ----------------------- |
+| vCluster       | RVTools_tabvCluster.csv |
+| vCPU           | RVTools_tabvCPU.csv     |
+| vHost          | RVTools_tabvHost.csv    |
+| vInfo          | RVTools_tabvInfo.csv    |
+| vTools         | RVTools_tabvTools.csv   |
+
+I file vengono salvati nella stessa cartella del file Excel originale.
+
+Il separatore utilizzato è:
+
+```
+;
+```
+
+---
+
+# Passo 9 – Gestione degli errori
+
+La procedura controlla:
+
+* file Excel non apribile;
+* foglio mancante;
+* errore durante l'esportazione CSV;
+* cartella già esistente durante il rename.
+
+Gli errori vengono mostrati senza interrompere l'elaborazione degli altri file.
+
+---
+
+# Risultato finale
+
+Al termine vengono prodotti file CSV standardizzati:
+
+```
+RVTools_tabvCluster.csv
+RVTools_tabvCPU.csv
+RVTools_tabvHost.csv
+RVTools_tabvInfo.csv
+RVTools_tabvTools.csv
+```
+
+Questi file vengono utilizzati successivamente per:
+
+* analisi dell’infrastruttura VMware;
+* identificazione di cluster e host ESX;
+* calcolo dei parametri necessari per la gestione delle licenze;
+* integrazione con le altre procedure del progetto **License Management**.
+
+---

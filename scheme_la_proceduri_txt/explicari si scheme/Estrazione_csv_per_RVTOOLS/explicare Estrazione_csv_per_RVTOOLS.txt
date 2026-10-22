@@ -1,0 +1,259 @@
+# 🇷🇴 Descriere generală – Procedura **Estrazione_csv_per_RVTOOLS.py**
+
+## Scopul procedurii
+
+Această procedură are rolul de a prelucra fișierele Excel generate de **RVTools**, extrăgând numai foile necesare și salvându-le în format CSV.
+
+În plus, procedura organizează automat fișierele rezultate în directoare standardizate, utilizate ulterior de celelalte proceduri din proiectul **License Management**.
+
+---
+
+## Pasul 1 – Citirea configurației
+
+Procedura citește informațiile din fișierul **Parametri.json**, din care preia:
+
+* directorul sursă;
+* directorul raportului curent;
+* directorul de ieșire;
+* extensia fișierelor Excel.
+
+Pe baza acestor informații este construită calea principală de lucru.
+
+---
+
+## Pasul 2 – Stabilirea datei curente
+
+Procedura determină automat prima zi a lunii curente folosind data sistemului.
+
+Această dată este utilizată pentru construirea numelor directoarelor în format standard:
+
+```
+_DDMMYYYY
+```
+
+Exemplu:
+
+```
+_01072026
+```
+
+Astfel toate exporturile RVTools din aceeași lună sunt organizate într-o structură unitară.
+
+---
+
+## Pasul 3 – Identificarea fișierelor RVTools
+
+Procedura caută automat fișierele Excel care au unul dintre prefixele configurate și extensia specificată.
+
+Sunt procesate doar fișierele care corespund modelelor definite, evitând astfel prelucrarea altor documente existente în director.
+
+---
+
+## Pasul 4 – Determinarea directorului de ieșire
+
+Pentru fiecare fișier este identificat prefixul din numele acestuia.
+
+Pe baza acestui prefix este construit numele directorului în care vor fi salvate rezultatele.
+
+Dacă există deja un director **rvtools**, procedura utilizează automat cel mai recent director găsit.
+
+În caz contrar, rezultatele sunt salvate în directorul standard de ieșire definit în configurație.
+
+---
+
+## Pasul 5 – Deschiderea fișierului Excel
+
+Fișierul RVTools este deschis utilizând biblioteca **Pandas**.
+
+În această etapă sunt identificate toate foile disponibile din document.
+
+Dacă fișierul nu poate fi deschis, este afișat un mesaj de eroare, iar procesarea acelui fișier este întreruptă.
+
+---
+
+## Pasul 6 – Extragerea foilor necesare
+
+Procedura verifică existența fiecărei foi necesare:
+
+* vCluster
+* vCPU
+* vHost
+* vInfo
+* vTools
+
+Dacă o foaie nu există, aceasta este ignorată, iar procesarea continuă cu următoarea.
+
+---
+
+## Pasul 7 – Generarea fișierelor CSV
+
+Fiecare foaie identificată este citită și convertită într-un fișier CSV.
+
+Fișierele sunt salvate folosind denumiri standardizate:
+
+```
+RVTools_tabvCluster.csv
+RVTools_tabvCPU.csv
+RVTools_tabvHost.csv
+RVTools_tabvInfo.csv
+RVTools_tabvTools.csv
+```
+
+Separatorul utilizat este caracterul:
+
+```
+;
+```
+
+---
+
+## Pasul 8 – Organizarea rezultatelor
+
+Toate fișierele CSV sunt salvate în directorul creat automat pentru exportul respectiv.
+
+În acest mod fiecare export RVTools este păstrat separat și poate fi utilizat ulterior de celelalte proceduri din aplicație.
+
+---
+
+## Rezultatul final
+
+La sfârșitul execuției sunt generate fișiere CSV standardizate pentru foile importante din RVTools.
+
+Obiectivele principale ale procedurii sunt:
+
+* identificarea automată a fișierelor RVTools;
+* organizarea exporturilor în directoare standardizate;
+* extragerea foilor relevante din fișierele Excel;
+* conversia datelor în format CSV;
+* pregătirea informațiilor pentru procedurile următoare din procesul **License Management**.
+
+---
+
+# 🇮🇹 Descrizione generale – Procedura **Estrazione_csv_per_RVTOOLS.py**
+
+## Scopo della procedura
+
+Questa procedura ha lo scopo di elaborare i file Excel generati da **RVTools**, estraendo solamente i fogli necessari e salvandoli in formato CSV.
+
+Inoltre organizza automaticamente i file prodotti in cartelle standardizzate, utilizzate dalle successive procedure del progetto **License Management**.
+
+---
+
+## Passo 1 – Lettura della configurazione
+
+La procedura legge il file **Parametri.json**, dal quale ricava:
+
+* la directory sorgente;
+* la cartella del report corrente;
+* la cartella di output;
+* l'estensione dei file Excel.
+
+Sulla base di queste informazioni viene costruito il percorso principale di lavoro.
+
+---
+
+## Passo 2 – Determinazione della data corrente
+
+La procedura ricava automaticamente il primo giorno del mese corrente utilizzando la data del sistema.
+
+Questa data viene utilizzata per costruire i nomi delle cartelle nel formato standard:
+
+```
+_DDMMYYYY
+```
+
+Ad esempio:
+
+```
+_01072026
+```
+
+In questo modo tutti gli export RVTools dello stesso mese vengono organizzati in modo uniforme.
+
+---
+
+## Passo 3 – Individuazione dei file RVTools
+
+La procedura ricerca automaticamente i file Excel che possiedono uno dei prefissi configurati e l'estensione prevista.
+
+Vengono elaborati solamente i file che corrispondono ai criteri definiti, evitando di processare documenti non pertinenti.
+
+---
+
+## Passo 4 – Determinazione della cartella di output
+
+Per ogni file viene identificato il prefisso presente nel nome.
+
+Sulla base di questo prefisso viene costruita la cartella nella quale saranno salvati i risultati.
+
+Se esiste già una cartella **rvtools**, la procedura utilizza automaticamente quella più recente.
+
+In caso contrario i file vengono salvati nella cartella di output configurata.
+
+---
+
+## Passo 5 – Apertura del file Excel
+
+Il file RVTools viene aperto tramite la libreria **Pandas**.
+
+In questa fase vengono identificati tutti i fogli disponibili.
+
+Se il file non può essere aperto, viene visualizzato un messaggio di errore e l'elaborazione di quel file viene interrotta.
+
+---
+
+## Passo 6 – Estrazione dei fogli necessari
+
+La procedura verifica la presenza dei seguenti fogli:
+
+* vCluster
+* vCPU
+* vHost
+* vInfo
+* vTools
+
+Se un foglio non è presente, viene ignorato e l'elaborazione continua con i successivi.
+
+---
+
+## Passo 7 – Generazione dei file CSV
+
+Ogni foglio disponibile viene letto e convertito in un file CSV.
+
+I file vengono salvati con nomi standardizzati:
+
+```
+RVTools_tabvCluster.csv
+RVTools_tabvCPU.csv
+RVTools_tabvHost.csv
+RVTools_tabvInfo.csv
+RVTools_tabvTools.csv
+```
+
+Il separatore utilizzato è:
+
+```
+;
+```
+
+---
+
+## Passo 8 – Organizzazione dei risultati
+
+Tutti i file CSV vengono salvati nella cartella creata automaticamente per il relativo export.
+
+In questo modo ogni esportazione RVTools rimane organizzata e pronta per essere utilizzata dalle procedure successive del progetto.
+
+---
+
+## Risultato finale
+
+Al termine dell'esecuzione vengono prodotti file CSV standardizzati contenenti i dati principali estratti dai file Excel RVTools.
+
+Gli obiettivi principali della procedura sono:
+
+* individuare automaticamente i file RVTools;
+* organizzare gli export in cartelle standardizzate;
+* estrarre i fogli Excel necessari;
+* convertire i dati nel formato CSV;
+* preparare le informazioni per le successive elaborazioni del processo **License Management**.

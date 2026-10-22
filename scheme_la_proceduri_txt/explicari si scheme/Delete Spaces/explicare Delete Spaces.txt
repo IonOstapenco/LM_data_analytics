@@ -1,0 +1,500 @@
+# 🇷🇴 Descriere generală – Procedura **DeleteSpaces_CSV.py**
+
+## Scopul procedurii
+
+Această procedură are rolul de a **curăța fișierele CSV de spațiile inutile și liniile goale**, pentru a asigura o structură uniformă a datelor înainte de procesarea acestora de către procedurile următoare.
+
+Procedura parcurge automat toate fișierele CSV din directorul raportului și:
+
+* elimină spațiile inutile de la începutul și sfârșitul valorilor;
+* elimină liniile complet goale;
+* rescrie fișierele CSV într-un format standardizat.
+
+---
+
+# Pasul 1 – Citirea configurației
+
+Procedura citește fișierul:
+
+```
+parametri.json
+```
+
+folosind:
+
+```python
+json.load()
+```
+
+Din configurație sunt preluate:
+
+* directorul principal:
+
+```
+Source_dir
+```
+
+* directorul raportului:
+
+```
+Report_dir
+```
+
+Aceste două valori sunt combinate pentru construirea căii complete de lucru:
+
+```
+Source_dir + Report_dir
+```
+
+Exemplu:
+
+```
+C:\License_Management
++
+Report_202607
+```
+
+devine:
+
+```
+C:\License_Management\Report_202607
+```
+
+---
+
+# Pasul 2 – Identificarea fișierelor CSV
+
+Procedura analizează directorul configurat și caută toate fișierele cu extensia:
+
+```
+.csv
+```
+
+Pentru fiecare fișier găsit este construită calea completă:
+
+```
+C:\License_Management\Report_202607\File.csv
+```
+
+Lista fișierelor identificate este memorată în:
+
+```python
+input_paths
+```
+
+Dacă nu sunt găsite fișiere CSV, procedura afișează mesajul:
+
+```
+Nessun file CSV trovato nella directory specificata.
+```
+
+---
+
+# Pasul 3 – Citirea fișierelor CSV
+
+Funcția:
+
+```python
+deleteSpaces()
+```
+
+procesează fiecare fișier CSV individual.
+
+Fișierul este deschis folosind:
+
+```python
+csv.reader()
+```
+
+cu separatorul:
+
+```
+,
+```
+
+și opțiunea:
+
+```python
+skipinitialspace=True
+```
+
+care ignoră spațiile existente după separator.
+
+Exemplu:
+
+Înainte:
+
+```
+Nome CI, OS, Domain Name
+server01, Windows, dominio.local
+```
+
+După citire:
+
+```
+Nome CI
+OS
+Domain Name
+```
+
+---
+
+# Pasul 4 – Eliminarea liniilor goale
+
+Pentru fiecare rând citit se verifică dacă este complet gol.
+
+Exemple eliminate:
+
+```
+,,,
+```
+
+sau:
+
+```
+          
+```
+
+Aceste rânduri nu sunt salvate în rezultatul final.
+
+Scopul este eliminarea înregistrărilor inutile care pot provoca probleme în procesarea ulterioară.
+
+---
+
+# Pasul 5 – Curățarea valorilor din coloane
+
+Pentru fiecare celulă din CSV se aplică:
+
+```python
+cell.strip()
+```
+
+Această operație elimină:
+
+* spațiile de la începutul valorii;
+* spațiile de la sfârșitul valorii.
+
+Exemplu:
+
+Înainte:
+
+```
+"   Server01   "
+```
+
+După:
+
+```
+"Server01"
+```
+
+Astfel valorile devin consistente pentru:
+
+* comparații;
+* JOIN-uri;
+* filtrări;
+* eliminarea duplicatelor.
+
+---
+
+# Pasul 6 – Rescrierea fișierului CSV
+
+După curățare, datele sunt scrise din nou în același fișier:
+
+```python
+csv.writer()
+```
+
+cu:
+
+* separator standard `,`;
+* format CSV compatibil;
+* quoting minim.
+
+Fișierul original este suprascris cu versiunea curățată.
+
+---
+
+# Pasul 7 – Procesarea tuturor fișierelor
+
+Procedura aplică aceeași logică pentru toate fișierele CSV găsite.
+
+Exemplu:
+
+```
+AssetServer.csv
+AssetClient.csv
+Flexera.csv
+AD_users.csv
+```
+
+sunt procesate automat fără necesitatea indicării manuale a fiecărui fișier.
+
+---
+
+# Rezultatul final
+
+La finalul execuției toate fișierele CSV din directorul raportului sunt standardizate.
+
+Beneficii principale:
+
+* eliminarea spațiilor inutile din date;
+* eliminarea liniilor goale;
+* reducerea problemelor la importul în MySQL sau Excel;
+* îmbunătățirea rezultatelor la comparații și JOIN-uri;
+* pregătirea fișierelor pentru procedurile de License Management.
+
+---
+
+# 🇮🇹 Descrizione generale – Procedura **DeleteSpaces_CSV.py**
+
+## Scopo della procedura
+
+Questa procedura ha lo scopo di **pulire i file CSV eliminando spazi inutili e righe vuote**, garantendo una struttura uniforme dei dati prima delle successive elaborazioni.
+
+La procedura analizza automaticamente tutti i file CSV presenti nella cartella del report e:
+
+* elimina gli spazi iniziali e finali dai valori;
+* elimina le righe completamente vuote;
+* riscrive i file CSV in un formato standardizzato.
+
+---
+
+# Passo 1 – Lettura della configurazione
+
+La procedura legge il file:
+
+```
+parametri.json
+```
+
+tramite:
+
+```python
+json.load()
+```
+
+Dal file vengono recuperati:
+
+* directory principale:
+
+```
+Source_dir
+```
+
+* directory del report:
+
+```
+Report_dir
+```
+
+Questi valori vengono combinati per creare il percorso completo di lavoro:
+
+```
+Source_dir + Report_dir
+```
+
+Esempio:
+
+```
+C:\License_Management
++
+Report_202607
+```
+
+diventa:
+
+```
+C:\License_Management\Report_202607
+```
+
+---
+
+# Passo 2 – Ricerca dei file CSV
+
+La procedura analizza la directory configurata e ricerca tutti i file con estensione:
+
+```
+.csv
+```
+
+Per ogni file viene costruito il percorso completo.
+
+I percorsi vengono memorizzati nella lista:
+
+```python
+input_paths
+```
+
+Se non viene trovato nessun file CSV viene visualizzato il messaggio:
+
+```
+Nessun file CSV trovato nella directory specificata.
+```
+
+---
+
+# Passo 3 – Lettura dei file CSV
+
+La funzione:
+
+```python
+deleteSpaces()
+```
+
+elabora ogni file CSV singolarmente.
+
+Il file viene letto tramite:
+
+```python
+csv.reader()
+```
+
+utilizzando:
+
+* separatore `,`;
+* gestione degli spazi iniziali.
+
+Esempio:
+
+Prima:
+
+```
+Nome CI, OS, Domain Name
+server01, Windows, dominio.local
+```
+
+Dopo la pulizia:
+
+```
+Nome CI
+OS
+Domain Name
+```
+
+---
+
+# Passo 4 – Eliminazione delle righe vuote
+
+Durante la lettura viene controllato ogni record.
+
+Le righe completamente vuote vengono eliminate.
+
+Esempi rimossi:
+
+```
+,,,
+```
+
+oppure:
+
+```
+          
+```
+
+Questo evita la presenza di record inutili nei file finali.
+
+---
+
+# Passo 5 – Pulizia dei valori
+
+Per ogni cella viene applicato:
+
+```python
+strip()
+```
+
+che elimina:
+
+* spazi prima del valore;
+* spazi dopo il valore.
+
+Esempio:
+
+Prima:
+
+```
+"   Server01   "
+```
+
+Dopo:
+
+```
+"Server01"
+```
+
+In questo modo i dati risultano più affidabili per:
+
+* confronti;
+* JOIN;
+* filtri;
+* eliminazione duplicati.
+
+---
+
+# Passo 6 – Riscrittura dei file CSV
+
+Dopo la pulizia, il contenuto viene riscritto nello stesso file tramite:
+
+```python
+csv.writer()
+```
+
+con:
+
+* separatore standard `,`;
+* formato CSV compatibile;
+* quoting minimo.
+
+Il file originale viene quindi sostituito dalla versione pulita.
+
+---
+
+# Passo 7 – Elaborazione automatica di tutti i file
+
+La procedura applica la stessa logica a tutti i CSV presenti nella cartella.
+
+Esempio:
+
+```
+AssetServer.csv
+AssetClient.csv
+Flexera.csv
+AD_users.csv
+```
+
+vengono elaborati automaticamente senza configurazioni aggiuntive.
+
+---
+
+# Risultato finale
+
+Al termine dell'esecuzione tutti i file CSV presenti nella cartella del report vengono uniformati.
+
+I principali vantaggi sono:
+
+* eliminazione degli spazi indesiderati;
+* eliminazione delle righe vuote;
+* riduzione degli errori durante importazioni MySQL o Excel;
+* maggiore affidabilità nei confronti e nei JOIN;
+* preparazione dei dati per le successive procedure di License Management.
+
+---
+
+Observație tehnică: această procedură este foarte utilă ca **etapă de pre-processing** înainte de `Elabora_CMDB.py`, deoarece acolo se fac operații sensibile la spații precum:
+
+* `Nome CI` pentru eliminarea duplicatelor;
+* `Used By` pentru legături cu alte surse;
+* comparații între Flexera / CMDB / Active Directory.
+
+Fără această curățare, două valori aparent identice:
+
+```
+SERVER01
+```
+
+și
+
+```
+SERVER01 
+```

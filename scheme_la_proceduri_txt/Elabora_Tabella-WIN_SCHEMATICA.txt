@@ -1,0 +1,224 @@
+ ==== Elabora_Tabella-WIN.py ==============
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-WIN)**
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două fișiere principale**:
+
+```text
+OUT_Hardware_TAB   → Tabella_HW.csv     (baza hardware)
+OUT_Software_TAB   → Tabella_SW.csv     (lista software instalat)
+```
+
+Acestea sunt încărcate în dicționare Python:
+
+- `Hardware` → toate serverele + câmpuri HW  
+- `Software` → ediția Windows detectată din software (standard / datacenter / enterprise)  
+- `WIN` → structura finală pentru Tabella_WIN  
+
+---
+
+# **2. STRUCTURI ȘI CÂMPURI**
+
+## 🔵 **2.1. Structura WIN_Field (OUTPUT)**
+
+WIN_Field definește câmpurile extrase din Hardware + câmpuri calculate:
+
+- nome  
+- powerstate  
+- virtuale  
+- tipo  
+- n_cpu  
+- n_core  
+- cluster_name  
+- cluster_cores  
+- cluster_numhosts  
+- cluster_n_vms_win  
+- cliente  
+- ambiente  
+- destinazione  
+- contratto  
+- nome_edizione (din Software)  
+- standard_lic_number (calculat)  
+- datacenter_lic_number (calculat)  
+
+Total câmpuri WIN: **17**
+
+---
+
+## 🟣 **2.2. Structura Software (doar pentru Windows Server)**
+
+Din Tabella_SW se extrage:
+
+- `nome componente`  
+- dacă conține:
+  - *windows server datacenter* → ediție = datacenter  
+  - *windows server standard* → ediție = standard  
+  - *windows server enterprise* → ediție = enterprise  
+
+Rezultatul este:
+
+```
+Software[nome_server] = "datacenter" | "standard" | "enterprise"
+```
+
+---
+
+# **3. INPUT → CUM SUNT FOLOSITE SURSELE**
+
+## 🟢 **3.1. OUT_Hardware_TAB → baza HW**
+
+Pentru fiecare server:
+
+- se verifică dacă OS conține:
+  - "windows server"
+  - sau "win20" (Windows 2000 / 2003 / 2008 etc.)
+
+Dacă DA → serverul intră în Tabella_WIN.
+
+---
+
+## 🟡 **3.2. OUT_Software_TAB → detectare ediție Windows**
+
+Pentru fiecare linie din Tabella_SW:
+
+- se citește `nome componente`
+- dacă conține "windows server":
+  - se detectează ediția (datacenter / standard / enterprise)
+  - se salvează în `Software[nome_server]`
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI WIN**
+
+## 🔵 **4.1. Construirea structurii WIN**
+
+Pentru fiecare server Windows:
+
+1. Se creează `WIN[k] = {}`  
+2. Se extrag primele **WIN_read = 14** câmpuri din Hardware conform WIN_Field  
+3. Se tratează câmpul special `cluster_cores`:
+   - dacă același cluster a fost deja procesat → cluster_cores = 0  
+   - altfel → se păstrează valoarea și se marchează clusterul în `ClusterName`  
+4. Se adaugă `nome_edizione`:
+   - dacă serverul apare în Software → ediția detectată  
+   - altfel → '-'  
+
+---
+
+## 🔵 **4.2. Calcul licențe Windows Server**
+
+Regulile:
+
+### **Pentru servere virtuale (virtuale = SI)**
+
+- se calculează:
+  - `n_core` → număr core VM  
+  - `cluster_n_vms_win` → nr. VM Windows în cluster  
+  - `cluster_numhosts` → nr. hosturi ESX  
+  - `cluster_cores` → total core cluster # de intrebat mai desfasurat p-u schema  
+
+- se calculează raportul:
+  ```
+  w = n_vmwin / n_hosts
+  ```
+
+- dacă `w > 6` → licențiere pe host (Datacenter):
+  - standard_lic_number = 0  
+  - datacenter_lic_number = cluster_cores / 2  
+
+- altfel → licențiere pe VM (Standard):
+  - standard_lic_number = max(n_core/2, Minimo_lic_Win_vm)  
+  - datacenter_lic_number = 0  
+
+---
+
+### **Pentru servere fizice (virtuale = NO)**
+
+- dacă ediția este **datacenter**:
+  - standard_lic_number = 0  
+  - datacenter_lic_number = max(n_core/2, Minimo_lic_Win_fs)  
+
+- altfel (standard / enterprise):
+  - standard_lic_number = max(n_core/2, Minimo_lic_Win_fs)  
+  - datacenter_lic_number = 0  
+
+---
+
+# **5. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+## **5.1. OUT_WIN_TAB → Tabella_WIN.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_WIN_TAB → Tabella_WIN.csv               │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE câmpurile WIN_Field:
+- nome
+- powerstate
+- virtuale
+- tipo
+- n_cpu
+- n_core
+- cluster_name
+- cluster_cores
+- cluster_numhosts
+- cluster_n_vms_win
+- cliente
+- ambiente
+- destinazione
+- contratto
+- nome_edizione
+- standard_lic_number
+- datacenter_lic_number
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stil identic cu celelalte)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Tabella_SW.csv      → Software (ediție Windows)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Detectare ediție Windows Server din Tabella_SW       │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare server Windows din Hardware:
+        - extrage câmpurile WIN_Field
+        - tratează cluster_cores (evită dublarea)
+        - adaugă nome_edizione (standard / datacenter / enterprise)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Calcul licențe Windows Server                        │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Reguli:
+        - VM: dacă VM_per_host > 6 → licențiere Datacenter
+        - VM: altfel → licențiere Standard
+        - Fizic: depinde de ediție (datacenter / standard)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_WIN_TAB → Tabella_WIN.csv                        │
+        └──────────────────────────────────────────────────────┘
+```
+
+---

@@ -1,0 +1,340 @@
+# ==== PowerShell_Script_STD_Gruppi ===============
+
+#  DIAGRAMMA VISIVA – CAMPI INPUT / OUTPUT (PowerShell_Script_STD_Gruppi)
+
+---
+
+# **1. FILE DI INPUT → CAMPI UTILIZZATI**
+
+La procedura utilizza **3 file principali**:
+
+OUT_Lista_Gruppi          → FLEXERA_Lista gruppi Office.txt
+AD-usersAndGroupsResult   → AD-usersAndGroupsResult.csv (tutte le sottocartelle)
+AD_Users_Results_attivi   → AD_Users_Results_attivi.csv (cartella perl, output-1)
+
+Tutti vengono caricati in memoria:
+
+* **Gruppi Office** ++++ → FLEXERA_Lista gruppi Office.txt
+* **Gruppi AD** ++++ → tutti i file AD-usersAndGroupsResult.csv
+* **Utenti AD** ++++ → AD_Users_Results_attivi.csv
+
+---
+
+# **2. INPUT → CAMPI UTILIZZATI DA OGNI SORGENTE**
+
+## **2.1. FLEXERA_Lista gruppi Office.txt**
+
+Utilizzato per identificare i gruppi Office Standard.
+
+Vengono utilizzati:
+
+* nome del gruppo
+* tipo di licenza (STD)
+
+Operazioni:
+
+* split tramite "|"
+* mantiene solo STD
+* normalizza `_prod` → `_prd`
+* elimina i duplicati
+
+---
+
+## **2.2. AD-usersAndGroupsResult.csv**
+
+È la sorgente principale dei membri dei gruppi Active Directory.
+
+Vengono utilizzati:
+
+* Group
+* Name
+* SamAccountName
+
+Operazioni:
+
+* Select-String per ogni gruppo
+* estrazione degli utenti
+* normalizzazione dei nomi
+
+---
+
+## **2.3. AD_Users_Results_attivi.csv**
+
+Utilizzato per le informazioni Active Directory degli utenti.
+
+Campi utilizzati:
+
+* Principal Name
+* Name
+* OU_01
+
+Operazioni:
+
+* costruzione del dizionario
+
+```
+SamAccountName
+        ↓
+      Banche
+```
+
+---
+
+# **3. ELABORAZIONE**
+
+## **3.1. Filtraggio dei gruppi**
+
+Vengono mantenuti solo:
+
+```
+*_prd
+```
+
+e l'eccezione:
+
+```
+ctx_047_tta_ads
+```
+
+---
+
+##  **3.2. Normalizzazione dei nomi**
+
+La funzione `Normalize-Name()` elimina:
+
+* `_1`
+* `_2`
+* `_3`
+* i numeri finali
+* gli spazi multipli
+* i caratteri speciali
+* la parola **bis**
+
+---
+
+##  **3.3. Pulizia dei risultati**
+
+Vengono eliminati:
+
+* gli utenti TEST
+* i duplicati
+* i record in cui
+
+```
+Name == SamAccountName
+```
+
+(se esiste anche la versione con il nome reale)
+
+---
+
+## **3.4. Arricchimento con Banche**
+
+In base a:
+
+```
+SamAccountName
+```
+
+viene cercato
+
+```
+OU_01
+```
+
+e viene compilata la colonna
+
+```
+Banche
+```
+
+---
+
+# **4. OUTPUT JSON (PowerShell → Python)**
+
+PowerShell restituisce:
+
+```
+Dettaglio
+UniqueNames
+UniqueSAM
+NamesBanche
+```
+
+---
+
+# **5. PYTHON → ELABORAZIONE**
+
+Python:
+
+* esegue PowerShell
+* legge il JSON
+* crea un DataFrame Pandas
+
+```
+Dettaglio
+
+UniqueNames
+
+UniqueSAM
+
+NamesBanche
+```
+
+---
+
+## **5.1. Match con Active Directory**
+
+Viene eseguito:
+
+```
+Unique Names
+
+        INNER JOIN
+
+AD_Users_Results_attivi
+```
+
+in base a
+
+```
+Name
+```
+
+e si ottengono:
+
+* Principal Name
+* Banche
+
+---
+
+# **6. FILE DI OUTPUT → CONTENUTO**
+
+La procedura genera un file Excel.
+
+## **6.1. Licenze_Office_STD_AD_RESULTS_ATTIVI E UNIQUE NAMES e Match AD.xlsx**
+
+Contiene 5 fogli:
+
+```
+Dettaglio
+
+Unique Names
+
+Unique SAM
+
+Names Banche
+
+Match AD
+```
+
+---
+
+# **DIAGRAMMA FINALE – TUTTO IN UN COLPO D'OCCHIO**
+
+```
+               ┌──────────────────────────────────────────────┐
+               │              3 FILE DI INPUT                 │
+               └──────────────────────────────────────────────┘
+                              │
+                              ▼
+
+ FLEXERA_Lista gruppi Office.txt → Gruppi Office
+
+ AD-usersAndGroupsResult.csv → Membri dei gruppi AD
+
+ AD_Users_Results_attivi.csv → Utenti AD
+
+                              │
+                              ▼
+
+        ┌────────────────────────────────────────────────┐
+        │ Seleziona solo i gruppi Office Standard        │
+        └────────────────────────────────────────────────┘
+                              │
+                              ▼
+
+        Normalizza i gruppi
+
+        _prod → _prd
+
+        elimina i duplicati
+
+        mantiene solo PRD
+
+        + eccezione ctx_047_tta_ads
+
+                              │
+                              ▼
+
+        ┌────────────────────────────────────────────────┐
+        │ Cerca i gruppi in tutti i file AD             │
+        └────────────────────────────────────────────────┘
+                              │
+                              ▼
+
+        Estrae:
+
+        • Group
+        • Name
+        • SamAccountName
+
+                              │
+                              ▼
+
+        Normalizza i nomi
+
+        Elimina:
+            • TEST
+            • duplicati
+            • login senza nome
+
+                              │
+                              ▼
+
+        Compila la colonna
+
+        Banche
+
+        (da)
+
+        AD_Users_Results_attivi
+
+                              │
+                              ▼
+
+        ┌────────────────────────────────────────────────┐
+        │ PowerShell restituisce un JSON                │
+        └────────────────────────────────────────────────┘
+                              │
+                              ▼
+
+        Python legge il JSON
+
+        ▼
+
+        Crea un DataFrame Pandas
+
+        ▼
+
+        INNER JOIN
+
+        Unique Names
+
+              con
+
+        AD_Users_Results_attivi
+
+                              │
+                              ▼
+
+        ┌────────────────────────────────────────────────┐
+        │ File Excel finale                             │
+        └────────────────────────────────────────────────┘
+
+        • Dettaglio
+        • Unique Names
+        • Unique SAM
+        • Names Banche
+        • Match AD
+```

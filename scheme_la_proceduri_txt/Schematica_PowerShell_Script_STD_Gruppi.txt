@@ -1,0 +1,342 @@
+# ==== PowerShell_Script_STD_Gruppi ===============
+
+# 📘 DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (PowerShell_Script_STD_Gruppi)
+
+---
+
+# **1. INPUT FILES → CÂMPURI FOLOSITE**
+
+Procedura folosește **3 fișiere principale**:
+
+
+OUT_Lista_Gruppi          → FLEXERA_Lista gruppi Office.txt
+AD-usersAndGroupsResult   → AD-usersAndGroupsResult.csv (toate subfolderele)
+AD_Users_Results_attivi   → AD_Users_Results_attivi.csv (din mapa perl, output-1)
+```
+
+Toate sunt încărcate în memorie:
+
+* **Gruppi Office** ++++ → FLEXERA_Lista gruppi Office.txt
+* **AD Groups** ++++ → toate fișierele AD-usersAndGroupsResult.csv
+* **AD Users** ++++ → AD_Users_Results_attivi.csv
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSĂ**
+
+## 🔵 **2.1. FLEXERA_Lista gruppi Office.txt**
+
+Folosit pentru identificarea grupurilor Office Standard.
+
+Se utilizează:
+
+* nume grup
+* tip licență (STD)
+
+Operații:
+
+* split după "|"
+* păstrează doar STD
+* normalizează `_prod` → `_prd`
+* elimină duplicate
+
+---
+
+## 🟣 **2.2. AD-usersAndGroupsResult.csv**
+
+Este sursa principală pentru membrii grupurilor Active Directory.
+
+Se folosesc:
+
+* Group
+* Name
+* SamAccountName
+
+Operații:
+
+* Select-String după fiecare grup
+* extragerea utilizatorilor
+* normalizarea numelor
+
+---
+
+## 🟢 **2.3. AD_Users_Results_attivi.csv**
+
+Folosit pentru informațiile Active Directory despre utilizatori.
+
+Câmpuri utilizate:
+
+* Principal Name
+* Name
+* OU_01
+
+Operații:
+
+* construirea dicționarului
+
+```
+SamAccountName
+        ↓
+      Banche
+```
+
+---
+
+# **3. PROCESARE**
+
+## 🟡 **3.1. Filtrarea grupurilor**
+
+Se păstrează doar:
+
+```
+*_prd
+```
+
+și excepția:
+
+```
+ctx_047_tta_ads
+```
+
+---
+
+## 🟠 **3.2. Normalizare nume**
+
+Funcția `Normalize-Name()` elimină:
+
+* `_1`
+* `_2`
+* `_3`
+* cifrele finale
+* spații multiple
+* caractere speciale
+* cuvântul **bis**
+
+---
+
+## 🔴 **3.3. Curățare rezultate**
+
+Se elimină:
+
+* utilizatorii TEST
+* duplicatele
+* înregistrările unde
+
+```
+Name == SamAccountName
+```
+
+(dacă există și varianta cu numele real)
+
+---
+
+## 🟤 **3.4. Îmbogățire cu Banche**
+
+Pe baza:
+
+```
+SamAccountName
+```
+
+se caută
+
+```
+OU_01
+```
+
+și se completează coloana
+
+```
+Banche
+```
+
+---
+
+# **4. OUTPUT JSON (PowerShell → Python)**
+
+PowerShell returnează:
+
+```text
+Dettaglio
+UniqueNames
+UniqueSAM
+NamesBanche
+```
+
+---
+
+# **5. PYTHON → PRELUCRARE**
+
+Python:
+
+* rulează PowerShell
+* citește JSON
+* creează DataFrame Pandas
+
+```
+Dettaglio
+
+UniqueNames
+
+UniqueSAM
+
+NamesBanche
+```
+
+---
+
+## 🟢 **5.1. Match cu Active Directory**
+
+Se realizează:
+
+```
+Unique Names
+
+        INNER JOIN
+
+AD_Users_Results_attivi
+```
+
+după
+
+```
+Name
+```
+
+și se obține:
+
+* Principal Name
+* Banche
+
+---
+
+# **6. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează un fișier Excel.
+
+## **6.1. Licenze_Office_STD_AD_RESULTS_ATTIVI E UNIQUE NAMES e Match AD.xlsx**
+
+Conține 5 foi:
+
+```
+Dettaglio
+
+Unique Names
+
+Unique SAM
+
+Names Banche
+
+Match AD
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE**
+
+```text
+               ┌──────────────────────────────────────────────┐
+               │              3 INPUT FILES                   │
+               └──────────────────────────────────────────────┘
+                              │
+                              ▼
+
+ FLEXERA_Lista gruppi Office.txt → Gruppi Office
+
+ AD-usersAndGroupsResult.csv → Membri grupuri AD
+
+ AD_Users_Results_attivi.csv → AD Users
+
+                              │
+                              ▼
+
+        ┌────────────────────────────────────────────────┐
+        │ Selectează doar grupurile Office Standard      │
+        └────────────────────────────────────────────────┘
+                              │
+                              ▼
+
+        Normalizează grupurile
+
+        _prod → _prd
+
+        elimină duplicate
+
+        păstrează doar PRD
+
+        + excepția ctx_047_tta_ads
+
+                              │
+                              ▼
+
+        ┌────────────────────────────────────────────────┐
+        │ Caută grupurile în toate fișierele AD          │
+        └────────────────────────────────────────────────┘
+                              │
+                              ▼
+
+        Extrage:
+
+        • Group
+        • Name
+        • SamAccountName
+
+                              │
+                              ▼
+
+        Normalizează numele
+
+        Elimină:
+            • TEST
+            • duplicate
+            • login-urile fără nume
+
+                              │
+                              ▼
+
+        Completează coloana
+
+        Banche
+
+        folosind
+
+        AD_Users_Results_attivi
+
+                              │
+                              ▼
+
+        ┌────────────────────────────────────────────────┐
+        │ PowerShell returnează JSON                     │
+        └────────────────────────────────────────────────┘
+                              │
+                              ▼
+
+        Python citește JSON
+
+        ▼
+
+        Creează DataFrame Pandas
+
+        ▼
+
+        INNER JOIN
+
+        Unique Names
+
+              cu
+
+        AD_Users_Results_attivi
+
+                              │
+                              ▼
+
+        ┌────────────────────────────────────────────────┐
+        │ Excel final                                    │
+        └────────────────────────────────────────────────┘
+
+        • Dettaglio
+        • Unique Names
+        • Unique SAM
+        • Names Banche
+        • Match AD
+```

@@ -1,0 +1,667 @@
+--
+# 🇷🇴 Descriere PowerShell Script STD Gruppi
+
+## Descriere generală
+
+Scriptul preia date din mai multe surse (Flexera și Active Directory), filtrează și normalizează informațiile, elimină duplicatele și generează un fișier Excel final cu mai multe foi de lucru.
+
+---
+
+## Partea 1
+
+`import subprocess`
+
+Acest modul permite executarea altor programe din Python, în cazul nostru PowerShell.
+
+Python păstrează întregul script PowerShell într-un șir de caractere (`ps_script`), apoi creează automat fișierul **gruppi_standard.ps1**, în care scrie tot codul PowerShell.
+
+Cu alte cuvinte, Python generează automat scriptul PowerShell și apoi îl execută.
+
+---
+
+## Partea 2
+
+```powershell
+$config = Get-Content "Parametri.json" -Raw | ConvertFrom-Json
+```
+
+Această instrucțiune citește fișierul **Parametri.json** și îl transformă într-un obiect PowerShell.
+
+De exemplu:
+
+* `$config.Source_dir` → `C:\License_Management`
+* `$config.Report_dir` → `Report_202607`
+* `$config.Output_dir` → `OutPut`
+
+Apoi:
+
+```powershell
+$basePath = Join-Path $rootDir $reportDir
+```
+
+construiește directorul principal de lucru:
+
+```
+C:\License_Management\Report_202607
+```
+
+Toate fișierele necesare vor fi căutate în această structură de directoare.
+
+---
+
+## Următorul pas
+
+Se construiește calea către fișierul Flexera:
+
+```
+C:\License_Management\Report_202607\OutPut\
+FLEXERA_Lista gruppi Office.txt
+```
+
+Dacă fișierul nu există, scriptul afișează un mesaj de eroare și se oprește.
+
+---
+
+## Citirea grupurilor Flexera
+
+Instrucțiunea
+
+```powershell
+Get-Content $groupFile
+```
+
+citește fiecare linie din fișier, de exemplu:
+
+```
+CTX_003_SDB_PRD|STD
+CTX_008_SDB_PRD|STD
+CTX_015_DAISY_COL|STD
+CTX_015_DAISY_PRD|STD
+```
+
+Fiecare linie este împărțită după caracterul `|`.
+
+Rezultatul este:
+
+```
+[0] CTX_003_SDB_PRD
+[1] STD
+```
+
+Se păstrează doar grupurile cu tipul **STD**.
+
+După aceea numele grupurilor sunt normalizate:
+
+```
+_prod → _prd
+```
+
+iar duplicatele sunt eliminate.
+
+---
+
+## Construirea dicționarului grupurilor
+
+Se creează:
+
+```powershell
+$groupMap = @{}
+```
+
+Acest dicționar grupează toate variantele aceluiași grup.
+
+Exemplu:
+
+```
+ctx_001_prd
+ctx_001_ads
+ctx_001_col
+```
+
+devin
+
+```
+ctx_001
+      ↓
+{PRD, ADS, COL}
+```
+
+Scopul acestui dicționar este de a identifica grupurile care au mai multe variante (PRD, ADS sau COL).
+
+---
+
+## Selectarea grupurilor valide
+
+Sunt păstrate:
+
+* grupurile care există doar în varianta **PRD**
+* grupurile aflate în lista de excepții
+
+În versiunea actuală există excepția:
+
+```
+ctx_047_tta
+```
+
+La final se reconstruiește lista grupurilor:
+
+```
+ctx_001_prd
+ctx_002_prd
+...
+ctx_047_tta_ads
+```
+
+---
+
+## Crearea directorului de ieșire
+
+Se creează automat directorul
+
+```
+Report_202607\gruppi
+```
+
+în care va fi salvat fișierul Excel final.
+
+---
+
+## Citirea utilizatorilor Active Directory
+
+Se citește fișierul
+
+```
+AD_Users_Results_attivi.csv
+```
+
+și se utilizează câmpurile:
+
+* Principal Name
+* Name
+* OU_01
+
+Exemplu:
+
+```
+AG00924@ced.it
+```
+
+devine
+
+```
+AG00924
+```
+
+Se construiește un dicționar (`HashMap`) în care:
+
+```
+SamAccountName
+        ↓
+OU_01 (Banche)
+```
+
+Acest dicționar va fi folosit ulterior pentru completarea coloanei **Banche**.
+
+---
+
+## Procesarea fișierelor Active Directory
+
+Scriptul caută recursiv toate fișierele:
+
+```
+AD-usersAndGroupsResult.csv
+```
+
+Pentru fiecare grup Office găsit anterior se execută:
+
+```powershell
+Select-String
+```
+
+care caută grupul în toate fișierele Active Directory.
+
+Pentru fiecare utilizator găsit se creează un obiect PowerShell (`PSCustomObject`) care conține:
+
+* Group
+* Name
+* SamAccountName
+* SourceFile
+
+---
+
+## Normalizarea numelor
+
+Funcția
+
+```
+Normalize-Name()
+```
+
+elimină:
+
+* caractere speciale de la sfârșitul numelui;
+* cifrele finale;
+* sufixele `_1`, `_2`, `_3` etc.;
+* spațiile multiple;
+* cuvântul **bis**.
+
+Astfel numele utilizatorilor sunt aduse la un format unitar.
+
+---
+
+## Curățarea rezultatelor
+
+După procesare sunt eliminate:
+
+* utilizatorii care conțin cuvântul **TEST**;
+* înregistrările duplicate;
+* cazurile în care coloana **Name** conține doar login-ul (`SamAccountName`), dacă există deja o înregistrare cu numele real al utilizatorului.
+
+---
+
+## Construirea rezultatelor finale
+
+PowerShell construiește patru colecții:
+
+* Dettaglio
+* UniqueNames
+* UniqueSAM
+* NamesBanche
+
+Ultima colecție completează automat coloana **Banche** folosind dicționarul construit anterior.
+
+---
+
+## Returnarea rezultatelor către Python
+
+PowerShell nu mai creează fișiere CSV.
+
+La final construiește un obiect:
+
+```powershell
+$result
+```
+
+care este convertit în format JSON:
+
+```powershell
+ConvertTo-Json
+```
+
+Acest JSON este trimis direct către Python.
+
+---
+
+## Partea Python
+
+Python execută scriptul PowerShell folosind
+
+```python
+subprocess.run(...)
+```
+
+și citește rezultatul JSON:
+
+```python
+json.loads(...)
+```
+
+Din acesta sunt create patru DataFrame-uri Pandas:
+
+* Dettaglio
+* UniqueNames
+* UniqueSAM
+* NamesBanche
+
+---
+
+## Match cu Active Directory
+
+Python citește din nou
+
+```
+AD_Users_Results_attivi.csv
+```
+
+normalizează coloana **Name** și efectuează un **INNER JOIN** cu lista **UniqueNames**.
+
+Astfel sunt obținute:
+
+* Principal Name
+* Banche
+
+Rezultatul este salvat în foaia **Match AD**.
+
+---
+
+## Generarea fișierului Excel
+
+La final Python generează fișierul:
+
+```
+Licenze_Office_STD_AD_RESULTS_ATTIVI E UNIQUE NAMES e Match AD.xlsx
+```
+
+care conține următoarele foi:
+
+* Dettaglio
+* Unique Names
+* Unique SAM
+* Names Banche
+* Match AD
+
+---
+
+# 🇮🇹 Descrizione PowerShell Script STD Gruppi
+
+## Descrizione generale
+
+Lo script acquisisce dati da diverse fonti (Flexera e Active Directory), filtra e normalizza le informazioni, elimina i duplicati e genera un file Excel finale con più fogli di lavoro.
+
+---
+
+## Parte 1
+
+`import subprocess`
+
+Questo modulo permette di eseguire programmi esterni da Python, in questo caso PowerShell.
+
+Python mantiene l'intero script PowerShell nella variabile `ps_script`, crea automaticamente il file **gruppi_standard.ps1** e vi scrive tutto il codice.
+
+Successivamente esegue lo script PowerShell.
+
+---
+
+## Parte 2
+
+```powershell
+$config = Get-Content "Parametri.json" -Raw | ConvertFrom-Json
+```
+
+Questa istruzione legge il file **Parametri.json** e lo converte in un oggetto PowerShell.
+
+Ad esempio:
+
+* `$config.Source_dir` → `C:\License_Management`
+* `$config.Report_dir` → `Report_202607`
+* `$config.Output_dir` → `OutPut`
+
+Successivamente
+
+```powershell
+$basePath = Join-Path $rootDir $reportDir
+```
+
+costruisce la cartella principale di lavoro:
+
+```
+C:\License_Management\Report_202607
+```
+
+Tutti i file verranno cercati in questa cartella.
+
+---
+
+## Passo successivo
+
+Viene costruito il percorso del file Flexera:
+
+```
+C:\License_Management\Report_202607\OutPut\
+FLEXERA_Lista gruppi Office.txt
+```
+
+Se il file non esiste, lo script mostra un messaggio di errore e termina.
+
+---
+
+## Lettura dei gruppi Flexera
+
+Il comando
+
+```powershell
+Get-Content $groupFile
+```
+
+legge ogni riga del file, ad esempio:
+
+```
+CTX_003_SDB_PRD|STD
+CTX_008_SDB_PRD|STD
+CTX_015_DAISY_COL|STD
+CTX_015_DAISY_PRD|STD
+```
+
+Ogni riga viene divisa con il separatore `|`.
+
+Si ottiene:
+
+```
+[0] CTX_003_SDB_PRD
+[1] STD
+```
+
+Vengono mantenuti solo i gruppi di tipo **STD**.
+
+Successivamente i nomi vengono normalizzati:
+
+```
+_prod → _prd
+```
+
+e vengono eliminati i duplicati.
+
+---
+
+## Costruzione del dizionario dei gruppi
+
+Viene creato:
+
+```powershell
+$groupMap = @{}
+```
+
+Questo dizionario raggruppa tutte le varianti dello stesso gruppo.
+
+Esempio:
+
+```
+ctx_001_prd
+ctx_001_ads
+ctx_001_col
+```
+
+diventa
+
+```
+ctx_001
+      ↓
+{PRD, ADS, COL}
+```
+
+Lo scopo del dizionario è identificare i gruppi che possiedono più varianti.
+
+---
+
+## Selezione dei gruppi validi
+
+Vengono mantenuti:
+
+* i gruppi presenti solo nella variante **PRD**;
+* i gruppi presenti nella lista delle eccezioni.
+
+Nella versione attuale l'eccezione è:
+
+```
+ctx_047_tta
+```
+
+Alla fine viene ricostruita la lista finale dei gruppi:
+
+```
+ctx_001_prd
+ctx_002_prd
+...
+ctx_047_tta_ads
+```
+
+---
+
+## Lettura degli utenti Active Directory
+
+Viene letto il file:
+
+```
+AD_Users_Results_attivi.csv
+```
+
+utilizzando i campi:
+
+* Principal Name
+* Name
+* OU_01
+
+Ad esempio:
+
+```
+AG00924@ced.it
+```
+
+diventa
+
+```
+AG00924
+```
+
+Successivamente viene creato un dizionario (`HashMap`) che associa:
+
+```
+SamAccountName
+        ↓
+OU_01 (Banche)
+```
+
+---
+
+## Elaborazione dei file Active Directory
+
+Lo script cerca ricorsivamente tutti i file
+
+```
+AD-usersAndGroupsResult.csv
+```
+
+Per ogni gruppo Office viene eseguito:
+
+```powershell
+Select-String
+```
+
+che ricerca il gruppo in tutti i file Active Directory.
+
+Per ogni utente trovato viene creato un `PSCustomObject` contenente:
+
+* Group
+* Name
+* SamAccountName
+* SourceFile
+
+---
+
+## Normalizzazione dei nomi
+
+La funzione
+
+```
+Normalize-Name()
+```
+
+rimuove:
+
+* caratteri speciali finali;
+* numeri finali;
+* suffissi `_1`, `_2`, `_3`;
+* spazi multipli;
+* la parola **bis**.
+
+---
+
+## Pulizia dei dati
+
+Successivamente vengono eliminati:
+
+* gli utenti di test;
+* i duplicati;
+* i record in cui il campo **Name** contiene soltanto il login (`SamAccountName`), se esiste già un record con il nome reale dell'utente.
+
+---
+
+## Costruzione dei risultati
+
+PowerShell crea quattro collezioni:
+
+* Dettaglio
+* UniqueNames
+* UniqueSAM
+* NamesBanche
+
+L'ultima collezione completa automaticamente la colonna **Banche** utilizzando il dizionario creato in precedenza.
+
+---
+
+## Restituzione dei risultati a Python
+
+PowerShell non genera più file CSV.
+
+Alla fine crea l'oggetto
+
+```powershell
+$result
+```
+
+che viene convertito in formato JSON mediante
+
+```powershell
+ConvertTo-Json
+```
+
+Il JSON viene restituito direttamente a Python.
+
+---
+
+## Parte Python
+
+Python esegue lo script PowerShell con
+
+```python
+subprocess.run(...)
+```
+
+legge il JSON mediante
+
+```python
+json.loads(...)
+```
+
+e crea quattro DataFrame Pandas:
+
+* Dettaglio
+* UniqueNames
+* UniqueSAM
+* NamesBanche
+
+Successivamente legge nuovamente `AD_Users_Results_attivi.csv`, normalizza la colonna **Name** ed esegue un **INNER JOIN** con **UniqueNames**.
+
+Infine genera il file Excel:
+
+```
+Licenze_Office_STD_AD_RESULTS_ATTIVI E UNIQUE NAMES e Match AD.xlsx
+```
+
+contenente i fogli:
+
+* Dettaglio
+* Unique Names
+* Unique SAM
+* Names Banche
+* Match AD.

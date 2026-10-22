@@ -1,0 +1,389 @@
+# 🇷🇴 Descriere generală – Procedura **Flexera_GraphQL.py**
+
+## Scopul procedurii
+
+Această procedură are rolul de a extrage informații din platforma **Flexera One** utilizând interfața **GraphQL API**.
+
+Procedura realizează autentificarea automată prin **Refresh Token**, execută interogarea GraphQL 
+definită într-un fișier extern și exportă rezultatele într-un fișier **CSV** standardizat (și opțional în format JSON),
+ utilizat ulterior în procesul de **License Management**.
+
+Operațiile principale efectuate sunt:
+
+* citirea configurației din **Parametri.json**;
+* încărcarea interogării GraphQL din fișierul `graphql.qry`;
+* autentificarea în platforma Flexera folosind **Refresh Token**;
+* obținerea automată a unui **Access Token**;
+* executarea interogării GraphQL;
+* conversia răspunsului JSON într-un format tabelar;
+* exportul datelor într-un fișier CSV standardizat.
+
+---
+
+# Pasul 1 – Citirea configurației
+
+Procedura citește fișierul:
+
+```text
+Parametri.json
+```
+
+din care sunt preluate principalele informații necesare execuției:
+
+* directorul principal:
+
+```text
+Source_dir
+```
+
+* directorul raportului curent:
+
+```text
+Report_dir
+```
+
+* numele fișierului CSV rezultat:
+
+```text
+FLEXERA_SOFTWARE_CSV
+```
+
+* Refresh Token-ul Flexera:
+
+```text
+FLEXERA_REFRESH_TOKEN
+```
+
+Pe baza acestor valori este construită automat calea către fișierul de ieșire.
+
+Exemplu:
+
+```text
+C:\License_Management\Report_202608\flexera_software_devices.csv
+```
+
+---
+
+# Pasul 2 – Încărcarea interogării GraphQL
+
+Procedura citește conținutul fișierului:
+
+```text
+graphql.qry
+```
+
+Acest fișier conține interogarea GraphQL care stabilește ce informații vor fi extrase din Flexera.
+
+Dacă este furnizat și un fișier JSON cu variabile (`variables-file`), acesta este încărcat și transmis împreună cu interogarea.
+
+---
+
+# Pasul 3 – Autentificarea în Flexera
+
+Procedura utilizează clasa:
+
+```python
+FlexeraClient
+```
+
+pentru autentificarea în platforma Flexera.
+
+Autentificarea se realizează prin intermediul unui **Refresh Token**, din care este generat automat un **Access Token** 
+necesar pentru accesarea API-ului GraphQL.
+
+În funcție de zona configurată (`eu`, `com` sau `au`), procedura selectează automat endpoint-ul de autentificare corespunzător.
+
+Dacă token-ul expiră în timpul execuției, acesta este reînnoit automat fără intervenția utilizatorului.
+
+---
+
+# Pasul 4 – Executarea interogării GraphQL
+
+După autentificare, procedura transmite interogarea către endpoint-ul GraphQL Flexera.
+
+Sunt trimise:
+
+* interogarea GraphQL;
+* variabilele asociate (dacă există);
+* numele operației (opțional).
+
+Răspunsul este primit în format **JSON**.
+
+Procedura verifică automat:
+
+* erorile HTTP;
+* răspunsurile invalide;
+* eventualele erori returnate de GraphQL.
+
+În cazul unor probleme, sunt generate mesaje descriptive fără a compromite integritatea datelor.
+
+---
+
+# Pasul 5 – Prelucrarea răspunsului JSON
+
+Datele returnate de Flexera sunt analizate și transformate într-o structură compatibilă cu formatul tabelar.
+
+Procedura:
+
+* identifică primul set de înregistrări disponibile în răspunsul GraphQL;
+* transformă obiectele JSON complexe într-o structură plată (flatten);
+* convertește listele și obiectele imbricate în valori text;
+* păstrează toate câmpurile disponibile pentru export.
+
+Această etapă permite obținerea unui fișier CSV ușor de utilizat în etapele următoare ale procesului de License Management.
+
+---
+
+# Pasul 6 – Exportul rezultatelor
+
+După procesarea datelor, procedura generează:
+
+* fișierul CSV standardizat:
+
+```text
+flexera_software_devices.csv
+```
+
+salvat în directorul raportului curent.
+
+Opțional, poate fi generat și un fișier:
+
+```text
+JSON
+```
+
+care conține răspunsul complet primit de la API-ul GraphQL.
+
+---
+
+# Pasul 7 – Tratarea erorilor
+
+Procedura gestionează automat mai multe situații de eroare, printre care:
+
+* lipsa Refresh Token-ului;
+* imposibilitatea autentificării;
+* expirarea token-ului;
+* erori HTTP;
+* răspuns JSON invalid;
+* erori GraphQL;
+* lipsa datelor pentru export;
+* probleme la generarea fișierelor CSV sau JSON.
+
+Toate erorile sunt afișate într-un mod descriptiv, facilitând identificarea și remedierea problemelor.
+
+---
+
+# Rezultatul final
+
+La finalul execuției este generat fișierul:
+
+```text
+flexera_software_devices.csv
+```
+
+care conține informațiile extrase din platforma **Flexera One**.
+
+Acest fișier reprezintă sursa de date utilizată ulterior pentru:
+
+* inventarierea software-ului instalat;
+* analiza produselor licențiate;
+* procesarea informațiilor în procedurile de **License Management**;
+* generarea tabelelor și rapoartelor utilizate în etapele următoare ale proiectului.
+
+---
+
+<br>
+
+# 🇮🇹 Descrizione generale – Procedura **Flexera_GraphQL.py**
+
+## Scopo della procedura
+
+Questa procedura ha lo scopo di estrarre informazioni dalla piattaforma **Flexera One** utilizzando l'interfaccia **GraphQL API**
+.
+
+La procedura esegue automaticamente l'autenticazione tramite **Refresh Token**, 
+invia una query GraphQL definita in un file esterno ed esporta i risultati in un file **CSV** standardizzato 
+(ed eventualmente anche in formato JSON), utilizzato successivamente nel processo di **License Management**.
+
+Le principali operazioni eseguite sono:
+
+* lettura della configurazione da **Parametri.json**;
+* caricamento della query GraphQL dal file `graphql.qry`;
+* autenticazione sulla piattaforma Flexera tramite **Refresh Token**;
+* ottenimento automatico dell'**Access Token**;
+* esecuzione della query GraphQL;
+* conversione della risposta JSON in formato tabellare;
+* esportazione dei dati in un file CSV standardizzato.
+
+---
+
+# Passo 1 – Lettura della configurazione
+
+La procedura legge il file:
+
+```text
+Parametri.json
+```
+
+dal quale recupera le principali informazioni necessarie:
+
+* directory principale:
+
+```text
+Source_dir
+```
+
+* directory del report corrente:
+
+```text
+Report_dir
+```
+
+* nome del file CSV di output:
+
+```text
+FLEXERA_SOFTWARE_CSV
+```
+
+* Refresh Token Flexera:
+
+```text
+FLEXERA_REFRESH_TOKEN
+```
+
+Utilizzando questi parametri viene costruito automaticamente il percorso del file di output.
+
+Esempio:
+
+```text
+C:\License_Management\Report_202608\flexera_software_devices.csv
+```
+
+---
+
+# Passo 2 – Caricamento della query GraphQL
+
+La procedura legge il contenuto del file:
+
+```text
+graphql.qry
+```
+
+che contiene la query GraphQL da eseguire sulla piattaforma Flexera.
+
+Se viene fornito anche un file JSON contenente le variabili (`variables-file`), 
+questo viene caricato e inviato insieme alla query.
+
+---
+
+# Passo 3 – Autenticazione su Flexera
+
+La procedura utilizza la classe:
+
+```python
+FlexeraClient
+```
+
+per gestire l'autenticazione verso la piattaforma Flexera.
+
+L'accesso viene effettuato mediante un **Refresh Token**, 
+dal quale viene generato automaticamente un **Access Token** necessario per l'accesso all'API GraphQL.
+
+In base alla zona configurata (`eu`, `com` oppure `au`), 
+viene selezionato automaticamente il relativo endpoint di autenticazione.
+
+Se il token scade durante l'esecuzione, viene rinnovato automaticamente senza intervento dell'utente.
+
+---
+
+# Passo 4 – Esecuzione della query GraphQL
+
+Dopo l'autenticazione, la procedura invia la query al servizio GraphQL di Flexera.
+
+Vengono trasmessi:
+
+* la query GraphQL;
+* le eventuali variabili;
+* il nome dell'operazione (facoltativo).
+
+La risposta viene ricevuta in formato **JSON**.
+
+La procedura verifica automaticamente:
+
+* errori HTTP;
+* risposte non valide;
+* eventuali errori restituiti dal motore GraphQL.
+
+In caso di problemi vengono generati messaggi descrittivi.
+
+---
+
+# Passo 5 – Elaborazione della risposta JSON
+
+I dati restituiti da Flexera vengono trasformati in una struttura tabellare.
+
+La procedura:
+
+* individua il primo insieme di record presente nella risposta;
+* converte gli oggetti JSON complessi in una struttura piatta (flatten);
+* trasforma liste e oggetti annidati in valori testuali;
+* mantiene tutti i campi disponibili per l'esportazione.
+
+Questa fase consente di ottenere un file CSV facilmente utilizzabile dalle procedure successive 
+del progetto di License Management.
+
+---
+
+# Passo 6 – Esportazione dei risultati
+
+Al termine dell'elaborazione viene generato il file CSV standardizzato:
+
+```text
+flexera_software_devices.csv
+```
+
+salvato nella cartella del report corrente.
+
+Facoltativamente può essere prodotto anche un file:
+
+```text
+JSON
+```
+
+contenente la risposta completa ricevuta dall'API GraphQL.
+
+---
+
+# Passo 7 – Gestione degli errori
+
+La procedura gestisce automaticamente diverse condizioni di errore, tra cui:
+
+* assenza del Refresh Token;
+* errori di autenticazione;
+* scadenza dell'Access Token;
+* errori HTTP;
+* risposta JSON non valida;
+* errori GraphQL;
+* assenza di dati da esportare;
+* errori durante la generazione dei file CSV o JSON.
+
+Gli errori vengono mostrati con messaggi descrittivi per facilitare la diagnosi del problema.
+
+---
+
+# Risultato finale
+
+Al termine dell'esecuzione viene prodotto il file:
+
+```text
+flexera_software_devices.csv
+```
+
+contenente i dati estratti dalla piattaforma **Flexera One**.
+
+Questo file costituisce la base dati utilizzata successivamente per:
+
+* l'inventario del software installato;
+* l'analisi dei prodotti soggetti a licenza;
+* l'elaborazione delle informazioni nelle procedure di **License Management**;
+* la generazione delle tabelle e dei report utilizzati nelle fasi successive del progetto.

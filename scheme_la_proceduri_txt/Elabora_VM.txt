@@ -1,0 +1,202 @@
+Procedura Elabora_vInfo per generare i seguenti file:
+    
+    VM_list.csv
+    Cluster_list.csv                                                                                            
+    Vcenter_list.csv                                                                                            
+                                                                                                                
+Definire le strutture dati (VM_field, Cluster_field, Vcenter_field)                                             
+    che risulteranno essere il tracciato record dei file indicati sopra.                                        
+                                                                                                                
+Selezionare tutti i file con il seguente nome.                                                                  
+                                                                                                                
+        RVTools_tabvInfo.csv        ==> Vm                                                                      
+        RVTools_tabvCluster.csv     ==> Cluster                                                                 
+        RVTools_tabvCPU.csv         ==> CPUs                                                                    
+        RVTools_tabvTools.csv       ==> Tools                                                                   
+                                                                                                                
+Nelle directory sottostanti quella corrente di elaborazione.                                                    
+                                                                                                                
+I file RVTools_tabvCPU e RVTools_tabvTools sono utilizzati per completare e consolidare i dati delle VM. Tali file
+devono essere letti e memorizzati nelle rispettive strutture dati in memoria come indicato nella tabellina sopra
+                                                                                                                
+CPUs:
+Per ogni file:                                                                                                  
+    Per ogni server:                                                                                            
+                                                                                                                
+        -> Leggere una riga del file nella variabile di tipo lista con nome Riga.                               
+                                                                                                                
+        -> Normalizzare il nome:                                                                                
+            eliminare, se presente, il dominio                                                                  
+            tutte le lettere in minuscolo                                                                       
+                                                                                                                
+        -> Inizializzare il record che servirà per la scrittura su file di output.                              
+                                                                                                                
+        -> Memorizzare nella struttura CPUs i soli campi presenti in Cpus_field.                                    
+                                                                                                                
+            if cmp in CPUs_field:                                                                                 
+                if Riga[cmp] is defined:                                                                        
+                    CPUs[nome_server][cmp] = Riga[cmp]
+                                                                                                               
+        passo alla riga successiva                                                                             
+                                                                                                               
+    Passo al server successivo                                                                                 
+                                                                                                               
+Passo al file successivo                                                                                       
+
+Tools:
+Per ogni file:                                                                                                  
+    Per ogni server:                                                                                            
+                                                                                                                
+        -> Leggere una riga del file nella variabile di tipo lista con nome Riga.                               
+                                                                                                                
+        -> Normalizzare il nome:                                                                                
+            eliminare, se presente, il dominio                                                                  
+            tutte le lettere in minuscolo                                                                       
+
+        -> Inizializzare il record che servirà per la scrittura su file di output.                              
+
+        -> Memorizzare nella struttura Tools i soli campi presenti in Tools_field.                                    
+
+            if cmp in Tools_field:                                                                                 
+                if Riga[cmp] is defined:                                                                        
+                    Tools[nome_server][cmp] = Riga[cmp]
+
+        passo alla riga successiva                                                                             
+
+    Passo al server successivo                                                                                 
+
+Passo al file successivo                                                                                       
+
+
+Vm:                                                                                                                
+Per ogni file:                                                                                                  
+    Per ogni server:                                                                                            
+
+        -> Leggere una riga del file nella variabile di tipo lista con nome Riga.                               
+
+        -> Normalizzare il nome:                                                                                
+            eliminare, se presente, il dominio                                                                  
+            tutte le lettere in minuscolo                                                                       
+
+        -> Inizializzare il record che servirà per la scrittura su file di output.                              
+
+        -> Memorizzare nella struttura Vm i soli campi presenti in Vm_field.                                    
+
+            if cmp in Vm_field:                                                                                 
+                if Riga[cmp] is defined:                                                                        
+                    Vm[nome_server][cmp] = Riga[cmp]
+                if cmp == 'Vm Version':
+                    Vm[nome_server][cmp] = Tools[nome_server][cmp]
+                if cmp == 'Tools':
+                    Vm[nome_server][cmp] = Tools[nome_server][cmp]
+                if cmp == 'Tools Version':
+                    Vm[nome_server][cmp] = Tools[nome_server][cmp]
+                if cmp == 'Required Version':
+                    Vm[nome_server][cmp] = Tools[nome_server][cmp]
+                if cmp == 'Upgradeable':
+                    Vm[nome_server][cmp] = Tools[nome_server][cmp]
+                if cmp == 'Upgrade Policy':
+                    Vm[nome_server][cmp] = Tools[nome_server][cmp]
+                if cmp == 'CPUs':
+                    Vm[nome_server][cmp] = CPUs[nome_server][cmp]
+                if cmp == 'Sockets':
+                    Vm[nome_server][cmp] = CPUs[nome_server][cmp]
+                if cmp == 'Cores p/s':
+                    Vm[nome_server][cmp] = CPUs[nome_server][cmp]
+
+                Elaborare i dati per aggiornare il numero delle VM appartenenti allo specifico Cluster.
+                    # VMS Total
+                    # VMS
+                    # VMS WIN
+                    
+                Elaborare i dati per creare e aggiornare i dati nella struttura Vcenter
+
+        passo alla riga successiva                                                                             
+
+    Passo al server successivo                                                                                 
+
+Passo al file successivo                                                                                       
+
+Controllare che la directory di destinazione sia presente e in caso contrario, crearla.                        
+Scrivere i file:                                                                                               
+    "VM_list.csv"                                                                                              
+    "Cluster_list.csv"                                                                                         
+    "Vcenter_list.csv"                                                                                         
+
+Fine procedure                                                                                                               
+
+ Cluster_field = ["Name",                                                                                                               
+                  "NumHosts",                                                                                                               
+                  "numEffectiveHosts",                                                                                                               
+                  "TotalCpu",                                                                                                               
+                  "NumCpuCores",                                                                                                               
+                  "NumCpuThreads",                                                                                                               
+                  "HA enabled",                                                                                                               
+                  "DRS enabled",                                                                                                               
+                  "DRS default VM behavior",                                                                                                               
+                  "DRS vmotion rate",                                                                                                               
+                  "Ambiente",                                                                                                               
+                  "Cliente",                                                                                                               
+                  "Destinazione",                                                                                                               
+                  "VI SDK Server",                                                                                                               
+                  "Vcenter",                                                                                                               
+                  "# VMS Total",                                                                                                               
+                  "# VMS",                                                                                                               
+                  "# VMS WIN"                                                                                                               
+                 ]                                                                                                               
+ 
+ Tools_field = ["VM",              
+                "VM Version",      
+                "Tools",           
+                "Tools Version",   
+                "Required Version",
+                "Upgradeable",     
+                "Upgrade Policy"   
+               ]
+ 
+ Cpus_field = ["VM",       
+               "CPUs",     
+               "Sockets",  
+               "Cores p/s" 
+              ]
+ 
+ Vcenter_field = ["Name",   
+                  "Core totali",
+                  "# Cluster",
+                  "# Host",  
+                  "Dominio"
+                 ]
+                 
+                 
+Vm_field = ["VM",                 
+            "Powerstate",
+            "Template",
+            "SRM Placeholder",
+            "DNS Name",
+            "CPUs", (<-- sostituito da quello in CPUs )
+            "Memory",
+            "Primary IP Address",
+            "HW version",
+            "Annotation",
+            "Datacenter",
+            "Cluster",
+            "Host",
+            "OS according to the configuration file",
+            "OS according to the VMware Tools",
+            "VM ID",
+            "VI SDK Server type",
+            "VI SDK API Version",
+            "VM-Cod_App",
+            "VM-Cliente",
+            "VM-Ambiente",
+            "VI SDK Server",
+            "Vm Version", (<------- Tools)
+            "Tools", (<------------ Tools)     
+            "Tools Version", (<---- Tools)
+            "Required Version", (<- Tools)
+            "Upgradeable", (<------ Tools)
+            "Upgrade Policy", (<--- Tools)
+            "CPUs", (<------ CPUs)
+            "Sockets", (<--- CPUs)
+            "Cores p/s"  (<- CPUs)
+           ]

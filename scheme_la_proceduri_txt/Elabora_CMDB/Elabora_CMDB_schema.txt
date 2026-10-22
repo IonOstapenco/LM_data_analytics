@@ -1,0 +1,367 @@
+Da, schema este **în mare parte corectă**, dar pentru **versiunea actuală a `Elabora_CMDB.py`** sunt câteva puncte care trebuie ajustate, deoarece schema ta încă descrie și elemente care **nu mai sunt active în cod** (DISS).
+
+Mai jos sunt observațiile:
+
+---
+
+## ✅ 1. INPUT FILES
+
+### 1. Asset Server (ALL)*.csv → CMDB
+
+Corect ✅
+
+Acesta este singurul input folosit pentru:
+
+```python
+CMDB_data = process_asset(
+    "CMDB",
+    CMDB_field,
+    cm.pr["CMDB_Pattern"],
+    "Nome CI",
+    cm.pr["OUT_CMDB"]
+)
+```
+
+Câmpurile sunt exact cele din:
+
+```python
+CMDB_field
+```
+
+Deci lista este corectă:
+
+* Nome CI
+* OS
+* DNS
+* Domain Name
+* Is Virtual
+* Numero CPU
+* Numero Socket
+* Processore
+* Modello
+* VM_Cluster
+* VM_Virtualcenter
+* VM_Host
+* VMWare_LastReportDate
+* Bigfix_LastReportDate
+* Applicazioni (lista)
+* Ruolo
+* Category
+* Type
+* Ambiente
+* Responsabile (Server)
+* Used By
+* Contratto
+* server_iscloud
+* Ip_primary
+
+---
+
+## ⚠️ 2. Asset ServerDismessi → DISMESSI
+
+Aici trebuie modificat.
+
+Schema ta spune:
+
+```
+Asset ServerDismessi (ALL)*.csv → DISMESSI
+
+DISS_field:
+- server
+- datadismissione
+```
+
+Dar în cod actual:
+
+```python
+#DISS_data = process_asset(...)
+```
+
+este comentat.
+
+Mai mult:
+
+```python
+#DISS_field = ["server","datadismissione"]
+```
+
+este și el comentat.
+
+Deci această parte **nu mai face parte din fluxul actual**.
+
+În schimb eliminarea serverelor dezafectate se face direct din:
+
+```
+Asset Server (ALL)
+```
+
+prin:
+
+```python
+stato = row.get("Stato", "")
+
+if stato == "Dismesso":
+    continue
+```
+
+Deci schema corectă ar fi:
+
+```
+Asset Server (ALL)*.csv
+          |
+          |
+          ▼
+Filtru:
+Stato != Dismesso
+```
+
+Nu mai există fișier separat pentru Dismessi.
+
+---
+
+## ✅ 3. Asset Client (ALL)*.csv → PDL
+
+Corect ✅
+
+Este procesat aici:
+
+```python
+PDL_data = process_asset(
+    "PDL",
+    PDL_field,
+    cm.pr["PDL_Pattern"],
+    "Nome CI",
+    cm.pr["OUT_PDL"]
+)
+```
+
+Câmpurile:
+
+```python
+PDL_field = [
+"Nome CI",
+"Category",
+"Type",
+"Domain Name",
+"Used By"
+]
+```
+
+sunt corecte.
+
+---
+
+# OUTPUT FILES
+
+## ✅ OUT_CMDB → AssetServer_CMDB.csv
+
+Corect.
+
+Conține:
+
+```
+CMDB_field (24 câmpuri)
+```
+
+și este rezultatul:
+
+```python
+cm.pr["OUT_CMDB"]
+```
+
+---
+
+## ✅ OUT_CMDB_ESX → AssetCMDB_Esx.csv
+
+Corect.
+
+Conține:
+
+```
+CMDB_field (24 câmpuri)
+```
+
+dar cu filtrare:
+
+```python
+Ruolo.startswith("esx")
+```
+
+și modificarea:
+
+Inițial:
+
+```
+Numero CPU = 8
+Numero Socket = 2
+```
+
+devine:
+
+```
+Numero CPU = ""
+Numero Socket = 8
+```
+
+Deci aș adăuga în schemă:
+
+```
+(doar servere ESX)
+(schimb CPU → Socket)
+```
+
+---
+
+## ❌ OUT_DISMESSI → ServerDismessi.csv
+
+Această parte trebuie eliminată.
+
+În cod nu mai există:
+
+```python
+OUT_DISMESSI
+```
+
+și:
+
+```python
+ServerDismessi.csv
+```
+
+nu este generat.
+
+---
+
+## ✅ OUT_PDL → AssetClient.csv
+
+Corect.
+
+Conține:
+
+```
+PDL_field (5 câmpuri)
+```
+
+---
+
+# Varianta corectată a schemei ar fi:
+
+```
+==== Elabora_CMDB ====
+
+DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT
+
+
+1. INPUT FILES → CÂMPURI FOLOSITE
+
+
+┌──────────────────────────────────────────────┐
+│ 1. Asset Server (ALL)*.csv → CMDB            │
+└──────────────────────────────────────────────┘
+                 │
+                 ▼
+
+CÂMPURI FOLOSITE (CMDB_field):
+
+- Nome CI
+- OS
+- DNS
+- Domain Name
+- Is Virtual
+- Numero CPU
+- Numero Socket
+- Processore
+- Modello
+- VM_Cluster
+- VM_Virtualcenter
+- VM_Host
+- VMWare_LastReportDate
+- Bigfix_LastReportDate
+- Applicazioni (lista)
+- Ruolo
+- Category
+- Type
+- Ambiente
+- Responsabile (Server)
+- Used By
+- Contratto
+- server_iscloud
+- Ip_primary
+
+
+Filtrări aplicate:
+- eliminare Stato = Dismesso
+- eliminare duplicate Nome CI
+
+
+------------------------------------------------
+
+
+┌──────────────────────────────────────────────┐
+│ 2. Asset Client (ALL)*.csv → PDL             │
+└──────────────────────────────────────────────┘
+                 │
+                 ▼
+
+CÂMPURI FOLOSITE (PDL_field):
+
+- Nome CI
+- Category
+- Type
+- Domain Name
+- Used By
+
+
+------------------------------------------------
+
+
+2. OUTPUT FILES → CÂMPURI PRODUSE
+
+
+┌──────────────────────────────────────────────┐
+│ OUT_CMDB → AssetServer_CMDB.csv              │
+└──────────────────────────────────────────────┘
+
+Conține:
+
+CMDB_field
+(24 câmpuri)
+
+Servere active după filtrare
+
+
+------------------------------------------------
+
+
+┌──────────────────────────────────────────────┐
+│ OUT_CMDB_ESX → AssetCMDB_Esx.csv             │
+└──────────────────────────────────────────────┘
+
+Conține:
+
+CMDB_field
+(24 câmpuri)
+
+Doar:
+
+Ruolo = ESX*
+
+Modificare:
+CPU → Socket
+
+
+------------------------------------------------
+
+
+┌──────────────────────────────────────────────┐
+│ OUT_PDL → AssetClient.csv                   │
+└──────────────────────────────────────────────┘
+
+Conține:
+
+PDL_field
+(5 câmpuri)
+
+```
+
+---

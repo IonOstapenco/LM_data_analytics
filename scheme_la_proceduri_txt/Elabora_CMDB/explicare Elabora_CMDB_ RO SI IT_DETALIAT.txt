@@ -1,0 +1,741 @@
+# 🇷🇴 Descriere generală – Procedura **Elabora_CMDB.py**
+
+## Descriere generală
+
+Procedura **Elabora_CMDB.py** are rolul de a procesa fișierele provenite din sursele
+ **Asset Server** și **Asset Client**, 
+pregătind datele necesare pentru procesele ulterioare de **License Management**.
+
+Procedura efectuează următoarele operații principale:
+
+* identificarea automată a fișierelor de intrare;
+* selectarea celui mai recent fișier disponibil;
+* citirea și standardizarea datelor CSV;
+* eliminarea serverelor scoase din uz (**Stato = Dismesso**);
+* eliminarea înregistrărilor duplicate;
+* extragerea doar a coloanelor necesare;
+* generarea fișierelor CSV standardizate pentru pașii următori.
+
+Fluxul general este:
+
+```
+Asset Server (ALL)
+        |
+        |
+        v
+ Elabora_CMDB.py
+        |
+        +--------------------+
+        |                    |
+        v                    v
+AssetServer_CMDB.csv   AssetCMDB_Esx.csv
+
+
+Asset Client (ALL)
+        |
+        v
+AssetClient.csv
+```
+
+---
+
+# Partea 1 – Importul modulelor
+
+La început sunt încărcate bibliotecile necesare:
+
+```python
+import csv
+import Common as cm
+```
+
+## Modulul csv
+
+Modulul standard Python `csv` este utilizat pentru:
+
+* citirea fișierelor CSV;
+* interpretarea separatorului;
+* accesarea datelor prin `DictReader`.
+
+Utilizarea `DictReader` permite accesarea valorilor prin numele coloanei și nu prin poziția acesteia.
+
+Exemplu:
+
+```
+Nome CI | OS | DNS
+server1 | WIN | srv01
+```
+
+poate fi accesat prin:
+
+```python
+row["Nome CI"]
+row["OS"]
+row["DNS"]
+```
+
+fără dependență de ordinea coloanelor.
+
+---
+
+## Modulul Common
+
+Modulul intern:
+
+```python
+import Common as cm
+```
+
+conține funcțiile și configurațiile comune utilizate de toate procedurile proiectului.
+
+Acesta furnizează informații precum:
+
+* directorul sursă;
+* directorul de output;
+* parametrii încărcați din `Parametri.json`;
+* separatorul standard;
+* funcțiile pentru căutarea fișierelor.
+
+Exemple:
+
+```python
+cm.start_path
+cm.out_path
+cm.pr
+cm.cs
+```
+
+---
+
+# Partea 2 – Funcția de normalizare `norm()`
+
+Funcția:
+
+```python
+def norm(s):
+    if s is None:
+        return ""
+    return s.replace("\ufeff", "").strip()
+```
+
+are rolul de a uniformiza textele citite din fișiere.
+
+Aceasta elimină:
+
+* caracterul BOM (`\ufeff`) introdus uneori de Excel;
+* spațiile inutile de la început și sfârșit.
+
+Exemplu:
+
+În fișier:
+
+```
+ Nome CI 
+```
+
+devine:
+
+```
+Nome CI
+```
+
+Această funcție este utilizată pentru a evita problemele de identificare a coloanelor sau a valorilor.
+
+---
+
+# Partea 3 – Funcția generică `process_asset()`
+
+Funcția principală a procedurii este:
+
+```python
+process_asset()
+```
+
+Aceasta este o funcție generică utilizată pentru procesarea mai multor tipuri de fișiere:
+
+* CMDB;
+* PDL (Asset Client).
+
+Parametrii funcției sunt:
+
+```python
+process_asset(
+    name_class,
+    fieldnames,
+    file_pattern,
+    main_field,
+    output_file
+)
+```
+
+unde:
+
+| Parametru      | Descriere                               |
+| -------------- | --------------------------------------- |
+| `name_class`   | tipul procesării (CMDB / PDL)           |
+| `fieldnames`   | lista coloanelor necesare               |
+| `file_pattern` | modelul pentru identificarea fișierului |
+| `main_field`   | câmpul principal de identificare        |
+| `output_file`  | numele fișierului rezultat              |
+
+---
+
+## Structura internă `c_generic`
+
+În interiorul funcției este definită o clasă simplă:
+
+```python
+class c_generic:
+    def __init__(self, nome, dati):
+        self.nome = nome
+        self.dati = dati
+```
+
+Această structură este utilizată pentru memorarea unui record procesat.
+
+Conține:
+
+* `nome` → identificatorul principal (ex: Nome CI);
+* `dati` → lista valorilor care vor fi scrise în fișierul final.
+
+Exemplu:
+
+```
+nome:
+srv001
+
+dati:
+[
+srv001,
+Windows Server,
+10.10.1.5,
+VMware
+]
+```
+
+---
+
+# Partea 4 – Pregătirea procesării
+
+La începutul funcției sunt efectuate operațiile inițiale.
+
+## Crearea listei de rezultate
+
+```python
+data = []
+```
+
+Lista `data` va conține toate înregistrările validate care vor fi exportate.
+
+---
+
+## Verificarea directorului de output
+
+```python
+cm.check_outdir(cm.out_path)
+```
+
+Dacă directorul de ieșire nu există, acesta este creat automat.
+
+Exemplu:
+
+```
+Report_202607
+      |
+      └── OutPut
+```
+
+---
+
+## Curățarea listei de fișiere
+
+```python
+cm.files.clear()
+```
+
+Lista globală de fișiere găsite anterior este golită înainte de o nouă căutare.
+
+Acest lucru previne procesarea accidentală a fișierelor dintr-o execuție precedentă.
+
+---
+
+## Căutarea fișierelor de intrare
+
+```python
+cm.list_files_scandir(
+    cm.start_path,
+    file_pattern,
+    cm.pr["Extension_end"]
+)
+```
+
+Procedura caută automat fișierele care corespund:
+
+* locației configurate;
+* pattern-ului definit;
+* extensiei acceptate.
+
+Exemple:
+
+```
+Asset Server (ALL)*.csv
+
+Asset Client (ALL)*.csv
+```
+
+---
+
+/*/*/*/*/*/
+
+---
+
+# 🇷🇴 Descriere generală – Procedura **Elabora_CMDB.py**
+
+## Scopul procedurii
+
+Procedura **Elabora_CMDB.py** are rolul de a procesa fișierele exportate 
+din **CMDB (Asset Server)** și **Asset Client (PDL)**, 
+de a extrage doar câmpurile necesare, de a curăța datele și de a genera fișiere CSV standardizate 
+utilizate ulterior pentru analiza hardware și license management.
+
+Procedura:
+
+* identifică automat ultimul fișier exportat;
+* detectează structura CSV;
+* normalizează datele;
+* elimină serverele dezafectate;
+* elimină duplicatele;
+* generează fișiere de output standard.
+
+---
+
+# 1. Importuri și funcții comune
+
+Procedura utilizează:
+
+```python
+import csv
+import Common as cm
+```
+
+`csv` permite citirea și scrierea fișierelor CSV.
+
+Modulul `Common` gestionează:
+
+* parametrii din `Parametri.json`;
+* directoarele de lucru;
+* separatorul CSV;
+* căutarea fișierelor sursă.
+
+---
+
+# 2. Normalizarea datelor
+
+Funcția:
+
+```python
+norm()
+```
+
+are rolul de a curăța valorile citite din CSV.
+
+Elimină:
+
+* caractere BOM (`\ufeff`);
+* spații inutile la început și sfârșit.
+
+Această normalizare este utilizată pentru:
+
+* numele coloanelor;
+* valorile din fișiere;
+* evitarea problemelor la compararea câmpurilor.
+
+---
+
+# 3. Funcția generală `process_asset()`
+
+Aceasta este funcția principală utilizată pentru procesarea diferitelor tipuri de asset-uri.
+
+Parametrii principali:
+
+| Parametru      | Rol                            |
+| -------------- | ------------------------------ |
+| `name_class`   | tipul procesării (CMDB / PDL)  |
+| `fieldnames`   | coloanele care trebuie extrase |
+| `file_pattern` | modelul fișierului sursă       |
+| `main_field`   | cheia principală (ex: Nome CI) |
+| `output_file`  | fișierul rezultat              |
+
+Aceeași funcție este reutilizată pentru:
+
+* Asset Server (CMDB);
+* Asset Client (PDL).
+
+---
+
+# 4. Pregătirea procesării
+
+La început:
+
+* este verificată existența directorului de output;
+* lista fișierelor găsite anterior este curățată;
+* sunt căutate fișierele conform parametrilor din `Parametri.json`.
+
+Exemplu:
+
+```
+CMDB_Pattern
+PDL_Pattern
+Extension_end
+```
+
+---
+
+# 5. Selectarea fișierului cel mai recent
+
+Dacă există mai multe exporturi:
+
+```
+Asset Server (ALL)-data-2026-06-01.csv
+Asset Server (ALL)-data-2026-06-02.csv
+Asset Server (ALL)-data-2026-06-03.csv
+```
+
+procedura:
+
+* sortează fișierele descrescător;
+* selectează automat ultimul export disponibil.
+
+Astfel nu este necesară modificarea manuală a numelui fișierului.
+
+---
+
+# 6. Detectarea structurii CSV
+
+Procedura verifică automat:
+
+* separatorul CSV;
+* linia de header.
+
+Sunt suportate fișiere care conțin:
+
+```
+sep=|
+```
+
+sau separator implicit:
+
+```
+,
+```
+
+După identificarea header-ului, fișierul este citit folosind:
+
+```python
+csv.DictReader
+```
+
+Avantajul este că procesarea nu depinde de poziția coloanelor, ci de numele acestora.
+
+---
+
+# 7. Procesarea rândurilor CSV
+
+Pentru fiecare rând:
+
+* coloanele sunt normalizate;
+* este extras câmpul principal:
+
+```
+Nome CI
+```
+
+Acesta este utilizat ca identificator unic al serverului.
+
+Sunt eliminate:
+
+* rândurile fără identificator;
+* duplicatele;
+* serverele dezafectate.
+
+---
+
+# 8. Eliminarea serverelor dezafectate
+
+Pentru procesarea CMDB se verifică:
+
+```
+Stato = Dismesso
+```
+
+Dacă serverul este dezafectat:
+
+```
+continue
+```
+
+iar înregistrarea nu este inclusă în rezultatul final.
+
+Exemplu:
+
+Input:
+
+| Nome CI | Stato    |
+| ------- | -------- |
+| srv001  | Attivo   |
+| srv002  | Dismesso |
+
+Output:
+
+| Nome CI |
+| ------- |
+| srv001  |
+
+---
+
+# 9. Eliminarea duplicatelor
+
+Procedura utilizează un set:
+
+```python
+seen = set()
+```
+
+pentru memorarea serverelor deja procesate.
+
+Dacă același:
+
+```
+Nome CI
+```
+
+apare de mai multe ori, este păstrată doar prima apariție.
+
+---
+
+# 10. Generarea fișierului CMDB
+
+Pentru Asset Server sunt extrase câmpurile:
+
+* Nome CI
+* OS
+* DNS
+* Domain Name
+* Is Virtual
+* Numero CPU
+* Numero Socket
+* Processore
+* Modello
+* VM information
+* Applicazioni
+* Ruolo
+* Category
+* Type
+* Ambiente
+* Used By
+* Contract
+* IP
+
+Rezultatul este:
+
+```
+AssetServer_CMDB.csv
+```
+
+---
+
+# 11. Generarea listei ESX
+
+După procesarea CMDB se creează un fișier separat:
+
+```
+AssetCMDB_Esx.csv
+```
+
+Sunt păstrate doar serverele unde:
+
+```
+Ruolo = ESX
+```
+
+Pentru aceste servere:
+
+* valoarea CPU este mutată în câmpul Socket;
+* câmpul CPU este golit.
+
+Scopul este adaptarea structurii pentru analiza infrastructurii VMware ESX.
+
+---
+
+# 12. Procesarea Asset Client (PDL)
+
+Procedura reutilizează aceeași funcție pentru fișierele:
+
+```
+Asset Client
+```
+
+Sunt extrase doar câmpurile necesare:
+
+* Nome CI
+* Category
+* Type
+* Domain Name
+* Used By
+
+Rezultatul este:
+
+```
+AssetClient.csv
+```
+
+---
+
+# 13. Rezultate finale
+
+La final procedura generează:
+
+## Asset Server
+
+```
+AssetServer_CMDB.csv
+```
+
+Conține serverele active, fără duplicate și fără servere dezafectate.
+
+## ESX
+
+```
+AssetCMDB_Esx.csv
+```
+
+Conține doar infrastructura ESX.
+
+## Asset Client
+
+```
+AssetClient.csv
+```
+
+Conține informațiile PDL necesare procesărilor ulterioare.
+
+---
+
+# Rezumat flux procesare
+
+```
+Parametri.json
+        |
+        v
+Căutare fișiere CMDB / PDL
+        |
+        v
+Selectare ultim export
+        |
+        v
+Citire CSV + detectare separator
+        |
+        v
+Normalizare date
+        |
+        v
+Eliminare Dismesso
+        |
+        v
+Eliminare duplicate
+        |
+        v
+Extracție câmpuri necesare
+        |
+        v
+Generare CSV standard
+        |
+        +----------------+
+        |                |
+        v                v
+AssetServer_CMDB.csv   AssetCMDB_Esx.csv
+        |
+        v
+AssetClient.csv
+```
+
+---
+
+# 🇮🇹 Descrizione generale – Procedura **Elabora_CMDB.py**
+
+## Scopo della procedura
+
+La procedura **Elabora_CMDB.py** elabora i file esportati dalla **CMDB (Asset Server)** e 
+da **Asset Client (PDL)**, estrae solamente i campi necessari, 
+pulisce i dati e genera file CSV standardizzati utilizzati nelle successive analisi 
+hardware e license management.
+
+La procedura:
+
+* identifica automaticamente l’ultimo file disponibile;
+* rileva la struttura CSV;
+* normalizza i dati;
+* esclude i server dismessi;
+* elimina i duplicati;
+* genera file CSV di output standard.
+
+---
+
+## Flusso principale
+
+1. Lettura configurazione da `Parametri.json`
+2. Ricerca dei file CMDB / PDL
+3. Selezione dell’ultimo export disponibile
+4. Lettura CSV tramite `DictReader`
+5. Normalizzazione dei dati
+6. Eliminazione record non validi
+7. Eliminazione server dismessi
+8. Eliminazione duplicati
+9. Estrazione dei campi richiesti
+10. Creazione file CSV finali
+
+---
+
+## Output generati
+
+### Asset Server
+
+```
+AssetServer_CMDB.csv
+```
+
+Contiene le informazioni principali dei server attivi.
+
+---
+
+### ESX
+
+```
+AssetCMDB_Esx.csv
+```
+
+Contiene solamente i server ESX con struttura adattata per l’analisi VMware.
+
+---
+
+### Asset Client
+
+```
+AssetClient.csv
+```
+
+Contiene le informazioni principali degli endpoint client.
+
+---
+
+## Obiettivo finale
+
+La procedura permette di trasformare gli export originali CMDB in dataset puliti e uniformi, 
+pronti pentru utilizarea în procesele de:
+
+* License Management;
+* inventariere hardware;
+* analisi server;
+* elaborazioni Python successive.
+
+---
+

@@ -1,0 +1,130 @@
+cele 3 proceduri formează practic un **flux pentru identificarea și pregătirea utilizatorilor/grupurilor 
+care au licențe Microsoft Office Standard și Professional Plus**, pornind de la Flexera și Active Directory.
+
+### 1. `Inner_Join_Office_Flexera`
+
+**Pe scurt:** compară serverele din **FARM_MT** cu dispozitivele din **Flexera** și identifică unde există Office Standard / Professional Plus.
+
+Fluxul este:
+
+**FARM_MT + Flexera → JOIN după server → identificare Office → extragere grupuri AD**
+
+Mai exact:
+
+* ia cele mai recente fișiere **FARM_MT** și **Flexera**;
+* combină cele două sheet-uri FARM (`DNSName_sec_group` și `DNSName_sec_group_evo`);
+* normalizează numele serverelor;
+* din Flexera păstrează doar **Office Standard** și **Professional Plus**;
+* face `INNER JOIN` între FARM și Flexera;
+* identifică și serverele care există într-o sursă, dar lipsesc din cealaltă;
+* separă rezultatele în **Office Standard** și **Office Professional**;
+* extrage din coloana `Gruppi di AD` grupurile AD relevante;
+* elimină anumite grupuri/excepții;
+* generează Excel-ul **`FLEXERA_Gruppi_Std_Prof.xlsx`** și listele TXT cu grupurile.
+
+ **Scopul principal:** să determine **ce servere au Office și ce grupuri AD sunt asociate acestor servere/licențe**.
+
+---
+
+### 2. `Elabora_User_Group_AD_FLEXERA`
+
+**Pe scurt:** pornește de la lista de grupuri Office obținută anterior și caută în fișierele **Active Directory** utilizatorii care apar în aceste grupuri.
+
+Fluxul este:
+
+**Lista grupuri Office → AD-usersAndGroupsResult → utilizatori pe grup → STD / PRO**
+
+Procedura:
+
+* citește `Lista gruppi Office_FLEXERA.txt`;
+* separă grupurile în:
+
+  * `STD` → Office Standard
+  * `PRO` → Office Professional Plus;
+* citește fișierele `AD-usersAndGroupsResult`;
+* caută utilizatorii care apar în grupurile respective;
+* ignoră:
+
+  * grupurile `099`, `ctx_033`, `ctx_870`;
+  * anumite `SamAccountName` care conțin `CR` / `CRE`;
+  * intrările unde obiectul este el însuși un `Group`;
+* elimină duplicatele;
+* produce două fișiere:
+
+  * lista utilizatorilor/grupurilor **Office Professional**
+  * lista utilizatorilor/grupurilor **Office Standard**.
+
+👉 **Scopul principal:** să transforme **grupurile AD identificate de Flexera în lista efectivă de utilizatori** care apar în acele grupuri.
+
+---
+
+### 3. `PowerShell_Script_STD_Gruppi`
+
+Aceasta este puțin mai complexă.
+
+**Pe scurt:** ia grupurile **Office Standard**, le filtrează după tipul `PRD/ADS/COL`, caută utilizatorii în Active Directory și apoi îi corelează cu informațiile despre bancă (`OU_01`).
+
+Fluxul este:
+
+**Lista grupuri STD → selectare grupuri PRD → AD users/groups → curățare utilizatori → Banche → Excel**
+
+Procedura:
+
+* citește lista `FLEXERA_Lista gruppi Office.txt`;
+* păstrează grupurile marcate `STD`;
+* identifică grupurile de tip `PRD`, `ADS`, `COL`;
+* păstrează în principal grupurile care au doar varianta **PRD**;
+* tratează separat excepția `ctx_047_tta`;
+* caută aceste grupuri în fișierele `AD-usersAndGroupsResult.csv`;
+* extrage:
+
+  * `Group`
+  * `Name`
+  * `SamAccountName`
+  * `SourceFile`;
+* elimină utilizatorii de test și anumite duplicate;
+* elimină situațiile în care `Name` este doar login-ul, atunci când există un nume real;
+* face legătura cu `AD_Users_Results_attivi`;
+* adaugă informația **`Banche`** din `OU_01`;
+* creează mai multe rezultate:
+
+  * `Dettaglio`
+  * `Unique Names`
+  * `Unique SAM`
+  * `Names Banche`
+  * `Match AD`;
+* la final generează Excel-ul **`Licenze_Office_STD_AD_RESULTS_ATTIVI E UNIQUE NAMES e Match AD.xlsx`**.
+
+ **Scopul principal:** să obțină o **listă curățată și verificată a utilizatorilor Office Standard**, inclusiv asocierea lor cu banca și verificarea existenței lor în lista utilizatorilor AD activi.
+
+---
+
+### Privite împreună
+
+Aș descrie cele 3 proceduri foarte simplu în documentație astfel:
+
+| Procedura                         | Ce face                                                                                                       |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Inner_Join_Office_Flexera**     | Identifică serverele cu Office și grupurile AD asociate, prin corelarea FARM_MT cu Flexera                    |
+| **Elabora_User_Group_AD_FLEXERA** | Identifică utilizatorii care apar în grupurile AD Office Standard / Professional                              |
+| **PowerShell_Script_STD_Gruppi**  | Procesează și curăță utilizatorii Office Standard, îi corelează cu AD Users și adaugă informația despre bancă |
+
+**Schema generală:**
+
+`FARM_MT + FLEXERA`
+↓
+**Inner_Join_Office_Flexera**
+↓
+`Gruppi AD Office STD / PRO`
+↓
+**Elabora_User_Group_AD_FLEXERA**
+↓
+`UserName + GroupName`
+↓
+**PowerShell_Script_STD_Gruppi**
+↓
+`Utenti Office STD + SamAccountName + Banche + Match AD`
+↓
+**Excel finale pentru analiza licențelor**
+
+Deci, în esență, **prima procedură pleacă de la servere/licențe, a doua ajunge la utilizatori, iar a treia face o prelucrare și validare mai aprofundată a utilizatorilor Office Standard.**

@@ -1,0 +1,77 @@
+======== merge_AD_users.pl ==================
+
+Pe scurt, procedura Perl merge_AD_users.pl nu modifică Active Directory. 
+Ea are rolul de a colecta, uni și normaliza informațiile despre utilizatorii AD 
+provenite din mai multe domenii/controlere de domeniu și să genereze rapoarte consolidate.
+
+==== Ce face concret ===============
+
+Încarcă configurația din parametri.txt
+
+Citește toți parametrii necesari (locații de fișiere, separatori CSV, directoare etc.).
+
+Caută fișierele cu exporturile AD Users
+
+Scanează recursiv directoarele și caută fișierele indicate de parametrul cerca_ad_users.
+
+Citește exporturile din Active Directory
+
+Preia utilizatori din toate domeniile/subdomeniile.
+Ignoră obiectele de tip computer și păstrează doar obiectele de tip user.
+
+Extrage și normalizează informațiile utilizatorului Pentru fiecare utilizator salvează:
+
+CN (Common Name)
+OU (Organizational Unit)
+DC (Domain Component)
+Description
+UserPrincipalName
+UserAccountControl
+LastLogon
+LastLogonTimestamp
+PwdLastSet
+
+Parsează Distinguished Name (DN) Dintr-un DN de forma:
+
+CN=John Doe,OU=Users,OU=IT,DC=corp,DC=local
+
+
+construiește separat:
+
+CN = John Doe
+OU = Users, IT
+DC = corp, local
+
+Convertește datele AD Valorile AD de tip FILETIME (lastLogon, pwdLastSet, lastLogonTimestamp) sunt transformate în zile de la o dată de referință pentru a putea fi comparate și filtrate.
+
+Determină utilizatorii activi
+
+Calculează o dată prag.
+Dacă ultimul logon/activitate este în ultimele aproximativ 90 de zile, utilizatorul este considerat activ.
+
+Generează două fișiere CSV
+
+Un fișier cu toți utilizatorii (file_ad_users).
+Un fișier cu utilizatorii activi (file_ad_users_logon).
+
+Actualizează statistici
+
+Numărul total de utilizatori.
+Numărul de utilizatori activi.
+
+Înregistrează execuția
+
+Scrie în fișierul de jurnal că procedura a început și s-a terminat cu succes.
+Rezultatul final
+
+Scriptul este practic un consolidator de utilizatori Active Directory care:
+
+adună utilizatori din mai multe domenii;
+elimină duplicatele;
+extrage structura OU/DC;
+calculează activitatea utilizatorilor;
+produce rapoarte CSV cu:
+toți utilizatorii;
+utilizatorii considerați activi.
+
+Observ și că acest fișier pare să facă parte dintr-un proiect mult mai mare de inventariere infrastructură (CMDB, BigFix, VMware/RVTools, Oracle etc.), dar în acest script este folosită doar partea dedicată AD Users.

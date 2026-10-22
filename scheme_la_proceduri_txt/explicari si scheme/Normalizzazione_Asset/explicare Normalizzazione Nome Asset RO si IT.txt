@@ -1,0 +1,417 @@
+# 🇷🇴 Descriere generală – Procedura **Normalizazzione_Nome_Asset.py**
+
+## Scopul procedurii
+
+Această procedură are rolul de a **normaliza denumirea fișierelor Asset CSV**, 
+transformând formatele de dată și oră generate automat de sisteme externe într-un format standard **ISO 24h**.
+
+Scopul principal este de a uniformiza numele fișierelor înainte de procesarea acestora 
+de către procedurile de import și prelucrare a datelor.
+
+Exemplu:
+
+Format inițial:
+
+```
+Asset Server (ALL)-data-11_06_2025, 11_21_15 AM.csv
+```
+
+devine:
+
+```
+Asset Server (ALL)-data-2025-11-06 11_21_15.csv
+```
+
+---
+
+# Pasul 1 – Citirea configurației
+
+Procedura importă din modulul **Common** informațiile de configurare:
+
+```python
+from Common import pr, start_path
+```
+
+Este utilizată în special variabila:
+
+```
+start_path
+```
+
+care reprezintă directorul unde sunt căutate fișierele Asset.
+
+Astfel, locația de procesare nu este definită direct în cod, ci este gestionată centralizat.
+
+---
+
+# Pasul 2 – Căutarea fișierelor Asset
+
+Procedura verifică directorul configurat și caută numai fișierele care respectă condițiile:
+
+* extensia trebuie să fie **.csv**;
+* numele trebuie să conțină textul **Asset**.
+
+Sunt ignorate:
+
+* directoarele;
+* alte tipuri de fișiere;
+* fișiere care nu aparțin procesului Asset.
+
+---
+
+# Pasul 3 – Identificarea formatului vechi de dată
+
+Funcția:
+
+```python
+processa_nome_file()
+```
+
+analizează numele fișierului folosind o expresie regulată (**Regex**).
+
+Procedura identifică automat formate precum:
+
+```
+11_06_2025, 11_21_15 AM
+```
+
+sau formate care conțin caractere speciale introduse de Windows:
+
+```
+11_06_2025 , 11_21_15 AM
+```
+
+Sunt extrase următoarele informații:
+
+* ziua;
+* luna;
+* anul;
+* ora;
+* minutele;
+* secundele;
+* formatul AM/PM.
+
+---
+
+# Pasul 4 – Conversia formatului de timp
+
+Procedura transformă ora din format:
+
+```
+12 ore (AM/PM)
+```
+
+în format:
+
+```
+24 ore
+```
+
+Exemple:
+
+```
+11_21_15 AM
+```
+
+devine:
+
+```
+11_21_15
+```
+
+iar:
+
+```
+02_15_30 PM
+```
+
+devine:
+
+```
+14_15_30
+```
+
+Sunt tratate și cazurile speciale:
+
+```
+12 AM → 00
+12 PM → 12
+```
+
+---
+
+# Pasul 5 – Conversia datei în format ISO
+
+Data este restructurată în format standard:
+
+```
+YYYY-MM-DD
+```
+
+Exemplu:
+
+```
+11_06_2025
+```
+
+devine:
+
+```
+2025-11-06
+```
+
+Acest format permite sortarea corectă cronologică a fișierelor.
+
+---
+
+# Pasul 6 – Redenumirea fișierelor
+
+Dacă numele fișierului conține formatul vechi, acesta este înlocuit automat.
+
+Exemplu:
+
+Înainte:
+
+```
+Asset Client (ALL)-data-11_21_2025, 03_15_22 PM.csv
+```
+
+După:
+
+```
+Asset Client (ALL)-data-2025-11-21 15_15_22.csv
+```
+
+Dacă fișierul este deja în format ISO 24h:
+
+```
+Asset Server-data-2025-11-21 15_15_22.csv
+```
+
+nu este modificat.
+
+---
+
+# Pasul 7 – Verificarea existenței fișierului
+
+Înainte de redenumire sunt efectuate verificări:
+
+* dacă directorul există;
+* dacă numele nou este deja utilizat;
+* dacă operația de redenumire poate fi executată.
+
+În cazul în care apare o problemă, procedura afișează mesajul corespunzător fără oprirea întregului proces.
+
+---
+
+# Rezultatul final
+
+La finalul execuției toate fișierele Asset CSV sunt aduse la același format de denumire.
+
+Beneficiile principale:
+
+* standardizarea numelor fișierelor;
+* sortare cronologică corectă;
+* identificarea mai ușoară a celui mai recent export;
+* eliminarea problemelor cauzate de formatele diferite generate de Windows sau aplicațiile sursă;
+* pregătirea fișierelor pentru procedurile de procesare CMDB și License Management.
+
+---
+
+# 🇮🇹 Descrizione generale – Procedura **Normalizazzione_Nome_Asset.py**
+
+## Scopo della procedura
+
+Questa procedura ha lo scopo di **normalizzare i nomi dei file Asset CSV**, 
+trasformando i formati automatici di data e ora generati dai sistemi sorgente 
+in un formato standard **ISO 24h**.
+
+L'obiettivo principale è uniformare i nomi dei file prima dell'elaborazione da parte delle procedure successive.
+
+Esempio:
+
+Formato originale:
+
+```
+Asset Server (ALL)-data-11_06_2025, 11_21_15 AM.csv
+```
+
+diventa:
+
+```
+Asset Server (ALL)-data-2025-11-06 11_21_15.csv
+```
+
+---
+
+## Passo 1 – Lettura della configurazione
+
+La procedura importa dal modulo **Common** le informazioni di configurazione:
+
+```python
+from Common import pr, start_path
+```
+
+Viene utilizzata principalmente la variabile:
+
+```
+start_path
+```
+
+che identifica la cartella contenente i file Asset da elaborare.
+
+In questo modo il percorso non viene scritto direttamente nel codice.
+
+---
+
+## Passo 2 – Ricerca dei file Asset
+
+La procedura analizza la cartella configurata e considera solamente i file che rispettano le condizioni:
+
+* estensione **.csv**;
+* nome contenente la parola **Asset**.
+
+Vengono esclusi:
+
+* directory;
+* file con altre estensioni;
+* file non appartenenti al processo Asset.
+
+---
+
+## Passo 3 – Identificazione del formato data precedente
+
+La funzione:
+
+```python
+processa_nome_file()
+```
+
+utilizza una Regex per individuare automaticamente il formato data/ora presente nel nome del file.
+
+Vengono riconosciuti formati come:
+
+```
+11_06_2025, 11_21_15 AM
+```
+
+e varianti con caratteri speciali.
+
+Sono estratti:
+
+* giorno;
+* mese;
+* anno;
+* ora;
+* minuti;
+* secondi;
+* formato AM/PM.
+
+---
+
+## Passo 4 – Conversione dell'orario
+
+L'orario viene convertito dal formato:
+
+```
+12 ore (AM/PM)
+```
+
+al formato:
+
+```
+24 ore
+```
+
+Esempio:
+
+```
+03_15_22 PM
+```
+
+diventa:
+
+```
+15_15_22
+```
+
+Vengono gestiti anche i casi particolari:
+
+```
+12 AM → 00
+12 PM → 12
+```
+
+---
+
+## Passo 5 – Conversione della data in formato ISO
+
+La data viene trasformata nel formato standard:
+
+```
+YYYY-MM-DD
+```
+
+Esempio:
+
+```
+11_06_2025
+```
+
+diventa:
+
+```
+2025-11-06
+```
+
+Questo permette una corretta ordinazione cronologica dei file.
+
+---
+
+## Passo 6 – Rinomina dei file
+
+Quando viene trovato un nome nel vecchio formato, la procedura esegue automaticamente la rinomina.
+
+Esempio:
+
+Prima:
+
+```
+Asset Client-data-11_21_2025, 03_15_22 PM.csv
+```
+
+Dopo:
+
+```
+Asset Client-data-2025-11-21 15_15_22.csv
+```
+
+Se il file è già nel formato ISO 24h, non viene modificato.
+
+---
+
+## Passo 7 – Controlli durante la rinomina
+
+Prima della modifica del nome vengono eseguiti alcuni controlli:
+
+* verifica dell'esistenza della cartella;
+* controllo se il nuovo nome è già presente;
+* gestione degli eventuali errori di sistema.
+
+In caso di problemi viene mostrato un messaggio informativo senza interrompere completamente l'elaborazione.
+
+---
+
+## Risultato finale
+
+Al termine dell'esecuzione tutti i file Asset CSV vengono uniformati con lo stesso formato di denominazione.
+
+I principali vantaggi sono:
+
+* standardizzazione dei nomi dei file;
+* ordinamento cronologico corretto;
+* identificazione più semplice dell'ultimo export disponibile;
+* eliminazione dei problemi causati dai diversi formati generati dai sistemi sorgente;
+* preparazione dei file per le successive elaborazioni CMDB e License Management.
+
+---

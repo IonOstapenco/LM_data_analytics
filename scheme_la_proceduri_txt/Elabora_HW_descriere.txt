@@ -1,0 +1,260 @@
+Perfect 🙂
+Îți fac o **diagramă vizuală schematică (logic flow)** a procedurii *Elabora_HW* — structurată pe flux de proces și decizii.
+
+---
+
+# 📊 DIAGRAMĂ VIZUALĂ – ELABORA_HW
+
+```
+┌──────────────────────────────────────────────┐
+│                 START                        │
+└──────────────────────────────────────────────┘
+                      │
+                      ▼
+┌──────────────────────────────────────────────┐
+│  Încarcă fișierele intermediare din OUT:    │
+│  - CMDB_Citrix                              │
+│  - BGFX                                      │
+│  - VM                                        │
+│  - HOST                                      │
+│  - Cluster                                   │
+│  - VCenter                                   │
+│  - DISS                                      │
+│  - PDL                                       │
+└──────────────────────────────────────────────┘
+                      │
+                      ▼
+┌──────────────────────────────────────────────┐
+│  Obține lista serverelor din CMDB_Citrix    │
+│  lnome = CMDB_Citrix.keys()                 │
+└──────────────────────────────────────────────┘
+                      │
+                      ▼
+         ┌───────────────────────────┐
+         │  Pentru fiecare server k  │
+         └───────────────────────────┘
+                      │
+                      ▼
+         ┌───────────────────────────┐
+         │ Creează Hardware[k] = {}  │
+         └───────────────────────────┘
+                      │
+                      ▼
+         ┌──────────────────────────────┐
+         │ Pentru fiecare câmp f din    │
+         │ Hardware_field               │
+         └──────────────────────────────┘
+                      │
+                      ▼
+         ┌────────────────────────────────────┐
+         │ Ia lista surselor prioritare      │
+         │ ex: CMDB → BGFX → VM → Cluster    │
+         └────────────────────────────────────┘
+                      │
+                      ▼
+         ┌──────────────────────────────┐
+         │ Pentru fiecare sursă a       │
+         └──────────────────────────────┘
+                      │
+                      ▼
+        ┌───────────────────────────────────────┐
+        │ MATCH sursă                          │
+        └───────────────────────────────────────┘
+```
+
+---
+
+# 🔎 RAMIFICAȚII LOGICE
+
+## 1️⃣ CMDB_Citrix
+
+```
+Se ia valoarea direct
+↓
+BREAK (oprire căutare)
+```
+
+---
+
+## 2️⃣ BGFX
+
+```
+Server există în BGFX ?
+        │
+   ┌────┴────┐
+   │         │
+  DA         NU
+   │         │
+Valoare     "-"
+BREAK
+```
+
+---
+
+## 3️⃣ HOST
+
+```
+Server este virtual ?
+        │
+   ┌────┴────┐
+   │         │
+  DA         NU
+   │         │
+   "-"     caută în HOST
+             │
+        există ?
+         │      │
+        DA      NU
+         │       │
+      valoare    "-"
+      BREAK
+```
+
+---
+
+## 4️⃣ VM
+
+```
+Server este virtual ?
+        │
+   ┌────┴────┐
+   │         │
+  NU         DA
+   │         │
+   "-"     caută în VM
+             │
+        există ?
+         │      │
+        DA      NU
+         │       │
+      valoare    "-"
+      BREAK
+```
+
+---
+
+## 5️⃣ CLUSTER (doar pentru VM)
+
+```
+Server virtual ?
+        │
+   ┌────┴────┐
+   │         │
+  NU         DA
+   │         │
+   "-"   ia VM_Cluster din CMDB
+             │
+        există în Cluster ?
+         │      │
+        DA      NU
+         │       │
+      valoare    "-"
+      BREAK
+```
+
+---
+
+## 6️⃣ VCENTER (doar pentru VM)
+
+```
+Server virtual ?
+        │
+   ┌────┴────┐
+   │         │
+  NU         DA
+   │         │
+   "-"   ia VM_Virtualcenter
+           ↓
+     elimină domeniul
+           ↓
+     caută în VCenter
+           │
+        există ?
+         │      │
+        DA      NU
+         │       │
+      valoare    "-"
+      BREAK
+```
+
+---
+
+# 🖥️ DUPĂ SERVERELOR CMDB
+
+```
+Pentru fiecare PDL (desktop)
+    Creează rând gol
+    Setează:
+        tipo = PDL
+        ruolo = Desktop
+        ambiente = Produzione
+        virtuale = NO
+```
+
+---
+
+# 📝 FINAL
+
+```
+Scrie Tabella_HW.csv
+    ↓
+    Header = toate câmpurile
+    ↓
+    Pentru fiecare Hardware[k]
+        scrie rândul
+```
+
+---
+
+# 🏗️ DIAGRAMĂ SIMPLIFICATĂ (HIGH LEVEL)
+
+```
+           ┌─────────────┐
+           │   CMDB      │
+           └──────┬──────┘
+                  │
+                  ▼
+        ┌──────────────────┐
+        │  Motor Priorități │
+        │ (Hardware_field) │
+        └──────────────────┘
+          │      │      │
+          ▼      ▼      ▼
+        BGFX    VM    HOST
+                    │
+                    ▼
+                 Cluster
+                    │
+                    ▼
+                 VCenter
+                    │
+                    ▼
+            ┌────────────────┐
+            │  Hardware dict │
+            └────────────────┘
+                    │
+                    ▼
+           Tabella_HW.csv
+```
+
+---
+
+# 🎯 CONCEPT CHEIE
+
+Elabora_HW este:
+
+> 🔹 un motor de consolidare multi-sursă
+> 🔹 cu prioritate configurabilă pe câmp
+> 🔹 sensibil la tipul mașinii (fizic / virtual)
+> 🔹 care produce tabela finală de inventar hardware
+
+---
+
+Dacă vrei, pot să îți fac și:
+
+* 🧩 diagramă UML
+* 🧠 diagramă BPMN (proces business)
+* 📊 diagramă profesională pentru documentație (stil PowerPoint)
+* 🛠️ versiune optimizată a algoritmului
+
+Spune-mi pentru ce tip de documentație ai nevoie 🙂

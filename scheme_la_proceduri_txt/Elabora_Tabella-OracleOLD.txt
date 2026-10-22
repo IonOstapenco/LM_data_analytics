@@ -1,0 +1,184 @@
+# 📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-OracleOLD.py)**  
+*(stilul tău clasic, complet desfășurat și clar)*
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două surse principale**:
+
+```text
+OUT_Hardware_TAB   → Tabella_HW.csv
+Oracle BIGFIX      → raport ICTG-0-database-oracle-*.csv
+```
+
+Acestea sunt încărcate în structuri Python:
+
+- `Hardware` → toate serverele + câmpuri HW (OS, cliente, ambiente, contract etc.)
+- `Oracle` → obiecte c_Oracle (server + date hardware + funcții Oracle)
+- `Funzioni` → funcțiile Oracle suplimentare detectate (features Enterprise)
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSA**
+
+## 🔵 **2.1. Tabella_HW → metadate pentru servere**
+
+Din Hardware se folosesc câmpurile:
+
+- ambiente  
+- contratto  
+- cliente  
+
+Acestea sunt mapate prin:
+
+```python
+Oracle_Field["ambiente"] = 35
+Oracle_Field["contratto"] = 38
+Oracle_Field["cliente"]  = 37
+```
+
+---
+
+## 🟣 **2.2. Raport Oracle BIGFIX → baza pentru Tabella Oracle**
+
+Din fiecare linie se extrag câmpurile definite în:
+
+```python
+BGFX_Field = {
+    "Nome computer": 0,
+    "nome": 1,
+    "Versione": 2,
+    "Edizione": 3,
+    "Sistema operativo": 4,
+    "Funzione": 5,
+    "SID": 6,
+    ...
+}
+```
+
+Acestea sunt normalizate și transformate în lista `t`.
+
+---
+
+# **3. STRUCTURA ORACLE (OUTPUT)**
+
+Structura finală este:
+
+- câmpurile din `Oracle_Field` (hardware + OS + versiune + edition etc.)
+- câmpurile dinamice din `Funzioni` (funcții Oracle Enterprise detectate)
+
+Exemplu câmpuri Oracle_Field:
+
+- Nome computer  
+- Nome  
+- Versione  
+- Edizione  
+- Sistema operativo  
+- Funzione  
+- SID  
+- NumeroCore  
+- NumeroSocket  
+- Fattore core Oracle  
+- ambiente  
+- contratto  
+- cliente  
+
+La acestea se adaugă **funcțiile Oracle suplimentare** (ex: Diagnostics Pack, Tuning Pack etc.)
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI ORACLE**
+
+## 🟢 **4.1. Citirea fișierului BIGFIX**
+
+Pentru fiecare linie:
+
+1. Se curăță separatorii și ghilimelele  
+2. Se extrag câmpurile BGFX_Field  
+3. Se normalizează numele serverului (fără domeniu)  
+4. Se atașează metadatele din Hardware (ambiente, contratto, cliente)  
+5. Se adaugă 15 câmpuri goale pentru funcțiile Oracle suplimentare  
+6. Se creează obiectul `c_Oracle` dacă nu există  
+7. Se adaugă funcția Oracle în lista `sw`
+
+---
+
+## 🟢 **4.2. Identificarea funcțiilor Oracle suplimentare**
+
+Pentru fiecare server:
+
+- dacă ediția **NU** este *standard* sau *express*:
+  - se parcurg funcțiile din `sw`
+  - dacă lungimea > 36 caractere → este o funcție Enterprise
+  - se extrage numele funcției
+  - se adaugă în `Funzioni` cu index incremental
+  - se scrie funcția în `datihw[index]`
+
+---
+
+# **5. OUTPUT FILES → CE CONȚIN**
+
+Procedura generează **un fișier final**:
+
+---
+
+## **5.1. OUT_Oracle_TAB → Tabella_Oracle.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_Oracle_TAB → Tabella_Oracle.csv          │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE:
+- câmpurile Oracle_Field
+- câmpurile dinamice Funzioni (features Enterprise)
+- câte un rând pentru fiecare server Oracle
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stilul tău preferat)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Oracle BIGFIX       → BGFX_Field (date Oracle)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Prelucrare BIGFIX:                                    │
+        │ - curățare linii                                      │
+        │ - extragere câmpuri BGFX_Field                        │
+        │ - normalizare hostname                                │
+        │ - atașare ambiente / contratto / cliente din HW       │
+        │ - creare obiect c_Oracle                              │
+        │ - adăugare funcție Oracle în lista sw                 │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Detectare funcții Oracle Enterprise:                  │
+        │ - doar pentru ediții ≠ standard/express               │
+        │ - extragere funcții > 36 caractere                    │
+        │ - adăugare în Funzioni                                │
+        │ - scriere în datihw la indexul corespunzător          │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_Oracle_TAB → Tabella_Oracle.csv                  │
+        │ - Oracle_Field                                        │
+        │ - Funzioni (dinamice)                                 │
+        │ - un rând per server Oracle                           │
+        └──────────────────────────────────────────────────────┘
+```
+
+---
+
+

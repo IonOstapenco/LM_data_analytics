@@ -1,0 +1,1143 @@
+Salut! 😊 Da. Procedura este, în esență, un **script de căutare și corelare a utilizatorilor dintr-un grup Active Directory**, care la final generează un Excel cu 3 sheet-uri.
+
+Important: în cod există câteva mici neconcordanțe între ceea ce scrie în `to do` și ceea ce face efectiv programul. Ți le explic mai jos.
+
+---
+
+# 1. Ce face procedura, pe scurt
+
+Fluxul este acesta:
+
+```text
+Report_202608
+│
+├── Active Directory Results - CED...
+│      ├── ...
+│      ├── AD-usersAndGroupsResult.csv
+│      └── ...
+│
+├── Active Directory Results - SERVIZICED...
+│      ├── ...
+│      ├── AD-usersAndGroupsResult.csv
+│      └── ...
+│
+└── ... AD_Users_Results_attivi.csv
+             │
+             ▼
+       ┌─────────────────────┐
+       │ Python Script        │
+       └─────────────────────┘
+             │
+             ├── caută grupul
+             │   VDI_USER_VOLTERRA_026_MT
+             │
+             ├── extrage UserName
+             │   + SamAccountName
+             │
+             ├── elimină duplicatele
+             │
+             ├── caută UserName în CN_00
+             │
+             └── dacă există match
+                    │
+                    ▼
+              Excel XLSX
+              ├── Sheet1
+              ├── Sheet2
+              └── Sheet3
+```
+
+Mai concret:
+
+### Din `AD-usersAndGroupsResult.csv`
+
+caută:
+
+```text
+GroupName = VDI_USER_VOLTERRA_026_MT
+```
+
+și extrage:
+
+```text
+UserName
+SamAccountName
+```
+
+### Din `AD_Users_Results_attivi.csv`
+
+folosește:
+
+```text
+CN_00
+Principal Name
+OU_01
+```
+
+apoi face corelarea:
+
+```text
+UserName = CN_00
+```
+
+iar rezultatul ajunge în Excel.
+
+---
+
+# 2. Configurarea
+
+La început sunt citite valorile din:
+
+```python
+parametri.json
+```
+
+prin:
+
+```python
+with open("parametri.json", "r", encoding="utf-8") as f:
+    parametri = json.load(f)
+```
+
+Apoi sunt extrase:
+
+```python
+Source_dir = parametri["Source_dir"]
+Report_dir = parametri["Report_dir"]
+```
+
+De exemplu:
+
+```text
+Source_dir = C:\License_Management
+Report_dir = Report_202608
+```
+
+După aceea se construiește:
+
+```python
+base_folder = Source_dir / Report_dir
+```
+
+deci:
+
+```text
+C:\License_Management\Report_202608
+```
+
+Aceasta este mapa principală în care lucrează scriptul.
+
+---
+
+# 3. Ce grup caută
+
+Grupul este hardcodat:
+
+```python
+search_group = "VDI_USER_VOLTERRA_026_MT"
+```
+
+Deci procedura nu caută orice grup.
+
+Caută **exact acest grup**.
+
+Comparația este însă făcută case-insensitive:
+
+```python
+str(group_name).strip().lower()
+==
+target_group.strip().lower()
+```
+
+Asta înseamnă că, de exemplu:
+
+```text
+VDI_USER_VOLTERRA_026_MT
+vdi_user_volterra_026_mt
+VDI_USER_VOLTERRA_026_MT 
+```
+
+vor fi considerate aceeași valoare, deoarece se elimină spațiile și se transformă în lowercase.
+
+---
+
+# 4. În ce mape caută
+
+Din `parametri.json` sunt citite:
+
+```python
+AD_CED_Pattern = parametri["AD_CED_Pattern"]
+AD_Base_Pattern = parametri["AD_Base_Pattern"]
+```
+
+De exemplu:
+
+```text
+Active Directory Results - CED
+Active Directory Results - SERVIZICED
+```
+
+Scriptul face:
+
+```python
+base_folder.iterdir()
+```
+
+și caută directoarele al căror nume începe cu aceste pattern-uri:
+
+```python
+folder.name.startswith(pattern)
+```
+
+Deci dacă ai:
+
+```text
+Active Directory Results - CED - 31.07.2026-213001
+Active Directory Results - CED - 31.07.2026-220001
+```
+
+ambele pot fi găsite.
+
+La fel pentru:
+
+```text
+Active Directory Results - SERVIZICED...
+```
+
+---
+
+# 5. Caută recursiv `AD-usersAndGroupsResult.csv`
+
+Pentru fiecare dintre aceste mape:
+
+```python
+csv_files = current_folder.rglob(csv_filename)
+```
+
+`rglob()` înseamnă că nu caută numai în folderul principal.
+
+Caută și în toate subfolderele.
+
+De exemplu:
+
+```text
+Active Directory Results - CED...
+│
+├── Folder1
+│   └── AD-usersAndGroupsResult.csv
+│
+├── Folder2
+│   └── AD-usersAndGroupsResult.csv
+│
+└── Folder3
+    └── Subfolder
+        └── AD-usersAndGroupsResult.csv
+```
+
+le poate găsi pe toate.
+
+---
+
+# 6. Detectează automat encoding-ul
+
+Funcția:
+
+```python
+def detect_encoding(file_path):
+```
+
+verifică primii bytes ai fișierului.
+
+Ea detectează:
+
+### UTF-16 LE
+
+```text
+FF FE
+```
+
+→
+
+```python
+return "utf-16"
+```
+
+### UTF-16 BE
+
+```text
+FE FF
+```
+
+→
+
+```python
+return "utf-16"
+```
+
+### UTF-8 BOM
+
+```text
+EF BB BF
+```
+
+→
+
+```python
+return "utf-8-sig"
+```
+
+Dacă nu găsește BOM:
+
+```python
+return "utf-8"
+```
+
+Asta este util în cazul vostru pentru că fișierele AD pot veni în encoding-uri diferite.
+
+---
+
+# 7. Citește `AD-usersAndGroupsResult.csv`
+
+Fișierul este citit cu:
+
+```python
+csv.DictReader(
+    f,
+    delimiter=delimiter
+)
+```
+
+Iar pentru acest fișier:
+
+```python
+ad_groups_delimiter = ";"
+```
+
+Deci scriptul presupune că:
+
+```text
+AD-usersAndGroupsResult.csv
+```
+
+are separator:
+
+```text
+;
+```
+
+și nu:
+
+```text
+|
+```
+
+---
+
+# 8. Ce coloane caută în acest CSV
+
+Din fiecare rând citește:
+
+```python
+group_name = row.get("GroupName")
+```
+
+Apoi verifică dacă:
+
+```text
+GroupName == VDI_USER_VOLTERRA_026_MT
+```
+
+Dacă da, extrage:
+
+```python
+user_name = row.get("UserName")
+sam_account_name = row.get("SamAccountName")
+```
+
+Deci avem:
+
+```text
+GroupName
+     │
+     └── VDI_USER_VOLTERRA_026_MT
+                │
+                ▼
+          UserName
+          SamAccountName
+```
+
+---
+
+# 9. Eliminarea duplicatelor
+
+Aici ai o parte foarte bună:
+
+```python
+unique_users = set()
+```
+
+Pentru fiecare utilizator creează:
+
+```python
+unique_key = (
+    user_name_clean,
+    sam_account_clean
+)
+```
+
+De exemplu:
+
+```text
+("ION.POPESCU", "ipopescu")
+```
+
+Dacă aceeași combinație apare în două sau mai multe CSV-uri:
+
+```text
+CED\file1.csv
+CED\file2.csv
+SERVIZICED\file3.csv
+```
+
+ea este introdusă o singură dată.
+
+Deci dacă ai:
+
+```text
+ION.POPESCU ; ipopescu
+ION.POPESCU ; ipopescu
+ION.POPESCU ; ipopescu
+```
+
+rezultatul va conține doar:
+
+```text
+ION.POPESCU ; ipopescu
+```
+
+**Atenție:** duplicatul este verificat după combinația:
+
+```text
+UserName + SamAccountName
+```
+
+nu doar după `UserName`.
+
+---
+
+# 10. Ce ajunge în Sheet1
+
+La finalul primei faze:
+
+```python
+sheet1_data
+```
+
+conține ceva de genul:
+
+```text
+UserName              SamAccountName
+------------------------------------------------
+ION.POPESCU           ipopescu
+MARIA.IONESCU         mionescu
+ANDREI.RUSU           arusu
+...
+```
+
+Apoi `create_excel()` creează:
+
+```text
+Sheet1
+```
+
+cu:
+
+```text
+A                 B
+--------------------------------
+UserName          SamAccountName
+ION.POPESCU       ipopescu
+MARIA.IONESCU     mionescu
+ANDREI.RUSU       arusu
+```
+
+---
+
+# 11. Caută `AD_Users_Results_attivi.csv`
+
+După aceea scriptul caută:
+
+```python
+attivi_files = list(
+    base_folder.rglob(
+        ad_users_attivi_file
+    )
+)
+```
+
+Deci caută recursiv în:
+
+```text
+C:\License_Management\Report_202608
+```
+
+fișierul:
+
+```text
+AD_Users_Results_attivi.csv
+```
+
+Dacă găsește mai multe, aici apare un lucru important:
+
+```python
+attivi_file = attivi_files[0]
+```
+
+Scriptul ia **doar primul fișier găsit**.
+
+Nu combină mai multe `AD_Users_Results_attivi.csv`.
+
+---
+
+# 12. Cum citește `AD_Users_Results_attivi.csv`
+
+Aici separatorul este:
+
+```python
+csv_delimiter = "|"
+```
+
+Deci:
+
+```text
+AD_Users_Results_attivi.csv
+```
+
+este presupus ca fiind:
+
+```text
+CN_00|Principal Name|OU_01|...
+```
+
+Scriptul citește:
+
+```python
+CN_00
+Principal Name
+OU_01
+```
+
+---
+
+# 13. Construiește un dicționar
+
+Aceasta este o parte importantă.
+
+Se creează:
+
+```python
+users = {}
+```
+
+iar pentru fiecare utilizator:
+
+```python
+users[cn_00_clean] = {
+    "CN_00": cn_00_clean,
+    "Principal Name": ...,
+    "OU_01": ...
+}
+```
+
+Practic construiește o structură de forma:
+
+```text
+users = {
+
+    "ION.POPESCU": {
+        "CN_00": "ION.POPESCU",
+        "Principal Name": "ipopescu@company.com",
+        "OU_01": "Banca1"
+    },
+
+    "MARIA.IONESCU": {
+        "CN_00": "MARIA.IONESCU",
+        "Principal Name": "mionescu@company.com",
+        "OU_01": "Banca2"
+    }
+
+}
+```
+
+Avantajul este că ulterior poate face foarte rapid:
+
+```python
+attivi_users.get(user_name)
+```
+
+în loc să parcurgă întreg CSV-ul pentru fiecare utilizator.
+
+---
+
+# 14. Cum se face INNER JOIN-ul
+
+Aici este nucleul procedurii.
+
+Pentru fiecare utilizator din Sheet1:
+
+```python
+for item in sheet1_data:
+```
+
+ia:
+
+```python
+user_name = item["UserName"].strip()
+```
+
+și caută:
+
+```python
+matched_user = attivi_users.get(user_name)
+```
+
+Adică:
+
+```text
+Sheet1.UserName
+       =
+AD_Users_Results_attivi.CN_00
+```
+
+Exact cum ai descris în `to do`.
+
+---
+
+# 15. Exemplu concret
+
+Să presupunem că Sheet1 are:
+
+```text
+UserName          SamAccountName
+--------------------------------
+ION.POPESCU       ipopescu
+MARIA.IONESCU     mionescu
+VASILE.RUSU       vrusu
+```
+
+Iar `AD_Users_Results_attivi.csv` are:
+
+```text
+CN_00             Principal Name           OU_01
+-------------------------------------------------------
+ION.POPESCU       ipopescu@company.com     VOLTERRA
+MARIA.IONESCU     mionescu@company.com     ALPHA
+GEORGE.MATEI      gmatei@company.com       BETA
+```
+
+Se face:
+
+```text
+ION.POPESCU
+     ↓
+CN_00 = ION.POPESCU
+     ↓
+MATCH
+```
+
+```text
+MARIA.IONESCU
+     ↓
+CN_00 = MARIA.IONESCU
+     ↓
+MATCH
+```
+
+```text
+VASILE.RUSU
+     ↓
+CN_00 = VASILE.RUSU
+     ↓
+NU EXISTĂ
+```
+
+Pentru `VASILE.RUSU` nu se creează rând în Sheet2.
+
+Asta este comportamentul de **INNER JOIN**.
+
+---
+
+# 16. Ce intră în Sheet2
+
+Pentru utilizatorii găsiți, scriptul creează:
+
+```python
+sheet2_data.append({
+    "CN_00": matched_user["CN_00"],
+    "Principal Name": matched_user["Principal Name"],
+    "Banche": matched_user["OU_01"]
+})
+```
+
+Deci:
+
+```text
+CN_00
+Principal Name
+Banche
+```
+
+De exemplu:
+
+| CN_00         | Principal Name                                      | Banche   |
+| ------------- | --------------------------------------------------- | -------- |
+| ION.POPESCU   | [ipopescu@company.com](mailto:ipopescu@company.com) | VOLTERRA |
+| MARIA.IONESCU | [mionescu@company.com](mailto:mionescu@company.com) | ALPHA    |
+
+Observă că:
+
+```text
+OU_01
+```
+
+este redenumit în Excel:
+
+```text
+Banche
+```
+
+---
+
+# 17. Elimină și duplicatele din INNER JOIN
+
+Ai:
+
+```python
+join_keys = set()
+```
+
+și:
+
+```python
+join_key = (
+    matched_user["CN_00"],
+    matched_user["Principal Name"],
+    matched_user["OU_01"]
+)
+```
+
+Dacă exact aceeași combinație apare de mai multe ori, ea este introdusă o singură dată.
+
+---
+
+# 18. Sheet3 — aici apare o particularitate
+
+Codul creează și:
+
+```text
+Sheet3
+```
+
+cu:
+
+```text
+InnerJoin
+Principal Name
+Banche
+```
+
+Dar aici apare o diferență față de ce spune comentariul.
+
+Ai:
+
+```python
+join_value = normalize_account(
+    matched_user["Principal Name"]
+)
+```
+
+dar imediat după aceea:
+
+```python
+join_value = user_name.strip()
+```
+
+Deci prima valoare este **suprascrisă**.
+
+Prin urmare, în realitate:
+
+```text
+InnerJoin = UserName
+```
+
+nu:
+
+```text
+Principal Name fără @...
+```
+
+De exemplu, dacă:
+
+```text
+UserName = ION.POPESCU
+Principal Name = ipopescu@company.com
+```
+
+Sheet3 va avea:
+
+| InnerJoin   | Principal Name                                      | Banche   |
+| ----------- | --------------------------------------------------- | -------- |
+| ION.POPESCU | [ipopescu@company.com](mailto:ipopescu@company.com) | VOLTERRA |
+
+---
+
+# 19. Ce face `normalize_account()`
+
+Funcția:
+
+```python
+def normalize_account(value):
+```
+
+face:
+
+1. verifică dacă valoarea este goală;
+2. elimină spațiile;
+3. transformă în uppercase;
+4. elimină partea de după `@`.
+
+De exemplu:
+
+```text
+ipopescu@company.com
+```
+
+devine:
+
+```text
+IPOPESCU
+```
+
+Dar, în versiunea actuală a codului, rezultatul funcției **nu este folosit efectiv**, deoarece:
+
+```python
+join_value = normalize_account(...)
+```
+
+este urmat de:
+
+```python
+join_value = user_name.strip()
+```
+
+Deci `normalize_account()` este momentan practic inutilă pentru rezultatul final.
+
+---
+
+# 20. Formatarea Excelului
+
+Scriptul face și câteva lucruri de prezentare.
+
+Header-ele sunt:
+
+```python
+cell.font = Font(bold=True)
+```
+
+deci sunt **bold**.
+
+Și:
+
+```python
+cell.alignment = Alignment(
+    horizontal="center"
+)
+```
+
+deci sunt centrate.
+
+---
+
+# 21. Ajustarea automată a coloanelor
+
+Pentru Sheet1 și Sheet2:
+
+```python
+max_length = 0
+```
+
+se caută cea mai lungă valoare din fiecare coloană.
+
+Apoi:
+
+```python
+width = min(max_length + 2, 60)
+```
+
+Deci coloana este lățită automat, dar maximum:
+
+```text
+60
+```
+
+caractere.
+
+**Observație:** în codul actual, această ajustare se face pentru:
+
+```python
+sheet1
+sheet2
+```
+
+dar **nu și pentru Sheet3**.
+
+---
+
+# 22. Freeze panes
+
+Pentru Sheet1:
+
+```python
+sheet1.freeze_panes = "A2"
+```
+
+și Sheet2:
+
+```python
+sheet2.freeze_panes = "A2"
+```
+
+Asta înseamnă că primul rând, header-ul, rămâne vizibil când faci scroll.
+
+Din nou, **Sheet3 nu are `freeze_panes`**.
+
+---
+
+# 23. Fișierul final
+
+La final:
+
+```python
+output_file = (
+    base_folder /
+    "VDI_USEER_VOLTERRA_026_MT.xlsx"
+)
+```
+
+Deci fișierul va fi:
+
+```text
+C:\License_Management\Report_202608\VDI_USEER_VOLTERRA_026_MT.xlsx
+```
+
+Observă însă typo-ul:
+
+```text
+VDI_USEER
+```
+
+are două `E`.
+
+Probabil ai intenționat:
+
+```text
+VDI_USER
+```
+
+---
+
+# 24. Ce conține Excelul final
+
+În forma actuală:
+
+### Sheet1
+
+Utilizatorii găsiți în grup:
+
+```text
+UserName | SamAccountName
+```
+
+Exemplu:
+
+```text
+ION.POPESCU | ipopescu
+MARIA.IONESCU | mionescu
+VASILE.RUSU | vrusu
+```
+
+---
+
+### Sheet2
+
+Doar utilizatorii care au fost găsiți și în `AD_Users_Results_attivi.csv`:
+
+```text
+CN_00 | Principal Name | Banche
+```
+
+Exemplu:
+
+```text
+ION.POPESCU   | ipopescu@company.com | VOLTERRA
+MARIA.IONESCU | mionescu@company.com | ALPHA
+```
+
+---
+
+### Sheet3
+
+Din nou utilizatorii care au avut match:
+
+```text
+InnerJoin | Principal Name | Banche
+```
+
+În versiunea actuală:
+
+```text
+InnerJoin = UserName
+```
+
+Exemplu:
+
+```text
+ION.POPESCU   | ipopescu@company.com | VOLTERRA
+MARIA.IONESCU | mionescu@company.com | ALPHA
+```
+
+---
+
+# 25. Diferența dintre ce ai scris în TO DO și ce face codul
+
+Aș separa foarte clar:
+
+| TO DO                                               | Codul actual                                      |
+| --------------------------------------------------- | ------------------------------------------------- |
+| 1. Extrage `UserName` din toate CSV-urile           | ✅ Da                                              |
+| Filtrează `GroupName = VDI_USER_VOLTERRA_026_MT`    | ✅ Da                                              |
+| Extrage `SamAccountName`                            | ✅ Da                                              |
+| Elimină duplicatele                                 | ✅ Da                                              |
+| 2. Scrie UserName + SamAccountName în Sheet1        | ✅ Da                                              |
+| 3. INNER JOIN UserName = CN_00                      | ✅ Da                                              |
+| 4. Scrie CN_00 + Principal Name + Banche în Sheet2  | ✅ Da                                              |
+| Creează Sheet3                                      | ➕ Da, dar nu era în TO DO                         |
+| Normalizează Principal Name                         | ⚠️ Funcția există, dar rezultatul este suprascris |
+| Formatează Sheet3                                   | ⚠️ Doar header-ul, fără autofit/freeze            |
+| Dacă există mai multe `AD_Users_Results_attivi.csv` | ⚠️ Ia doar primul                                 |
+
+---
+
+# 26. Un lucru foarte important despre INNER JOIN
+
+Procedura **nu face un INNER JOIN Pandas propriu-zis**.
+
+Deși ai:
+
+```python
+import pandas as pd
+```
+
+și chiar funcția:
+
+```python
+normalize_account()
+```
+
+join-ul este făcut manual cu un dictionary:
+
+```python
+matched_user = attivi_users.get(user_name)
+```
+
+Logic, însă, comportamentul este echivalent cu:
+
+```sql
+SELECT ...
+FROM Sheet1
+INNER JOIN AD_Users_Results_attivi
+    ON Sheet1.UserName = AD_Users_Results_attivi.CN_00
+```
+
+Adică:
+
+```text
+                    INNER JOIN
+                       ↓↓↓
+Sheet1                         AD_Users_Results_attivi
+
+UserName ──────────────────── CN_00
+    │                            │
+    └──────── MATCH ─────────────┘
+                 │
+                 ▼
+        Principal Name
+        OU_01 → Banche
+```
+
+---
+
+# 27. Fluxul complet, foarte simplificat
+
+Practic, procedura face:
+
+```text
+1. Citește Parametri.json
+             ↓
+2. Construiește:
+   C:\License_Management\Report_202608
+             ↓
+3. Caută mapele:
+   Active Directory Results - CED*
+   Active Directory Results - SERVIZICED*
+             ↓
+4. În toate subfolderele caută:
+   AD-usersAndGroupsResult.csv
+             ↓
+5. Citește fiecare CSV
+             ↓
+6. Selectează:
+   GroupName = VDI_USER_VOLTERRA_026_MT
+             ↓
+7. Extrage:
+   UserName
+   SamAccountName
+             ↓
+8. Elimină duplicatele
+             ↓
+9. Scrie Sheet1
+             ↓
+10. Caută:
+    AD_Users_Results_attivi.csv
+             ↓
+11. Creează dicționar după CN_00
+             ↓
+12. Pentru fiecare UserName din Sheet1:
+             ↓
+       caută în CN_00
+             ↓
+       există?
+        /    \
+      DA      NU
+      ↓        ↓
+   Sheet2    ignoră
+      ↓
+   Sheet3
+             ↓
+13. Formatează Excel
+             ↓
+14. Salvează XLSX
+```
+
+### Concluzia mea
+
+Procedura este construită destul de bine pentru task-ul tău: **caută utilizatorii unui grup VDI în mai multe exporturi AD, elimină duplicatele, îi corelează cu lista utilizatorilor activi și produce un Excel cu rezultatul**.
+
+Totuși, sunt **4 lucruri pe care eu le-aș corecta înainte să o considerăm versiunea finală**:
+
+1. `normalize_account()` este calculat și apoi suprascris.
+2. `AD_Users_Results_attivi.csv` — dacă există mai multe, se ia arbitrar primul.
+3. Sheet3 nu are autofit și freeze panes.
+4. `VDI_USEER_VOLTERRA_026_MT.xlsx` pare să aibă typo în numele fișierului.
+
+Și mai există o întrebare importantă de logică: **dacă scopul tău pentru Sheet3 este să obții `SamAccountName` / partea din `Principal Name` pentru următorul pas al procedurii, atunci Sheet3-ul actual nu face ceea ce probabil ai intenționat**, pentru că `join_value` este suprascris cu `UserName`.

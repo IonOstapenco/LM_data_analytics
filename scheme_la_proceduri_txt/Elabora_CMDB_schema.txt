@@ -1,0 +1,97 @@
+==== Elabora_CMDB ====
+DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora CMDB)
+
+1. INPUT FILES → CÂMPURI FOLOSITE
+
+┌──────────────────────────────────────────────┐
+│ 1. Asset Server (ALL)*.csv   → CMDB          │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (CMDB_field):
+   - Nome CI
+   - OS
+   - DNS
+   - Domain Name
+   - Is Virtual
+   - Numero CPU
+   - Numero Socket
+   - Processore
+   - Modello
+   - VM_Cluster
+   - VM_Virtualcenter
+   - VM_Host
+   - VMWare_LastReportDate
+   - Bigfix_LastReportDate
+   - Applicazione (lista)
+   - Ruolo
+   - Category
+   - Type
+   - Ambiente
+   - Responsabile
+   - Used By
+   - Contratto
+   - server_iscloud
+   - Ip_primary
+
+
+┌──────────────────────────────────────────────┐
+│ 2. Asset ServerDismessi (ALL)*.csv → DISMESSI│
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (DISS_field):
+   - server
+   - datadismissione
+
+
+┌──────────────────────────────────────────────┐
+│ 3. Asset Client (ALL)*.csv   → PDL           │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (PDL_field):
+   - Nome CI
+   - Category
+   - Type
+   - Domain Name
+   - Used By
+   (index detectat automat din header)
+
+
+2. OUTPUT FILES → CÂMPURI FOLOSITE - ce campuri contin
+
+┌──────────────────────────────────────────────┐
+│ OUT_CMDB → AssetServer_CMDB.csv             │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CONȚINE EXACT CMDB_field (24 câmpuri)
+   
+
+
+┌──────────────────────────────────────────────┐
+│ OUT_CMDB_ESX → AssetCMDB_Esx.csv            │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CONȚINE EXACT CMDB_field (24 câmpuri)
+   (doar serverele cu Ruolo = "esx*")
+
+
+┌──────────────────────────────────────────────┐
+│ OUT_DISMESSI → ServerDismessi.csv           │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CONȚINE EXACT DISS_field (2 câmpuri)
+
+   
+┌──────────────────────────────────────────────┐
+│ OUT_PDL → AssetClient.csv                   │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CONȚINE EXACT PDL_field (5 câmpuri)
+   (ordine detectată din header)   
+   

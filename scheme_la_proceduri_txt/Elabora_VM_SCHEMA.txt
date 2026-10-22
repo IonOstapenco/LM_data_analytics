@@ -1,0 +1,161 @@
+==== Elabora_VM ====
+📘 DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora VM)
+1. INPUT FILES → CÂMPURI FOLOSITE
+Procedura folosește 3 fișiere RVTools, fiecare cu propriile câmpuri
+🔵 1.1. INPUT 1 – RVTools_tabvCPU → CPU_list
+┌──────────────────────────────────────────────┐
+│ RVTools_tabvCPU*.csv   → CPU                 │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (CPU_field):
+   - VM
+   - CPUs
+   - Sockets
+   - Cores p/s
+
+
+
+🟣 1.2. INPUT 2 – RVTools_tabvTools → TOOLS_list
+┌──────────────────────────────────────────────┐
+│ RVTools_tabvTools*.csv   → TOOLS             │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (TOOLS_field):
+   - VM
+   - VM Version
+   - Tools
+   - Tools Version
+   - Required Version
+   - Upgradeable
+   - Upgrade Policy
+
+
+
+🟢 1.3. INPUT 3 – RVTools_tabvInfo → VM_list
+┌──────────────────────────────────────────────┐
+│ RVTools_tabvInfo*.csv   → VM                 │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (VM_field):
+   - VM
+   - Powerstate
+   - Template
+   - SRM Placeholder
+   - DNS Name
+   - CPUs
+   - Memory
+   - Primary IP Address
+   - HW version
+   - Annotation
+   - Datacenter
+   - Cluster
+   - Host
+   - OS according to the configuration file
+   - OS according to the VMware Tools
+   - VM ID
+   - VI SDK Server type
+   - VI SDK API Version
+   - VI SDK Server
+   - Sockets
+   - Cores p/s
+   - Tools
+   - Tools Version
+   - Required Version
+   - Upgradeable
+   - Upgrade Policy
+
+
+⚠️ Filtrări aplicate:
+- VM-urile sunt ignorate dacă numele conține:
+indismissione, clone, replica, non_toccare, test, corrupt, template, issue_snap
+⚠️ Completări:
+- Din CPU_list → se completează:
+CPUs, Sockets, Cores p/s
+- Din TOOLS_list → se completează:
+Tools, Tools Version, Required Version, Upgradeable, Upgrade Policy
+
+2. OUTPUT FILES → CE CÂMPURI CONȚIN
+Procedura generează 3 fișiere de output:
+
+2.1. OUT_CPU → CPU_list.csv
+┌──────────────────────────────────────────────┐
+│ OUT_CPU → CPU_list.csv                       │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE EXACT CPU_field (4 câmpuri):
+- VM
+- CPUs
+- Sockets
+- Cores p/s
+
+
+
+2.2. OUT_TOOLS → Tools_list.csv
+┌──────────────────────────────────────────────┐
+│ OUT_TOOLS → Tools_list.csv                   │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE EXACT TOOLS_field (7 câmpuri):
+- VM
+- VM Version
+- Tools
+- Tools Version
+- Required Version
+- Upgradeable
+- Upgrade Policy
+
+
+
+2.3. OUT_VM → VM_list.csv
+┌──────────────────────────────────────────────┐
+│ OUT_VM → VM_list.csv                         │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE EXACT VM_field (26+ câmpuri):
+- Toate câmpurile VM_field (0–25)
+- + câmpuri suplimentare din CPU_list
+- + câmpuri suplimentare din TOOLS_list
+
+
+
+🎯 DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE
+                 ┌────────────────────────────────────┐
+                 │ RVTools_tabvCPU*.csv               │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                       CPU_field (4)
+                               │
+                               ▼
+                 OUT_CPU → CPU_list.csv
+
+
+                 ┌────────────────────────────────────┐
+                 │ RVTools_tabvTools*.csv             │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                     TOOLS_field (7)
+                               │
+                               ▼
+                 OUT_TOOLS → Tools_list.csv
+
+
+                 ┌────────────────────────────────────┐
+                 │ RVTools_tabvInfo*.csv              │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                     VM_field (26)
+                               │
+             + merge cu CPU_list (3 câmpuri)
+             + merge cu TOOLS_list (5 câmpuri)
+                               │
+                               ▼
+                 OUT_VM → VM_list.csv

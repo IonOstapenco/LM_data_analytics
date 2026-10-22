@@ -1,0 +1,188 @@
+===== Merge_CMDB_Citrix  =============
+---
+
+# 📘 **DIAGRAMĂ VIZUALĂ – Merge_CMDB_Citrix.py**  
+---
+
+# **1. INPUT FILES → CÂMPURI FOLOSITE**
+
+Procedura folosește **trei fișiere CSV**:
+
+### 🔹 1.1. **AssetServer_CMDB.csv**  
+Pattern: `OUT_CMDB` din Parametri.json  
+Conține **23 câmpuri CMDB** → încărcate integral.
+
+
+┌──────────────────────────────────────────────┐
+│ AssetServer_CMDB.csv                         │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+   CÂMPURI FOLOSITE (toate cele 23):
+   - Nome CI
+   - OS
+   - DNS
+   - Domain Name
+   - Is Virtual
+   - Numero CPU
+   - Numero Socket
+   - Processore
+   - Modello
+   - VM_Cluster
+   - VM_Virtualcenter
+   - VM_Host
+   - VMWare_LastReportDate
+   - Bigfix_LastReportDate
+   - Applicazione (lista)
+   - Ruolo
+   - Category
+   - Type
+   - Ambiente
+   - Responsabile
+   - Used By
+   - Contratto
+   - server_iscloud
+```
+
+---
+
+### 🔹 1.2. **Server_Citrix_list.csv**  
+Pattern: `OUT_Server_Citrix`
+
+```text
+┌──────────────────────────────────────────────┐
+│ Server_Citrix_list.csv                       │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CÂMPURI FOLOSITE:
+- name
+- CPUs
+- Pool
+```
+
+**Valori implicite setate în CMDB:**
+
+- Used By = "CEDACRI"
+- server_iscloud = "0"
+- Is Virtual = "NO"
+- OS = "XenServer Type"
+- Type = "Server"
+- Category = "Server"
+- Ruolo = "CITRIX"
+- Contratto = "MS SPLA"
+
+---
+
+### 🔹 1.3. **Vms_Citrix_list.csv**  
+Pattern: `OUT_Vms_Citrix`
+
+```text
+┌──────────────────────────────────────────────┐
+│ Vms_Citrix_list.csv                          │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CÂMPURI FOLOSITE:
+- name
+- CPUs
+- Pool
+- OS
+- Running on
+```
+
+**Valori implicite setate în CMDB:**
+
+- Used By = "CEDACRI"
+- server_iscloud = "0"
+- Is Virtual = "SI"
+- Type = "Server"
+- Category = "Server"
+- Ruolo = "CITRIX"
+- Contratto = "MS SPLA"
+
+---
+
+# **2. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+## **2.1. OUT_CMDB_Citrix → Server_CMDB_Citrix.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_CMDB_Citrix → Server_CMDB_Citrix.csv     │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE TOATE cele 23 câmpuri CMDB:
+- Nome CI
+- OS
+- DNS
+- Domain Name
+- Is Virtual
+- Numero CPU
+- Numero Socket
+- Processore
+- Modello
+- VM_Cluster
+- VM_Virtualcenter
+- VM_Host
+- VMWare_LastReportDate
+- Bigfix_LastReportDate
+- Applicazione (lista)
+- Ruolo
+- Category
+- Type
+- Ambiente
+- Responsabile
+- Used By
+- Contratto
+- server_iscloud
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stil identic cu modelul tău)**
+
+```text
+                 ┌────────────────────────────────────┐
+                 │ AssetServer_CMDB.csv               │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                 Încarcă toate cele 23 câmpuri CMDB
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Server_Citrix_list.csv                               │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+               Actualizează câmpuri CMDB:
+               - Nome CI
+               - Numero CPU
+               - Ambiente (Pool)
+               - VM_Cluster (Pool)
+               + valori implicite Citrix (server fizic)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Vms_Citrix_list.csv                                  │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+               Actualizează câmpuri CMDB:
+               - Nome CI
+               - Numero CPU
+               - Ambiente (Pool)
+               - OS
+               - VM_Cluster (Pool)
+               - VM_Host (Running on)
+               + valori implicite Citrix (VM)
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_CMDB_Citrix → Server_CMDB_Citrix.csv             │
+        └──────────────────────────────────────────────────────┘
+```

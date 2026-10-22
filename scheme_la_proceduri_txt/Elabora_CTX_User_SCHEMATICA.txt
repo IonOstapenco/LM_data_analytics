@@ -1,0 +1,183 @@
+---
+
+# ==== Elabora_CTX_User.py ==============
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_CTX_User)**  
+*(model complet, desfășurat, identic ca stil cu celelalte)*
+
+---
+
+# **1. INPUT FILES → SURSA DE DATE**
+
+Procedura folosește **un singur fișier CSV**, generat lunar:
+
+```text
+ConteggioMensileCitrix_AAAAMMGG.csv
+```
+
+Structura fișierului:
+
+```
+User ID,Cliente/Dominio,Data ultima connessione
+BB01925,BANCA POPOLARE DI BARI,2025-01-23 07:27:30.000
+```
+
+Acesta este încărcat în:
+
+- `CTX_User` → dicționar cu utilizatori activi grupați pe domeniu/client
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIȘIER**
+
+Procedura folosește 3 câmpuri:
+
+| Câmp CSV            | Index | Folosință |
+|---------------------|--------|-----------|
+| User ID             | 0      | identificare utilizator |
+| Dominio / Cliente   | 1      | grupare pe client |
+| Last Logon          | 2      | calcul vechime logon |
+
+---
+
+# **3. LOGICA PRINCIPALĂ – FILTRAREA UTILIZATORILOR**
+
+## 🟢 **3.1. Determinarea datei de referință**
+
+Data este extrasă din numele fișierului:
+
+```
+ConteggioMensileCitrix_20250123.csv
+                           ↑↑↑↑↑↑↑↑
+                           AAAAMMGG
+```
+
+Aceasta devine **data de extracție**.
+
+---
+
+## 🟢 **3.2. Calculul vechimii logon-ului**
+
+Pentru fiecare utilizator:
+
+1. Se citește `Last Logon`
+2. Se transformă în `datetime`
+3. Se calculează:
+
+```
+n_giorni = data_estrazione - data_user
+```
+
+---
+
+## 🟢 **3.3. Regula de filtrare**
+
+Un utilizator este considerat **activ** dacă:
+
+```
+n_giorni <= 90
+```
+
+Dacă este activ:
+
+- este adăugat în `CTX_User[domeniu]`
+- se incrementează `n_citrix_active`
+
+Indiferent de activitate:
+
+- `n_citrix_users` crește (număr total de conturi definite)
+
+---
+
+# **4. STRUCTURA CTX_User (OUTPUT INTERMEDIAR)**
+
+Dicționarul final:
+
+```
+CTX_User = {
+    "cliente1": [user1, user2, ...],
+    "cliente2": [user3, user4, ...],
+    ...
+}
+```
+
+Se creează și un sumar:
+
+```
+d_ctx[cliente] = număr utilizatori activi
+```
+
+---
+
+# **5. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier text**:
+
+```
+STAT_CTX_Users.txt
+```
+
+Acesta conține:
+
+### 🔹 **5.1. Număr total de conturi Citrix definite**
+
+```
+Risultano definite XXXX utenze...
+```
+
+### 🔹 **5.2. Număr total de conturi active (< 90 zile)**
+
+```
+-> YYYY utenze attive
+```
+
+### 🔹 **5.3. Tabel cu utilizatori activi pe client**
+
+Format:
+
+```
++--------+--------------------------------------------------------------+
+|   125  | BANCA POPOLARE DI BARI                                      |
+|    87  | GRUPPO CASSA CENTRALE                                       |
+|    12  | ALTRO CLIENTE                                               |
++--------+--------------------------------------------------------------+
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stilul tău preferat)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILE                             │
+                 │ ConteggioMensileCitrix_AAAAMMGG.csv        │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Extrage data AAAAMMGG din numele fișierului          │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        Pentru fiecare rând:
+        - citește User ID, Dominio, Last Logon
+        - calculează diferența în zile față de data_estrazione
+        - dacă n_giorni ≤ 90 → utilizator activ
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ CTX_User[domeniu] = listă utilizatori activi         │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ STAT_CTX_Users.txt                                   │
+        │  - total conturi                                     │
+        │  - total active (<90 zile)                           │
+        │  - tabel utilizatori activi per cliente              │
+        └──────────────────────────────────────────────────────┘
+```
+
+---
+
+

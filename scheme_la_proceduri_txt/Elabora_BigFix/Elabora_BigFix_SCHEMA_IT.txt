@@ -1,0 +1,84 @@
+====== Elabora_BigFix ==========
+DIAGRAMMA VISIVA – CAMPI INPUT / OUTPUT (Elabora BigFix)
+
+┌──────────────────────────────────────────────┐
+│ ICTG-0-inventario-hardware-*.csv  → BIGFIX   │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+
+   CAMPI UTILIZZATI (BGFX_field):
+   - Stato
+   - Nome computer
+   - Sistema operativo
+   - Nome DNS
+   - AIX Full OS Level
+   - Technology Level
+   - NumeroCPU
+   - NumeroSocket
+   - License Type
+   - Computer Type
+   - Java Output
+   - JavaPath
+   - JavaVersion
+   - Tipo di computer
+   - Core partizione
+   - Core server
+   - Stringa marchio processore
+   - Vendor
+   - Marchio
+   - Tipo
+   - Modello
+   - PVU per core
+   - Valore PVU modificato
+   - Valore PVU predefinito
+   - Fattore core Oracle
+   - Socket attivi del server
+   - Domain
+   - Nome cluster
+   - Core cluster
+   - CPU
+   - Nome host padre
+   - Last Report Time
+   - Tipo di server
+
+
+
+!!** Nota:
+– I campi vengono estratti tramite indice numerico dal file BigFix.
+– "Nome computer" viene convertito in lowercase e utilizzato come identificatore univoco.
+– Le righe duplicate vengono eliminate.
+
+
+
+2. FILE DI OUTPUT → QUALI CAMPI CONTIENE
+
+
+┌──────────────────────────────────────────────┐
+│ OUT_BGFX → ICTG-HW.csv                       │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+
+   CONTIENE ESATTAMENTE BGFX_field (33 campi)
+
+   nello stesso ordine dell'elenco sopra riportato
+
+
+
+DIAGRAMMA FINALE – TUTTO IN UN COLPO D'OCCHIO
+
+
+
+                 ┌────────────────────────────────────┐
+                 │ ICTG-0-inventario-hardware-*.csv   │
+                 └────────────────────────────────────┘
+                               │
+                               ▼
+                     BGFX_field (33 campi)
+                               │
+                               ▼
+                 ┌────────────────────────────────────┐
+                 │ OUT_BGFX → ICTG-HW.csv             │
+                 └────────────────────────────────────┘
+                 (contiene esattamente gli stessi 33 campi)

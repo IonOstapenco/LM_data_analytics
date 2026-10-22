@@ -1,0 +1,204 @@
+==== Elabora_Tabella-Oracle ==== 
+
+# ==== Elabora_Tabella-Oracle.py ==============
+
+📘 **DIAGRAMĂ VIZUALĂ – CÂMPURI INPUT / OUTPUT (Elabora_Tabella-Oracle)**  
+*(model complet, desfășurat, identic ca stil cu celelalte)*
+
+---
+
+# **1. INPUT FILES → SURSE DE DATE**
+
+Procedura folosește **două fișiere CSV**:
+
+```text
+OUT_Hardware_TAB           → Tabella_HW.csv
+ICTG-0-database-oracle-*   → report Oracle BigFix (inlocuim cu Asset Database)
+```
+
+Acestea sunt încărcate în:
+
+- `Hardware` → toate serverele + câmpuri HW (OS, core, socket, cliente, ambiente etc.)
+- `Oracle` → structura finală pentru Tabella_Oracle
+- `Funzioni` → funcțiile Oracle Enterprise detectate
+- `Software` → funcțiile Oracle extrase din BigFix
+
+---
+
+# **2. INPUT → CÂMPURI FOLOSITE DIN FIECARE SURSA**
+
+## 🔵 **2.1. Tabella_HW → completarea câmpurilor Oracle**
+
+Din Tabella_HW se extrag câmpurile:
+
+- ambiente  
+- contratto  
+- cliente  
+
+Acestea sunt adăugate la fiecare server Oracle dacă serverul există în Hardware.
+
+---
+
+## 🟣 **2.2. BigFix Oracle Report → baza principală**
+
+Din fișierul BigFix se extrag câmpurile definite în `BGFX_Field`:
+
+- Nome computer  
+- Nome  
+- Versione  
+- Edizione  
+- Sistema operativo  
+- Funzione  
+- SID  
+- AIX Full OS Level  
+- NumeroCpu  --- se poate de luat din ASset database sau tabella HW
+- NumeroCore  
+- Domain  
+- Tipo di computer  
+- NumeroSocket  
+- Processore  
+- Core partizione  
+- Fattore core Oracle  
+- Socket attivi del server  
+
+Acestea formează structura de bază pentru fiecare server Oracle.
+
+---
+
+# **3. STRUCTURA ORACLE (OUTPUT)**
+
+`Oracle_Field` definește câmpurile finale:
+
+- 17 câmpuri standard Oracle (nume, versiune, edizione, core, socket etc.)
+- 3 câmpuri din HW (ambiente, contratto, cliente)
+- câmpuri dinamice pentru funcțiile Enterprise (diagnostics, tuning, RAC, partitioning etc.)
+
+Total câmpuri Oracle: **17 + 3 + N funcții Enterprise**
+
+---
+
+# **4. LOGICA PRINCIPALĂ – CONSTRUIREA TABELEI ORACLE**
+
+## 🟢 **4.1. Citirea fișierului BigFix**
+
+Pentru fiecare rând:
+
+1. Se elimină ghilimelele și separatorii ambigui  
+2. Se extrag câmpurile din `BGFX_Field`  
+3. Se normalizează numele serverului (se elimină domeniul)  
+4. Se creează lista `t` cu toate câmpurile Oracle standard  
+5. Se adaugă câmpurile HW (ambiente, contratto, cliente)  
+6. Se adaugă 15 câmpuri goale pentru funcțiile Enterprise
+
+---
+
+## 🟢 **4.2. Construirea obiectului Oracle**
+
+Pentru fiecare server:
+
+```
+Oracle[nome] = c_Oracle(nome, t)
+```
+
+Apoi se adaugă funcția Oracle:
+
+```
+Oracle[nome].software(funzione)
+```
+
+---
+
+## 🟢 **4.3. Identificarea funcțiilor Oracle Enterprise**
+
+Funcțiile sunt extrase din câmpul "Funzione":
+
+- doar pentru edițiile **Enterprise**
+- se ignoră Standard și Express
+
+Pentru fiecare funcție:
+
+1. se extrage partea finală a stringului (după poziția 36)
+2. dacă funcția nu există în `Funzioni`, se adaugă cu un index nou
+3. se completează câmpul corespunzător în `datihw`
+
+Exemplu:
+
+```
+Funzione: "...diagnostics pack"
+→ Funzioni["diagnostics pack"] = 20
+→ Oracle[c].datihw[20] = "diagnostics pack"
+```
+
+---
+
+# **5. OUTPUT FILE → CE CONȚINE**
+
+Procedura generează **un singur fișier final**:
+
+---
+
+## **5.1. OUT_Oracle_TAB → Tabella_Oracle.csv**
+
+```text
+┌──────────────────────────────────────────────┐
+│ OUT_Oracle_TAB → Tabella_Oracle.csv         │
+└──────────────────────────────────────────────┘
+          │
+          ▼
+CONȚINE:
+- 17 câmpuri Oracle standard
+- 3 câmpuri HW (ambiente, contratto, cliente)
+- N câmpuri dinamice pentru funcțiile Enterprise
+```
+
+Structura unei linii:
+
+```
+Nome computer | Nome | Versione | Edizione | Sistema operativo |
+Funzione | SID | AIX Full OS Level | NumeroCore | NumeroCore x Socket |
+Domain | Tipo di computer | NumeroSocket | Processore |
+Core partizione | Fattore core Oracle | Socket attivi |
+ambiente | contratto | cliente |
+Funzione1 | Funzione2 | Funzione3 | ...
+```
+
+---
+
+# 🎯 **DIAGRAMĂ FINALĂ – TOTUL ÎNTR-O PRIVIRE (stilul tău preferat)**
+
+```text
+                 ┌────────────────────────────────────────────┐
+                 │ INPUT CSV FILES                           │
+                 └────────────────────────────────────────────┘
+                               │
+                               ▼
+     Tabella_HW.csv      → Hardware
+     Oracle BigFix CSV   → BGFX_Field
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Construire structura Oracle pentru fiecare server     │
+        │  - extrage câmpurile BGFX                            │
+        │  - normalizează numele                               │
+        │  - adaugă ambiente / contratto / cliente din HW      │
+        │  - adaugă 15 câmpuri goale pentru funcții            │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ Identificare funcții Oracle Enterprise               │
+        │  - diagnostics pack                                  │
+        │  - tuning pack                                       │
+        │  - advanced compression                              │
+        │  - RAC                                               │
+        │  - partitioning                                      │
+        │  - etc.                                              │
+        └──────────────────────────────────────────────────────┘
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────────────┐
+        │ OUT_Oracle_TAB → Tabella_Oracle.csv                  │
+        └──────────────────────────────────────────────────────┘
+```
+
+---
