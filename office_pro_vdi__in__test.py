@@ -2,7 +2,8 @@
 1. În lista Gruppi adauga grupurile ced\vdi_user_prd_529_2203_office
 crvolterra.ced.it\vdi_user_prd_529_2203_office , acestea sunt considerate office pro. 
 2  se va indentifica lista de useri care fac parte din aceste grupuri 
-3. se va face inner join cu raportul AD user attivi ca să vedem care user sunt activi din acei găsiți 
+3. se va face inner join (on samaccountname si name)
+ cu raportul AD user attivi ca să vedem care user sunt activi din acei găsiți 
 și se va genera numărul de user care trebuie să aibă lincenza Office ProPlus
 '''
 
