@@ -753,7 +753,7 @@ def create_excel(
 
 # ==================================================
     sheet3 = workbook.create_sheet(
-        "VDI_USER_PRD_529_2203_OFFICE E VDI_USER_VOLTERRA_026_ACCESS"
+        "2 in 1 pro plus"
     )
 
     sheet3_headers = [
