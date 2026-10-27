@@ -753,7 +753,7 @@ def create_excel(
 
 # ==================================================
     sheet3 = workbook.create_sheet(
-        "VDI_USER_PRD_529_2203_OFFICE"
+        "VDI_USER_PRD_529_2203_OFFICE E VDI_USER_VOLTERRA_026_ACCESS"
     )
 
     sheet3_headers = [
@@ -786,9 +786,9 @@ def create_excel(
     for item in sheet3_data:
 
         sheet3.append([
-            item["UserName"], # --> adaugat pe 28/08/2026
+            item["UserName"], # 
             #item["InnerJoin"],
-            item["CN_00"], # -- adaugat pe 28/08/2026
+            item["CN_00"], 
             item["GroupName"],
             item["Principal Name"],
             item["Banche"]
