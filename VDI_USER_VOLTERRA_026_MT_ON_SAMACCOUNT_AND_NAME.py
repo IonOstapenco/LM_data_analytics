@@ -90,7 +90,7 @@ base_folder = (
 # -============================================================================
 output_file = (
     base_folder /
-    "VDI_USEER_VOLTERRA_026_MT_on_SAM_ACCOUNT_AND_NAME.xlsx"
+    "VDI_USER_VOLTERRA_026_MT_on_SAM_ACCOUNT_AND_NAME.xlsx"
 )
 
 
