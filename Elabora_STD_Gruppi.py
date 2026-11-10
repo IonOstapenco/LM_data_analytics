@@ -269,7 +269,8 @@ print(f"Utenti AD caricati: {len(ad_users_df)}")
 print(f"SAM presenti nella mappa banche: {len(banche_map)}")
 
 
-# =========================================================
+# ============================================================
+# 9. NORMALIZAREA la NAM=
 # 9. NORMALIZZAZIONE NOMI
 # =========================================================
 
@@ -280,18 +281,24 @@ def normalize_name(name):
 
     name = str(name).strip()
 
+
+    # Stergerea # Rimuove ?, _, -, . de la capat
     # Rimuove ?, _, -, . alla fine
     name = re.sub(r"[?_.-]+$", "", name)
 
-    # Rimuove numeri finali preceduti da spazi
+    # Eliminarea numerelir finale, precedate de spatii
+    # Rimuoverea numeri finali preceduti da spazi
     name = re.sub(r"\s+\d+$", "", name)
 
-    # Rimuove suffissi come _1, _2, _3
+    # Stergerea sufixelor cum ar fi _1, _2, _3
+    # Rimuove suffissi come essere _1, _2, _3
     name = re.sub(r"[_ ]+\d+$", "", name)
 
+    # Reduce spatiile multiple
     # Riduce gli spazi multipli
     name = re.sub(r"\s+", " ", name)
 
+    # Elimina cuvantul "bis" de la capat
     # Rimuove la parola bis alla fine
     name = re.sub(
         r"\s+bis$",
@@ -304,12 +311,14 @@ def normalize_name(name):
 
 
 
-# =========================================================
+# ===================---==============================================
+# 10. CAUTAREA GRUPURI IN FISIERELE ACTIVE DIRECTORY
 # 10. RICERCA GRUPPI NEI FILE ACTIVE DIRECTORY
 # =========================================================
 
-all_results = []
+all_results = [] # --> lista, strucutra de date,seamana ca in Java
 
+# Normalizam grupurile pentru comparare
 # Normalizziamo i gruppi per il confronto
 groups_set = {
     group.strip().casefold()
@@ -325,7 +334,8 @@ for root, _, filenames in os.walk(base_path):
 
         current_file = os.path.join(root, filename)
 
-        # Lettura CSV con separatore ;
+        # Citirea CSV cu separator ;
+        # Leggere CSV con separator ;
         ad_groups_df = pd.read_csv(
             current_file,
             sep=";",
@@ -334,7 +344,9 @@ for root, _, filenames in os.walk(base_path):
             keep_default_na=False
         )
 
-        # Pulizia intestazioni
+
+        # Curatirea headers
+        #Pulizia headers
         ad_groups_df.columns = (
             ad_groups_df.columns
             .str.replace("\ufeff", "", regex=False)
@@ -364,6 +376,7 @@ for root, _, filenames in os.walk(base_path):
             .str.casefold()
         )
 
+        # Pastram doar recorduri ale grupelor gasite
         # Conserviamo solo i record dei gruppi cercati
         matched_df = ad_groups_df[
             ad_groups_df["_GROUP_NORM"].isin(groups_set)
@@ -385,7 +398,8 @@ for root, _, filenames in os.walk(base_path):
             })
 
 
-# Creazione DataFrame
+# Crearea DataFrame
+#Creazione DataFrame
 result_columns = [
     "Group",
     "Name",
@@ -405,8 +419,9 @@ print(
 
 
 
-# =========================================================
-# 11. ELIMINAZIONE UTENTI TEST
+# =================================-===============================
+# 11. ELIMINAREA USERILOR TEST
+# 11.  ELIMINAZIONE USERS TEST
 # =========================================================
 
 all_results_df = all_results_df[
@@ -419,7 +434,8 @@ all_results_df = all_results_df[
 ].copy()
 
 
-# =========================================================
+# ================================================================
+# 12. STERGERE LOGIN FOLOSITE CA NAME
 # 12. ELIMINAZIONE LOGIN USATI COME NOMI
 # =========================================================
 
@@ -439,8 +455,8 @@ all_results_df["_NAME"] = (
     .str.upper()
 )
 
-# Per ogni SAM controlliamo se esiste almeno
-# un record con un nome diverso dal login.
+# Pentru fiecare SAM verificam daca exista cel putin o inregistrare cu un alt nume decat acel de login.
+# Per ogni SAM controlliamo se esiste almeno  un record con un nome diverso dal login
 
 has_real_name = (
     all_results_df["_NAME"]
@@ -450,7 +466,11 @@ has_real_name = (
 ).transform("any")
 
 
-# Se esiste un nome reale per lo stesso SAM,
+
+# Daca exista un nume real pentru acelasi SAM, 
+# stergem inregistrarile in care Name se potriveste cu datele de login
+
+# Se esiste un nome reale per lo stesso SAM, 
 # eliminiamo i record in cui Name coincide con il login.
 
 all_results_df = all_results_df[
@@ -467,9 +487,14 @@ all_results_df.drop(
 )
 
 
+# =============================--==============================
+# 13. ELIMINAREA DUPLICATELOR
+# 13. ELIMINAZIONE dei DUPLICATI
 # =========================================================
-# 13. ELIMINAZIONE DUPLICATI
-# =========================================================
+
+
+# Unicitatea bazata pe Group, Name si SamAccountName.
+# !!!! SourceFile nu participa la criteriul de unicitate
 
 # Unicità basata su Group, Name e SamAccountName.
 # SourceFile non partecipa al criterio di unicità.
@@ -491,7 +516,7 @@ clean_results = (
 )
 
 
-# =========================================================
+# ================================================================
 # 14. UNIQUE NAMES
 # =========================================================
 
@@ -505,7 +530,7 @@ clean_results_name = (
 
 # =========================================================
 # 15. UNIQUE SAMACCOUNTNAME
-# =========================================================
+# ==========================================================
 
 clean_results_sam = (
     clean_results[["SamAccountName"]]
@@ -529,75 +554,165 @@ clean_results_with_banche["Banche"] = (
 )
 
 
+
 # =========================================================
 # 17. MATCH UNIQUE NAMES VS AD USERS
+# 17. MATCH CON SAMACCOUNTNAME E CN_00
 # =========================================================
 
-unique_names_match = clean_results_name.copy()
+# Normalizarea account: 
+# YAE1189@rev.ced.it -> YAE1189
+# Normalizzazione account:
+# YAE1189@rev.ced.it -> YAE1189
 
-# Normalizzazione per il confronto
-unique_names_match["Name_norm"] = (
-    unique_names_match["Name"]
-    .fillna("")
-    .astype(str)
-    .str.strip()
-    .str.upper()
+def normalize_account(value):
+
+    if pd.isna(value) or not str(value).strip():
+        return ""
+
+    return str(value).strip().upper().split("@", 1)[0]
+
+
+# Normalizarea numelor pentru comparare
+# Normalizzazione nomi per il confronto
+
+def normalize_text(value):
+
+    if pd.isna(value):
+        return ""
+
+    return re.sub(
+        r"\s+",
+        " ",
+        str(value).strip()
+    ).upper()
+
+
+# ------------------------------------------------------------
+# 17.1 CREAREA MAP PRINCIPAL NAME -> AD USER
+# 17.1 CREAZIONE MAP PRINCIPAL NAME -> AD USER
+# ---------------------------------------------------------
+
+ad_by_account = {}
+ad_by_name = {}
+
+for _, row in ad_users_df.iterrows():
+
+    principal = normalize_account(
+        row["Principal Name"]
+    )
+
+    cn_name = normalize_text(
+        row["CN_00"]
+    )
+
+
+    # Pastram primul record pentru account
+    # Conserviamo il primo record per account
+
+    if principal and principal not in ad_by_account:
+
+        ad_by_account[principal] = row
+
+    # Pastram primul record pentru CN_00 
+    #Conserviamo il primo record per CN_00
+
+    if cn_name and cn_name not in ad_by_name:
+
+        ad_by_name[cn_name] = row
+
+
+# -------------------------------------------------------------
+# 17.2 MATCH CU PRIORITATEA SAMACCOUNTNAME
+# 17.2 MATCH CON PRIORITA' SAMACCOUNTNAME
+# ---------------------------------------------------------
+
+match_results = []
+
+match_sam_count = 0
+match_name_count = 0
+
+for _, item in clean_results.iterrows():
+
+    sam = normalize_account(
+        item["SamAccountName"]
+    )
+
+    name = normalize_text(
+        item["Name"]
+    )
+
+    # PRIMA METODA:
+    # SamAccountName = Principal Name normalizat
+    # PRIMA METODO:
+    # SamAccountName = Principal Name normalizzato
+
+    matched_user = ad_by_account.get(sam)
+
+    if matched_user is not None:
+
+        match_sam_count += 1
+
+    else:
+
+        # A DOUA METODA:
+        # Name = CN_00
+        # SECONDO METODO:
+        # Name = CN_00
+
+        matched_user = ad_by_name.get(name)
+
+        if matched_user is not None:
+
+            match_name_count += 1
+
+    # Daca nu exista nici o corespundere
+    # nu-l inseram recodul.
+    # Se non existe nessuna corrispondenza,
+    # non inseriamo il record.
+
+    if matched_user is None:
+        continue
+
+    match_results.append({
+
+        "Name": item["Name"],
+
+        "Principal Name":
+            matched_user["Principal Name"],
+
+        "Banche":
+            matched_user["OU_01"]
+    })
+
+
+# ---------------------------------------------------------=--
+# 17.3 CREAREA DATAFRAME FINAL
+# 17.3 CREAZIONE DATAFRAME FINALE
+# ---------------------------------------------------------
+
+match_df = pd.DataFrame(
+    match_results,
+    columns=[
+        "Name",
+        "Principal Name",
+        "Banche"
+    ]
 )
 
-ad_users_df["Name_norm"] = (
-    ad_users_df["Name"]
-    .fillna("")
-    .astype(str)
-    .str.strip()
-    .str.upper()
-)
 
-
-# INNER JOIN: nome dei risultati = nome AD
-match_df = unique_names_match.merge(
-    ad_users_df[
-        [
-            "Name_norm",
-            "Principal Name",
-            "OU_01"
-        ]
-    ],
-    on="Name_norm",
-    how="inner"
-)
-
-
-# Come nella procedura originale:
-# conserviamo soltanto i record con Principal Name presente.
-
-match_df = match_df[
-    match_df["Principal Name"].notna()
-].copy()
-
-
-# OU_01 diventa Banche
-match_df.rename(
-    columns={"OU_01": "Banche"},
-    inplace=True
-)
-
-# Rimuoviamo la colonna tecnica
-match_df.drop(
-    columns=["Name_norm"],
-    inplace=True
-)
-
-match_df = match_df[
-    ["Name", "Principal Name", "Banche"]
-]
+# ---------------------------------------------------------
+# 17.4 ELIMINREA DUPLICATELOR
+# 17.4 ELIMINAZIONE DUPLICATI
+# ---------------------------------------------------------
 
 print(
     "Match AD prima dei duplicati:",
     len(match_df)
 )
 
-# Eliminazione duplicati ignorando maiuscole/minuscole
 for col in ["Name", "Principal Name", "Banche"]:
+
     match_df[col] = (
         match_df[col]
         .fillna("")
@@ -606,31 +721,47 @@ for col in ["Name", "Principal Name", "Banche"]:
         .str.upper()
     )
 
+
 match_df = (
     match_df
     .drop_duplicates(
-        subset=["Name", "Principal Name", "Banche"]
+        subset=[
+            "Name",
+            "Principal Name",
+            "Banche"
+        ]
     )
     .reset_index(drop=True)
 )
+
 
 print(
     "Match AD dopo i duplicati:",
     len(match_df)
 )
-#match_df =  ( match_df.drop_duplicates(subset=["Name", "Principal Name", "Banche"]).reset_index(drop=True))
+
+print(
+    "Match tramite SamAccountName:",
+    match_sam_count
+)
+
+print(
+    "Match tramite Name / CN_00:",
+    match_name_count
+)
 
 
 # ------------------------
 
-# =========================================================
-# 18. CREAZIONE EXCEL
+# ===============================--===============================
+#  18. CREARE EXCEL FISIER
+#  18. CREAZIONE EXCEL FILE
 # =========================================================
 
 excel_file = os.path.join(
     output_path,
-    "Licenze_Office_STD_AD_RESULTS_ATTIVI "
-    "E UNIQUE NAMES e Match AD_TEST_PY.xlsx"
+    "Office_STANDARD_Gruppi_AD_RESULTS_ATTIVI "
+    "E UNIQUE NAMES e Match AD.xlsx"
 )
 
 with pd.ExcelWriter(
@@ -669,7 +800,8 @@ with pd.ExcelWriter(
     )
 
 
-# =========================================================
+# =========================================================----====
+# 19. REZUMATUL EXECUTIEI
 # 19. RIEPILOGO ESECUZIONE
 # =========================================================
 
