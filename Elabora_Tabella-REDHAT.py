@@ -139,9 +139,9 @@ SW_field = {
     "cliente": 0,
     "contratto": 0,
     "sito": 0,
-    "nome publisher": 0,
-    "nome componente": 41,
-    "versione_componente": 42,
+    "nome publisher": 41, # modificat din 13/11/2026
+    "nome componente": 42, # modificat din 13/11/2026
+    "versione_componente": 43, # modificat din 13/11/2026
     "versione dettagliata componente": 0,
     "percorso_di_installazione": 0,
     "nome prodotto": 0,
